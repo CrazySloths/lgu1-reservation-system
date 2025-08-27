@@ -100,8 +100,7 @@
                         <button class="sidebar-dropdown w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-lgu-stroke rounded-lg transition-colors duration-200">
                             <div class="flex items-center">
                                 <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
-                                    <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1V8a1 1 0 00-1-1h-3z"/>
+                                    <path d="M6 2a1 1 0 000 2h8a1 1 0 100-2H6zM3 6a2 2 0 012-2h10a2 2 0 012 2v1H3V6zm0 3h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
                                 </svg>
                                 Facility Directory and Calendar
                             </div>
@@ -110,10 +109,11 @@
                             </svg>
                         </button>
                         <ul class="sidebar-submenu hidden ml-8 mt-2 space-y-1">
-                            <li><a href="#roads-overview" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Overview</a></li>
-                            <li><a href="#road-projects" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Active Projects</a></li>
-                            <li><a href="#road-maintenance" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Maintenance</a></li>
-                            <li><a href="#traffic-management" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Traffic Management</a></li>
+                            <li><a href="#roads-overview" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Facility List</a></li>
+                            <li><a href="#road-projects" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Facility Location</a></li>
+                            <li><a href="#road-maintenance" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Calendar Interface</a></li>
+                            <li><a href="#traffic-management" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Availabilty Status</a></li>
+                            <li><a href="#traffic-management" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Facilty Booking</a></li>
                         </ul>
                     </li>
                     
@@ -121,7 +121,7 @@
                         <button class="sidebar-dropdown w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-lgu-stroke rounded-lg transition-colors duration-200">
                             <div class="flex items-center">
                                 <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.05 3.636a1 1 0 010 1.414 7 7 0 000 9.9 1 1 0 11-1.414 1.414 9 9 0 010-12.728 1 1 0 011.414 0zm9.9 0a1 1 0 011.414 0 9 9 0 010 12.728 1 1 0 11-1.414-1.414 7 7 0 000-9.9 1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                    <path d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h5.586A2 2 0 0013 17.414l3.707-3.707A1 1 0 0017 13V4a2 2 0 00-2-2H6z"/>
                                 </svg>
                                 Online Booking and Approval
                             </div>
@@ -130,9 +130,9 @@
                             </svg>
                         </button>
                         <ul class="sidebar-submenu hidden ml-8 mt-2 space-y-1">
-                            <li><a href="#water-overview" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">System Overview</a></li>
-                            <li><a href="#water-quality" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Quality Monitoring</a></li>
-                            <li><a href="#water-distribution" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Distribution Network</a></li>
+                            <li><a href="#water-overview" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Reservation Request</a></li>
+                            <li><a href="#water-quality" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Suggesting Booking</a></li>
+                            <li><a href="#water-distribution" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Document Upload Verification</a></li>
                             <li><a href="#water-treatment" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Treatment Plants</a></li>
                         </ul>
                     </li>
@@ -141,7 +141,7 @@
                         <button class="sidebar-dropdown w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-lgu-stroke rounded-lg transition-colors duration-200">
                             <div class="flex items-center">
                                 <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.477.859h4z"/>
+                                    <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v1H2V6zm0 3h16v5a2 2 0 01-2 2H4a2 2 0 01-2-2V9zm3 3a1 1 0 100 2h2a1 1 0 100-2H5z"/>
                                 </svg>
                                 Usage Fee and Payment
                             </div>
@@ -161,7 +161,7 @@
                         <button class="sidebar-dropdown w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-lgu-stroke rounded-lg transition-colors duration-200">
                             <div class="flex items-center">
                                 <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zM3 16a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.721-1.36 3.486 0l6.518 11.598c.75 1.336-.213 3.003-1.743 3.003H3.482c-1.53 0-2.493-1.667-1.743-3.003L8.257 3.1zM11 14a1 1 0 11-2 0 1 1 0 012 0zm-1-2a1 1 0 01-1-1V7a1 1 0 112 0v4a1 1 0 01-1 1z" clip-rule="evenodd"/>
                                 </svg>
                                 Schedule Conflict Alert
                             </div>
@@ -181,7 +181,7 @@
                         <button class="sidebar-dropdown w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-lgu-stroke rounded-lg transition-colors duration-200">
                             <div class="flex items-center">
                                 <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zM3 16a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                                    <path d="M3 3a1 1 0 000 2h1v11a1 1 0 102 0V5h1a1 1 0 100-2H3zm6 4a1 1 0 011-1h1v9a1 1 0 11-2 0V7zm5-3a1 1 0 000 2h1v11a1 1 0 102 0V4h1a1 1 0 100-2h-4z"/>
                                 </svg>
                                 Usage Reports and Feedback
                             </div>
