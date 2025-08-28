@@ -39,3 +39,9 @@ Route::post('/bookings/{id}/reject', [FacilityController::class, 'rejectBooking'
 Route::get('/new-reservation', [FacilityController::class, 'newReservation'])->name('new-reservation');
 Route::get('/reservations/status', [FacilityController::class, 'reservationStatus'])->name('reservations.status');
 Route::delete('/facilities/{facility_id}', [FacilityController::class, 'destroy'])->name('facilities.destroy');
+
+// Forecast Page
+Route::get('/ai-forecast', [FacilityController::class, 'forecast'])->name('forecast');
+
+// User Reservation Status Page
+Route::get('/reservation-status', [FacilityController::class, 'showUserBookings'])->name('reservation.status');

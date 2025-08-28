@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Facility;
-use App\Models\Booking; // Import the Booking model
+use App\Models\Booking;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Artisan;
 
 class FacilityController extends Controller
 {
@@ -108,8 +111,8 @@ class FacilityController extends Controller
     public function getEvents($facility_id)
     {
         $bookings = Booking::where('facility_id', $facility_id)
-                            ->where('status', 'approved')
-                            ->get();
+                             ->where('status', 'approved')
+                             ->get();
 
         $events = [];
 
@@ -153,8 +156,8 @@ class FacilityController extends Controller
     public function approvalDashboard()
     {
         $pendingBookings = Booking::where('status', 'pending')
-                                  ->with('facility')
-                                  ->get();
+                                   ->with('facility')
+                                   ->get();
     
         return view('booking-approval', compact('pendingBookings'));
     }
@@ -190,16 +193,111 @@ class FacilityController extends Controller
     }
 
     /**
-     * Display the reservation status page for all user bookings.
+     * Display the reservation status page for a specific user.
      *
      * @return \Illuminate\View\View
      */
-    public function reservationStatus()
+    public function showUserBookings()
     {
-        $bookings = Booking::with('facility')
-                           ->orderBy('created_at', 'desc')
-                           ->get();
+        // Change this to the exact user name from your database to see their bookings.
+        $current_user_name = 'test 1'; 
+        
+        $bookings = Booking::where('user_name', $current_user_name)
+                             ->with('facility')
+                             ->orderBy('created_at', 'desc')
+                             ->get();
         
         return view('reservation-status', compact('bookings'));
+    }
+
+    // --- AI Integration Methods ---
+    
+    /**
+     * Exports booking data to a JSON file for AI model training.
+     *
+     * @return void
+     */
+    private function exportBookingDataForAI()
+    {
+        try {
+            // Get all approved bookings with their facility information
+            $bookings = Booking::with('facility')
+                                 ->where('status', 'approved')
+                                 ->get();
+
+            // If no approved bookings are found, write an empty array to the JSON file
+            if ($bookings->isEmpty()) {
+                $jsonData = '[]';
+            } else {
+                // Manually map and format the data to ensure clean JSON output
+                $formattedBookings = $bookings->map(function ($booking) {
+                    return [
+                        'id' => $booking->id,
+                        'facility_id' => $booking->facility_id,
+                        'start_time' => $booking->start_time->format('Y-m-d H:i:s'),
+                        'end_time' => $booking->end_time->format('Y-m-d H:i:s'),
+                        'user_name' => $booking->user_name,
+                        'status' => $booking->status,
+                        'created_at' => $booking->created_at->format('Y-m-d H:i:s'),
+                        'updated_at' => $booking->updated_at->format('Y-m-d H:i:s'),
+                        'deleted_at' => $booking->deleted_at ? $booking->deleted_at->format('Y-m-d H:i:s') : null,
+                        'facility' => $booking->facility->toArray(),
+                    ];
+                });
+                $jsonData = $formattedBookings->toJson();
+            }
+
+            // Define the path for the data file inside the python_ai/data folder
+            $filePath = base_path('python_ai/data/historical_bookings.json');
+
+            // Check if the directory exists, if not, create it
+            if (!File::isDirectory(dirname($filePath))) {
+                File::makeDirectory(dirname($filePath), 0777, true, true);
+            }
+
+            // Write the JSON data to the file
+            File::put($filePath, $jsonData);
+
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            Log::error('AI data export failed: ' . $e->getMessage());
+            // Write an empty array to prevent the Python script from crashing
+            File::put(base_path('python_ai/data/historical_bookings.json'), '[]');
+        }
+    }
+    
+    /**
+     * Displays the facility usage forecast.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function forecast()
+    {
+        // Add this line to clear the config and ensure the latest data is used
+        Artisan::call('cache:clear');
+        
+        // First, export the latest booking data to a JSON file
+        $this->exportBookingDataForAI();
+
+        // 1. Define the start and end dates for the forecast
+        $start_date = now()->addDay()->format('Y-m-d');
+        $end_date = now()->addMonths(6)->format('Y-m-d'); // Forecasting 6 months out
+
+        // 2. Build the command to call the Python script
+        $python_script_path = base_path('python_ai/forecast.py');
+        $command = "python " . escapeshellarg($python_script_path) . " " . escapeshellarg($start_date) . " " . escapeshellarg($end_date);
+
+        // 3. Execute the command and capture the output
+        $output = shell_exec($command);
+
+        // 4. Decode the JSON output from the Python script
+        $forecast_data = json_decode($output, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $forecast_data = ['error' => 'Failed to decode forecast data. Raw output: ' . $output];
+        }
+
+        // 5. Pass the forecast data to a view
+        return view('forecast', compact('forecast_data'));
     }
 }

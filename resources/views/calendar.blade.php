@@ -60,6 +60,7 @@
 </div>
 
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const calendarEl = document.getElementById('calendar');
@@ -105,7 +106,11 @@
                         modalBookingContent.classList.remove('opacity-0', 'scale-95');
                     }, 10);
                 } else {
-                    alert('Please select a facility from the list first!');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Selection Required',
+                        text: 'Please select a facility from the list first!'
+                    });
                 }
             }
         });
