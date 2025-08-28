@@ -1,18 +1,33 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\FacilityController;
 
-// Dashboard route
+// Homepage (Dashboard na agad)
 Route::get('/', function () {
-    return view('dashboard');
-})->name('dashboard');
+    return view('dashboard'); 
+})->name('home');
 
-// Facility CRUD routes
-Route::get('/facilities', [FacilityController::class, 'index'])->name('facilities.index');
-Route::get('/facilities/create', [FacilityController::class, 'create'])->name('facilities.create');
-Route::post('/facilities', [FacilityController::class, 'store'])->name('facilities.store');
-Route::get('/facilities/{id}', [FacilityController::class, 'show'])->name('facilities.show');
-Route::get('/facilities/{id}/edit', [FacilityController::class, 'edit'])->name('facilities.edit');
-Route::put('/facilities/{id}', [FacilityController::class, 'update'])->name('facilities.update');
-Route::delete('/facilities/{id}', [FacilityController::class, 'destroy'])->name('facilities.destroy');
+Route::get('/facilities', function () {
+    $facilities = [
+        (object)[
+            'name' => 'Municipal Gymnasium',
+            'location' => 'Poblacion',
+            'capacity' => 500,
+            'status' => 'Available',
+        ],
+        (object)[
+            'name' => 'Multi-purpose Hall',
+            'location' => 'Barangay San Isidro',
+            'capacity' => 200,
+            'status' => 'Not Available',
+        ],
+        (object)[
+            'name' => 'Conference Room',
+            'location' => 'LGU Building',
+            'capacity' => 50,
+            'status' => 'Available',
+        ],
+    ];
+
+    return view('FacilityList', compact('facilities'));
+})->name('facility.list');

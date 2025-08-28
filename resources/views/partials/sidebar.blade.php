@@ -27,9 +27,7 @@
     </script>
 </head>
 <body class="bg-lgu-bg">
-    <!-- Admin Sidebar -->
     <div id="admin-sidebar" class="fixed left-0 top-0 h-full w-64 bg-lgu-headline shadow-2xl transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 overflow-hidden flex flex-col">
-        <!-- Sidebar Header -->
         <div class="flex items-center justify-between p-4 border-b border-lgu-stroke">
             <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-lgu-highlight">
@@ -40,7 +38,6 @@
                     <p class="text-gray-300 text-xs">Infrastructure Panel</p>
                 </div>
             </div>
-            <!-- Close button for mobile -->
             <button id="sidebar-close" class="lg:hidden text-white hover:text-lgu-highlight">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -48,7 +45,6 @@
             </button>
         </div>
 
-        <!-- Admin Profile Section -->
         <div class="p-4 border-b border-lgu-stroke">
             <div class="flex items-center space-x-3">
                 <div class="w-12 h-12 bg-lgu-highlight rounded-full flex items-center justify-center">
@@ -67,14 +63,12 @@
             </div>
         </div>
 
-        <!-- Navigation Menu -->
         <nav class="flex-1 overflow-y-auto overflow-x-hidden py-4">
-            <!-- Dashboard -->
             <div class="px-4 mb-6">
                 <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Main</h4>
                 <ul class="space-y-1">
                     <li>
-                        <a href="#dashboard" class="sidebar-link active flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
+                        <a href="{{ route('home') }}" class="sidebar-link active flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
                             <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
                             </svg>
@@ -92,7 +86,6 @@
                 </ul>
             </div>
 
-            <!-- Facility Management -->
             <div class="px-4 mb-6">
                 <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Facility Reservation</h4>
                 <ul class="space-y-1">
@@ -100,7 +93,8 @@
                         <button class="sidebar-dropdown w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-lgu-stroke rounded-lg transition-colors duration-200">
                             <div class="flex items-center">
                                 <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M6 2a1 1 0 000 2h8a1 1 0 100-2H6zM3 6a2 2 0 012-2h10a2 2 0 012 2v1H3V6zm0 3h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                                    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
+                                    <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1V8a1 1 0 00-1-1h-3z"/>
                                 </svg>
                                 Facility Directory and Calendar
                             </div>
@@ -109,11 +103,10 @@
                             </svg>
                         </button>
                         <ul class="sidebar-submenu hidden ml-8 mt-2 space-y-1">
-                            <li><a href="#roads-overview" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Facility List</a></li>
-                            <li><a href="#road-projects" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Facility Location</a></li>
-                            <li><a href="#road-maintenance" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Calendar Interface</a></li>
-                            <li><a href="#traffic-management" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Availabilty Status</a></li>
-                            <li><a href="#traffic-management" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Facilty Booking</a></li>
+                            <li><a href="{{ route('facility.list') }}" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Facility Location</a></li>
+                            <li><a href="#road-projects" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Active Projects</a></li>
+                            <li><a href="#road-maintenance" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Maintenance</a></li>
+                            <li><a href="#traffic-management" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Traffic Management</a></li>
                         </ul>
                     </li>
                     
@@ -121,7 +114,7 @@
                         <button class="sidebar-dropdown w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-lgu-stroke rounded-lg transition-colors duration-200">
                             <div class="flex items-center">
                                 <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h5.586A2 2 0 0013 17.414l3.707-3.707A1 1 0 0017 13V4a2 2 0 00-2-2H6z"/>
+                                    <path fill-rule="evenodd" d="M5.05 3.636a1 1 0 010 1.414 7 7 0 000 9.9 1 1 0 11-1.414 1.414 9 9 0 010-12.728 1 1 0 011.414 0zm9.9 0a1 1 0 011.414 0 9 9 0 010 12.728 1 1 0 11-1.414-1.414 7 7 0 000-9.9 1 1 0 010-1.414z" clip-rule="evenodd"/>
                                 </svg>
                                 Online Booking and Approval
                             </div>
@@ -130,9 +123,9 @@
                             </svg>
                         </button>
                         <ul class="sidebar-submenu hidden ml-8 mt-2 space-y-1">
-                            <li><a href="#water-overview" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Reservation Request</a></li>
-                            <li><a href="#water-quality" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Suggesting Booking</a></li>
-                            <li><a href="#water-distribution" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Document Upload Verification</a></li>
+                            <li><a href="#water-overview" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">System Overview</a></li>
+                            <li><a href="#water-quality" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Quality Monitoring</a></li>
+                            <li><a href="#water-distribution" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Distribution Network</a></li>
                             <li><a href="#water-treatment" class="sidebar-link block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg">Treatment Plants</a></li>
                         </ul>
                     </li>
@@ -141,12 +134,12 @@
                         <button class="sidebar-dropdown w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-lgu-stroke rounded-lg transition-colors duration-200">
                             <div class="flex items-center">
                                 <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v1H2V6zm0 3h16v5a2 2 0 01-2 2H4a2 2 0 01-2-2V9zm3 3a1 1 0 100 2h2a1 1 0 100-2H5z"/>
+                                    <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.477.859h4z"/>
                                 </svg>
                                 Usage Fee and Payment
                             </div>
                             <svg class="w-4 h-4 transform transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20">
-                                                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
                             </svg>
                         </button>
                         <ul class="sidebar-submenu hidden ml-8 mt-2 space-y-1">
@@ -161,7 +154,7 @@
                         <button class="sidebar-dropdown w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-lgu-stroke rounded-lg transition-colors duration-200">
                             <div class="flex items-center">
                                 <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.721-1.36 3.486 0l6.518 11.598c.75 1.336-.213 3.003-1.743 3.003H3.482c-1.53 0-2.493-1.667-1.743-3.003L8.257 3.1zM11 14a1 1 0 11-2 0 1 1 0 012 0zm-1-2a1 1 0 01-1-1V7a1 1 0 112 0v4a1 1 0 01-1 1z" clip-rule="evenodd"/>
+                                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zM3 16a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
                                 </svg>
                                 Schedule Conflict Alert
                             </div>
@@ -181,9 +174,9 @@
                         <button class="sidebar-dropdown w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-lgu-stroke rounded-lg transition-colors duration-200">
                             <div class="flex items-center">
                                 <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M3 3a1 1 0 000 2h1v11a1 1 0 102 0V5h1a1 1 0 100-2H3zm6 4a1 1 0 011-1h1v9a1 1 0 11-2 0V7zm5-3a1 1 0 000 2h1v11a1 1 0 102 0V4h1a1 1 0 100-2h-4z"/>
+                                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zM3 16a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
                                 </svg>
-                                Usage Reports and Feedback
+                                Usage Reports and Feedback  
                             </div>
                             <svg class="w-4 h-4 transform transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
@@ -201,7 +194,6 @@
             
             
 
-            <!-- User Management -->
             <div class="px-4 mb-6">
                 <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Users</h4>
                 <ul class="space-y-1">
@@ -232,7 +224,6 @@
                 </ul>
             </div>
 
-            <!-- Settings -->
             <div class="px-4 mb-6">
                 <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Settings</h4>
                 <ul class="space-y-1">
@@ -265,11 +256,7 @@
             </div>
         </nav>
 
-        <!-- Sidebar Footer -->
         <div class="p-4 border-t border-lgu-stroke flex-shrink-0">
-
-
-            <!-- User Actions -->
             <div class="space-y-2">
                 <button class="w-full flex items-center px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-lgu-stroke rounded-lg transition-colors duration-200">
                     <svg class="w-4 h-4 mr-3" fill="currentColor" viewBox="0 0 20 20">
@@ -293,17 +280,14 @@
         </div>
     </div>
 
-    <!-- Mobile Sidebar Overlay -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden"></div>
 
-    <!-- Mobile Sidebar Toggle Button -->
     <button id="sidebar-toggle" class="fixed top-4 left-4 z-50 lg:hidden bg-lgu-headline text-white p-2 rounded-lg shadow-lg hover:bg-lgu-stroke transition-colors duration-200">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
         </svg>
     </button>
 
-    <!-- Sidebar JavaScript -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const sidebar = document.getElementById('admin-sidebar');
@@ -335,13 +319,9 @@
                     const submenu = this.nextElementSibling;
                     const arrow = this.querySelector('svg:last-child');
                     
-                    // Toggle submenu
                     submenu.classList.toggle('hidden');
-                    
-                    // Rotate arrow
                     arrow.classList.toggle('rotate-180');
                     
-                    // Close other dropdowns
                     dropdownButtons.forEach(otherButton => {
                         if (otherButton !== this) {
                             const otherSubmenu = otherButton.nextElementSibling;
@@ -353,28 +333,38 @@
                 });
             });
 
-            // Active link functionality
+            // Active link and navigation functionality
             sidebarLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    // Remove active class from all links
-                    sidebarLinks.forEach(l => l.classList.remove('active'));
-                    
-                    // Add active class to clicked link
-                    this.classList.add('active');
-                    
-                    // Close sidebar on mobile after clicking a link
-                    if (window.innerWidth < 1024) {
-                        closeSidebar();
-                    }
-                    
-                    // Simulate navigation (replace with actual routing logic)
                     const href = this.getAttribute('href');
-                    console.log('Navigating to:', href);
-                    
-                    // You can add actual navigation logic here
-                    // For example: window.location.hash = href;
+
+                    if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+                        // Allow external links to navigate normally. No e.preventDefault() here.
+                        console.log('Navigating to external URL:', href);
+                    } else {
+                        // For internal links (e.g., #dashboard), prevent default and handle with JS.
+                        e.preventDefault(); 
+                        
+                        // Remove active class from all links
+                        sidebarLinks.forEach(l => l.classList.remove('active'));
+                        
+                        // Add active class to clicked link
+                        this.classList.add('active');
+                        
+                        // Close sidebar on mobile after clicking a link
+                        if (window.innerWidth < 1024) {
+                            closeSidebar();
+                        }
+                        
+                        // Simulate smooth scrolling for internal links
+                        const targetElement = document.querySelector(href);
+                        if (targetElement) {
+                            targetElement.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }
+                    }
                 });
             });
 
@@ -386,8 +376,6 @@
                     // window.location.href = '/login';
                 }
             });
-
-
 
             // Responsive sidebar behavior
             window.addEventListener('resize', function() {
@@ -404,7 +392,6 @@
                 const badges = document.querySelectorAll('.sidebar-link span');
                 badges.forEach(badge => {
                     if (badge.textContent && !isNaN(badge.textContent)) {
-                        // Simulate random updates for demo purposes
                         if (Math.random() > 0.8) {
                             const currentCount = parseInt(badge.textContent);
                             badge.textContent = currentCount + Math.floor(Math.random() * 3);
@@ -412,72 +399,54 @@
                     }
                 });
             }
-
-            // Update badges every 30 seconds (for demo purposes)
             setInterval(updateNotificationBadges, 30000);
 
-            // Smooth scrolling for anchor links
-            document.addEventListener('click', function(e) {
-                if (e.target.matches('a[href^="#"]')) {
-                    e.preventDefault();
-                    const targetId = e.target.getAttribute('href');
-                    const targetElement = document.querySelector(targetId);
-                    
-                    if (targetElement) {
-                        targetElement.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
-                    }
+            // CSS for active states and transitions
+            const style = document.createElement('style');
+            style.textContent = `
+                .sidebar-link {
+                    color: #9CA3AF;
                 }
-            });
+                
+                .sidebar-link:hover {
+                    color: #FFFFFF;
+                    background-color: #00332c;
+                }
+                
+                .sidebar-link.active {
+                    color: #faae2b;
+                    background-color: #00332c;
+                    border-left: 3px solid #faae2b;
+                }
+                
+                .sidebar-submenu {
+                    transition: all 0.3s ease-in-out;
+                }
+                
+                .rotate-180 {
+                    transform: rotate(180deg);
+                }
+                
+                /* Custom scrollbar for sidebar */
+                #admin-sidebar nav::-webkit-scrollbar {
+                    width: 4px;
+                }
+                
+                #admin-sidebar nav::-webkit-scrollbar-track {
+                    background: #00332c;
+                }
+                
+                #admin-sidebar nav::-webkit-scrollbar-thumb {
+                    background: #faae2b;
+                    border-radius: 2px;
+                }
+                
+                #admin-sidebar nav::-webkit-scrollbar-thumb:hover {
+                    background: #e09900;
+                }
+            `;
+            document.head.appendChild(style);
         });
-
-        // CSS for active states and transitions
-        const style = document.createElement('style');
-        style.textContent = `
-            .sidebar-link {
-                color: #9CA3AF;
-            }
-            
-            .sidebar-link:hover {
-                color: #FFFFFF;
-                background-color: #00332c;
-            }
-            
-            .sidebar-link.active {
-                color: #faae2b;
-                background-color: #00332c;
-                border-left: 3px solid #faae2b;
-            }
-            
-            .sidebar-submenu {
-                transition: all 0.3s ease-in-out;
-            }
-            
-            .rotate-180 {
-                transform: rotate(180deg);
-            }
-            
-            /* Custom scrollbar for sidebar */
-            #admin-sidebar nav::-webkit-scrollbar {
-                width: 4px;
-            }
-            
-            #admin-sidebar nav::-webkit-scrollbar-track {
-                background: #00332c;
-            }
-            
-            #admin-sidebar nav::-webkit-scrollbar-thumb {
-                background: #faae2b;
-                border-radius: 2px;
-            }
-            
-            #admin-sidebar nav::-webkit-scrollbar-thumb:hover {
-                background: #e09900;
-            }
-        `;
-        document.head.appendChild(style);
     </script>
 </body>
 </html>
