@@ -87,7 +87,7 @@
                 <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Main</h4>
                 <ul class="space-y-1">
                     <li>
-                        <a href="#dashboard" class="sidebar-link active flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
+                        <a href="{{ route('home') }}" class="sidebar-link active flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
                             <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
                             </svg>
@@ -105,7 +105,7 @@
                 </ul>
             </div>
 
-            <!-- Infrastructure Management -->
+            <!-- Facility Management -->
             <div class="px-4 mb-6">
                 <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Public Facilities Reservation System</h4>
                 <ul class="space-y-1">
@@ -123,8 +123,8 @@
                             </svg>
                         </button>
                         <ul class="sidebar-submenu hidden ml-8 mt-2 space-y-1">
-                            <li><a href="#facility-management" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm6 6H7v2h6v-2z" clip-rule="evenodd"/></svg>Facility Management</a></li>
-                            <li><a href="#calendar-availability" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>Calendar & Availability</a></li>
+                            <li><a href="{{ route('facility.list') }}" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm6 6H7v2h6v-2z" clip-rule="evenodd"/></svg>Facility Management</a></li>
+                            <li><a href="{{ route('calendar') }}" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>Calendar & Availability</a></li>
                         </ul>
                     </li>
                     
@@ -141,8 +141,8 @@
                             </svg>
                         </button>
                         <ul class="sidebar-submenu hidden ml-8 mt-2 space-y-1">
-                            <li><a href="#new-reservations" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>New Reservations</a></li>
-                            <li><a href="#verification-approval" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Verification & Approval</a></li>
+                            <li><a href="{{ route('new-reservation') }}" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>New Reservations</a></li>
+                            <li><a href="{{ route('bookings.approval') }}" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Verification & Approval</a></li>
                             <li><a href="#reservation-status" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>Reservation Status</a></li>
                         </ul>
                     </li>
@@ -299,7 +299,7 @@
             // Active link functionality
             sidebarLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
-                    e.preventDefault();
+                    
                     
                     // Remove active class from all links
                     sidebarLinks.forEach(l => l.classList.remove('active'));
