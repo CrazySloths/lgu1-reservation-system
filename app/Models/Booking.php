@@ -49,7 +49,14 @@ class Booking extends Model
         'admin_notes',
         'approved_by',
         'approved_at',
-        'rejected_reason'
+        'rejected_reason',
+        // Document file paths
+        'valid_id_path',
+        'id_back_path',
+        'id_selfie_path',
+        'authorization_letter_path',
+        'event_proposal_path',
+        'digital_signature'
     ];
 
     /**
@@ -80,6 +87,14 @@ class Booking extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Get the payment slip for this booking.
+     */
+    public function paymentSlip()
+    {
+        return $this->hasOne(PaymentSlip::class);
     }
 
     /**

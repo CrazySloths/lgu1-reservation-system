@@ -36,8 +36,8 @@
                     <img src="{{ asset('image/logo.jpg') }}" alt="LGU Logo" class="w-full h-full object-cover">
                 </div>
                 <div>
-                    <h2 class="text-white font-bold text-sm">Client</h2>
-                    <p class="text-gray-300 text-xs">Location City</p>
+                    <h2 class="text-white font-bold text-sm">Local Government Unit</h2>
+                    <p class="text-gray-300 text-xs">LGU1</p>
                 </div>
             </div>
             <div class="relative">
@@ -50,7 +50,10 @@
                     <a href="#" class="block px-4 py-2 text-sm text-lgu-paragraph hover:bg-lgu-bg">Help & Support</a>
                     <a href="#" class="block px-4 py-2 text-sm text-lgu-paragraph hover:bg-lgu-bg">Account & Settings</a>
                     <div class="border-t border-gray-200 my-1"></div>
-                    <a href="#" id="logout-btn" class="block px-4 py-2 text-sm text-lgu-tertiary hover:bg-lgu-bg">Logout</a>
+                    <form method="POST" action="{{ route('logout') }}" class="block" id="adminLogoutForm">
+                        @csrf
+                        <button type="button" onclick="confirmAdminLogout()" class="w-full text-left px-4 py-2 text-sm text-lgu-tertiary hover:bg-lgu-bg">Logout</button>
+                    </form>
                 </div>
             </div>
             <!-- Close button for mobile -->
@@ -62,21 +65,41 @@
         </div>
 
         <!-- Admin Profile Section -->
-        <div class="p-4 border-b border-lgu-stroke">
-            <div class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-lgu-highlight rounded-full flex items-center justify-center">
-                    <svg class="w-7 h-7 text-lgu-button-text" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-                <div>
-                    <h3 class="text-white font-semibold text-sm">Name</h3>
-                    <p class="text-gray-300 text-xs">Role</p>
-                    <div class="flex items-center mt-1">
-                        <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                        <span class="text-green-400 text-xs">Online</span>
+        <div class="p-6 border-b border-lgu-stroke">
+            <div class="text-center">
+                @auth
+                    @php
+                        $admin = Auth::user();
+                        // Generate admin initials
+                        $nameParts = explode(' ', $admin->name);
+                        $firstName = $nameParts[0] ?? 'A';
+                        $lastName = end($nameParts);
+                        $adminInitials = strtoupper(
+                            substr($firstName, 0, 1) . 
+                            (($lastName !== $firstName) ? substr($lastName, 0, 1) : 'D')
+                        );
+                    @endphp
+                    <!-- Large Centered Admin Avatar -->
+                    <div class="w-20 h-20 bg-lgu-highlight rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg border-2 border-lgu-button">
+                        <span class="text-lgu-button-text font-bold text-2xl">{{ $adminInitials }}</span>
                     </div>
+                    
+                    <!-- Admin Information -->
+                    <div class="space-y-2">
+                        <h3 class="text-white font-semibold text-base leading-tight">{{ $admin->name }}</h3>
+                        <p class="text-gray-300 text-sm">{{ $admin->email }}</p>
+                        
+                        <!-- Admin Role Badge -->
+                        <div class="flex items-center justify-center mt-3">
+                            <div class="flex items-center px-3 py-1 rounded-full bg-blue-900/30">
+                                <svg class="w-3 h-3 text-blue-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                                <span class="text-blue-400 text-xs font-medium">{{ ucfirst($admin->role) }} Administrator</span>
+                            </div>
                 </div>
+                    </div>
+                @endauth
             </div>
         </div>
 
@@ -95,6 +118,22 @@
                         </a>
                     </li>
                     <li>
+                        <a href="{{ route('admin.reservations.index') }}" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
+                            <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                            </svg>
+                            Reservation Review
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.payment-slips.index') }}" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
+                            <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"/>
+                            </svg>
+                            Payment Management
+                        </a>
+                    </li>
+                    <li>
                         <a href="#analytics" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
                             <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
@@ -105,9 +144,60 @@
                 </ul>
             </div>
 
+            <!-- City Event Management -->
+            <div class="px-4 mb-6">
+                <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">City Event Management</h4>
+                <ul class="space-y-1">
+                    <li>
+                        <button class="sidebar-dropdown w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-lgu-stroke rounded-lg transition-colors duration-200">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5 4a1 1 0 00-1 1v10a1 1 0 001 1h10a1 1 0 001-1V5a1 1 0 00-1-1H5zm0 2v6h10V6H5z" clip-rule="evenodd"/>
+                                    <path d="M3 4a2 2 0 012-2h10a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V4z"/>
+                                </svg>
+                                Official City Events
+                            </div>
+                            <svg class="w-4 h-4 transform transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        <ul class="sidebar-submenu hidden ml-8 mt-2 space-y-1">
+                            <li><a href="#new-city-event" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>Book City Event</a></li>
+                            <li><a href="#city-event-calendar" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>City Event Calendar</a></li>
+                            <li><a href="#mayor-permissions" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 2a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 4a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>Mayor's Authorization</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+                    
+            <!-- Citizen Reservation Oversight -->
+            <div class="px-4 mb-6">
+                <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Citizen Reservation Management</h4>
+                <ul class="space-y-1">
+                    <li>
+                        <button class="sidebar-dropdown w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-lgu-stroke rounded-lg transition-colors duration-200">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                Approval & Oversight
+                            </div>
+                            <svg class="w-4 h-4 transform transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        <ul class="sidebar-submenu hidden ml-8 mt-2 space-y-1">
+                            <li><a href="{{ route('bookings.approval') }}" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Pending Approvals</a></li>
+                            <li><a href="{{ route('reservation.status') }}" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>All Reservations</a></li>
+                            <li><a href="#conflict-resolution" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>Schedule Conflicts</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
             <!-- Facility Management -->
             <div class="px-4 mb-6">
-                <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Public Facilities Reservation System</h4>
+                <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Facility Administration</h4>
                 <ul class="space-y-1">
                     <li>
                         <button class="sidebar-dropdown w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-lgu-stroke rounded-lg transition-colors duration-200">
@@ -116,119 +206,72 @@
                                     <path fill-rule="evenodd" d="M4 16a2 2 0 002 2h8a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v10zM6 6h8v10H6V6z" clip-rule="evenodd"/>
                                     <path d="M2 8a2 2 0 012-2h1V4a2 2 0 012-2h6a2 2 0 012 2v2h1a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V8z"/>
                                 </svg>
-                                Facility Directory and Calendar
+                                Facility Management
                             </div>
                             <svg class="w-4 h-4 transform transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
                             </svg>
                         </button>
                         <ul class="sidebar-submenu hidden ml-8 mt-2 space-y-1">
-                            <li><a href="{{ route('facility.list') }}" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm6 6H7v2h6v-2z" clip-rule="evenodd"/></svg>Facility Management</a></li>
-                            <li><a href="{{ route('calendar') }}" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>Calendar & Availability</a></li>
-                        </ul>
-                    </li>
-                    
-                    <li>
-                        <button class="sidebar-dropdown w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-lgu-stroke rounded-lg transition-colors duration-200">
-                            <div class="flex items-center">
-                                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
-                                </svg>
-                                Online Booking and Approval
-                            </div>
-                            <svg class="w-4 h-4 transform transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                            </svg>
-                        </button>
-                        <ul class="sidebar-submenu hidden ml-8 mt-2 space-y-1">
-                            <li><a href="{{ route('new-reservation') }}" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>New Reservations</a></li>
-                            <li><a href="{{ route('bookings.approval') }}" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Verification & Approval</a></li>
-                            <li><a href="{{ route('reservation.status') }}" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>Reservation Status</a></li>
+                            <li><a href="{{ route('facility.list') }}" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm6 6H7v2h6v-2z" clip-rule="evenodd"/></svg>Manage Facilities</a></li>
+                            <li><a href="{{ route('calendar') }}" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>Calendar Overview</a></li>
+                            <li><a href="#facility-maintenance" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/></svg>Maintenance Logs</a></li>
                         </ul>
                     </li>
 
-                    <li>
-                        <button class="sidebar-dropdown w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-lgu-stroke rounded-lg transition-colors duration-200">
-                            <div class="flex items-center">
-                                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
-                                    <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/>
-                                </svg>
-                                Usage Fee Calculation and Payment
-                            </div>
-                            <svg class="w-4 h-4 transform transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                            </svg>
-                        </button>
-                        <ul class="sidebar-submenu hidden ml-8 mt-2 space-y-1">
-                            <li><a href="#fee-calculation-orders" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 000 2h6a1 1 0 100-2H7zm6 7a1 1 0 01-1 1H8a1 1 0 110-2h4a1 1 0 011 1zm-1 4a1 1 0 100-2H8a1 1 0 100 2h4z" clip-rule="evenodd"/></svg>Fee Calculation & Orders</a></li>
-                            <li><a href="#payment-management" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/></svg>Payment Management</a></li>
-                        </ul>
-                    </li>
 
-                    <li>
-                        <button class="sidebar-dropdown w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-lgu-stroke rounded-lg transition-colors duration-200">
-                            <div class="flex items-center">
-                                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                </svg>
-                                Schedule Conflict Alert
-                            </div>
-                            <svg class="w-4 h-4 transform transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                            </svg>
-                        </button>
-                        <ul class="sidebar-submenu hidden ml-8 mt-2 space-y-1">
-                            <li><a href="#conflict-management" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>Conflict Management</a></li>
-                            <li><a href="#resolution-logging" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 16a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>Resolution Logging</a></li>
-                        </ul>
-                    </li>
-
-                    <li>
-                        <button class="sidebar-dropdown w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-lgu-stroke rounded-lg transition-colors duration-200">
-                            <div class="flex items-center">
-                                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
-                                </svg>
-                                Usage Reports and Feedback
-                            </div>
-                            <svg class="w-4 h-4 transform transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                            </svg>
-                        </button>
-                        <ul class="sidebar-submenu hidden ml-8 mt-2 space-y-1">
-                            <li><a href="#analytics-reports" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>Analytics & Reports</a></li>
-                            <li><a href="#feedback-insights" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/></svg>Feedback & Insights</a></li>
-                        </ul>
-                    </li>
                 </ul>
             </div>
-            <!-- User Management -->
+            <!-- Citizen Account Management -->
             <div class="px-4 mb-6">
-                <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Users</h4>
+                <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Account Management</h4>
                 <ul class="space-y-1">
                     <li>
-                        <a href="#user-management" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
+                        <a href="{{ route('admin.citizens') }}" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
+                                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Citizen Verification
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.citizens') }}" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
+                                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                            </svg>
+                            Pending Accounts
+                            <span class="ml-auto bg-yellow-500 text-yellow-900 text-xs px-2 py-0.5 rounded-full">2</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#all-citizens" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
                             <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
                             </svg>
-                            User Management
+                            All Citizen Accounts
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Reports & Analytics -->
+            <div class="px-4 mb-6">
+                <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Reports</h4>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="{{ route('forecast') }}" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
+                            <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+                            </svg>
+                            Usage Analytics
                         </a>
                     </li>
                     <li>
-                        <a href="#roles-permissions" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
+                        <a href="#monthly-reports" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
                             <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                                <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 000 2h6a1 1 0 100-2H7zm6 7a1 1 0 01-1 1H8a1 1 0 110-2h4a1 1 0 011 1zm-1 4a1 1 0 100-2H8a1 1 0 100 2h4z" clip-rule="evenodd"/>
                             </svg>
-                            Roles & Permissions
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#citizen-accounts" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
-                            <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                            </svg>
-                            Citizen Accounts
+                            Monthly Reports
                         </a>
                     </li>
                 </ul>
@@ -321,17 +364,40 @@
                 });
             });
 
-            // Logout functionality
-            const logoutBtn = document.getElementById('logout-btn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function() {
-                    if (confirm('Are you sure you want to logout?')) {
-                        // Add logout logic here
-                        alert('Logging out...');
-                        // window.location.href = '/login';
+            // Admin SweetAlert2 logout confirmation
+            window.confirmAdminLogout = function() {
+                Swal.fire({
+                    title: 'Sign Out?',
+                    text: "You will be logged out of the administrative system.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#fa5246',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Yes, sign me out',
+                    cancelButtonText: 'Cancel',
+                    background: '#ffffff',
+                    customClass: {
+                        title: 'text-gray-900',
+                        content: 'text-gray-600',
+                        confirmButton: 'bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg',
+                        cancelButton: 'bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Show logout success message
+                        Swal.fire({
+                            title: 'Signing out...',
+                            text: 'Thank you for using the LGU1 Admin Portal!',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            // Submit the logout form
+                            document.getElementById('adminLogoutForm').submit();
+                        });
                     }
                 });
-            }
+            };
 
 
 

@@ -1,18 +1,19 @@
 @extends('citizen.layouts.app')
 
-@section('title', 'Citizen Login - LGU1 Portal')
+@section('title', isset($isAdminLogin) && $isAdminLogin ? 'Admin Login - LGU1 Portal' : 'Citizen Login - LGU1 Portal')
 
 @section('content')
 <div class="bg-white shadow-xl rounded-lg p-8 max-w-md mx-auto">
     <div class="text-center mb-8">
-        <div class="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-            <i class="fas fa-user-circle text-2xl text-blue-600"></i>
+        <div class="mx-auto w-16 h-16 {{ isset($isAdminLogin) && $isAdminLogin ? 'bg-red-100' : 'bg-blue-100' }} rounded-full flex items-center justify-center mb-4">
+            <i class="fas fa-{{ isset($isAdminLogin) && $isAdminLogin ? 'shield-alt' : 'user-circle' }} text-2xl {{ isset($isAdminLogin) && $isAdminLogin ? 'text-red-600' : 'text-blue-600' }}"></i>
         </div>
-        <h2 class="text-2xl font-bold text-gray-900">Welcome Back</h2>
-        <p class="text-gray-600 mt-1">Sign in to your citizen account</p>
+        <h2 class="text-2xl font-bold text-gray-900">{{ isset($isAdminLogin) && $isAdminLogin ? 'Admin Portal' : 'Welcome Back' }}</h2>
+        <p class="text-gray-600 mt-1">{{ isset($isAdminLogin) && $isAdminLogin ? 'Sign in to the administrative system' : 'Sign in to your citizen account' }}</p>
     </div>
 
-    <!-- Social Login Options -->
+    @if(!isset($isAdminLogin) || !$isAdminLogin)
+    <!-- Social Login Options (Citizen Only) -->
     <div class="mb-6">
         <div class="grid grid-cols-2 gap-3">
             <!-- Facebook Login -->
@@ -39,8 +40,9 @@
             </div>
         </div>
     </div>
+    @endif
 
-    <form method="POST" action="{{ route('citizen.login.submit') }}" class="space-y-4">
+    <form method="POST" action="{{ isset($isAdminLogin) && $isAdminLogin ? route('admin.login.submit') : route('citizen.login.submit') }}" class="space-y-4">
         @csrf
 
         <!-- Email Address -->
@@ -80,8 +82,13 @@
                        type="password" 
                        autocomplete="current-password" 
                        required
-                       class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('password') border-red-500 @enderror"
+                       class="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('password') border-red-500 @enderror"
                        placeholder="Enter your password">
+                <button type="button" 
+                        onclick="togglePassword('password')" 
+                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                    <i id="password-toggle-icon" class="fas fa-eye"></i>
+                </button>
             </div>
             @error('password')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -143,6 +150,22 @@
 
 @push('scripts')
 <script>
+// Password visibility toggle function
+function togglePassword(inputId) {
+    const passwordInput = document.getElementById(inputId);
+    const toggleIcon = document.getElementById(inputId + '-toggle-icon');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.classList.remove('fa-eye');
+        toggleIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        toggleIcon.classList.remove('fa-eye-slash');
+        toggleIcon.classList.add('fa-eye');
+    }
+}
+
 // Social Media Login Functions
 function loginWithFacebook() {
     Swal.fire({

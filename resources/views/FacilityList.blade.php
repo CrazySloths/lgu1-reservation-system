@@ -97,7 +97,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="name" class="block text-sm font-medium text-gray-700">Facility Name <span class="text-red-500">*</span></label>
-                        <input type="text" name="name" id="name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-lgu-headline focus:ring focus:ring-lgu-headline focus:ring-opacity-50">
+                    <input type="text" name="name" id="name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-lgu-headline focus:ring focus:ring-lgu-headline focus:ring-opacity-50">
                     </div>
                     
                     <div>
@@ -129,9 +129,9 @@
                                 <input type="number" name="base_rate" id="base_rate" required min="5000" value="5000" class="block w-full pl-7 pr-12 border-gray-300 rounded-md focus:ring-lgu-headline focus:border-lgu-headline">
                             </div>
                             <p class="text-xs text-gray-500 mt-1">Minimum ₱5,000 for 3 hours</p>
-                        </div>
-                        
-                        <div>
+                </div>
+                
+                <div>
                             <label for="hourly_rate" class="block text-sm font-medium text-gray-700">Extension Rate (per hour) <span class="text-red-500">*</span></label>
                             <div class="mt-1 relative rounded-md shadow-sm">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -143,7 +143,7 @@
                         </div>
                     </div>
                 </div>
-
+                
                 <!-- Facility Type -->
                 <div>
                     <label for="facility_type" class="block text-sm font-medium text-gray-700">Facility Type <span class="text-red-500">*</span></label>
@@ -204,7 +204,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="edit_name" class="block text-sm font-medium text-gray-700">Facility Name <span class="text-red-500">*</span></label>
-                        <input type="text" name="name" id="edit_name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-lgu-headline focus:ring focus:ring-lgu-headline focus:ring-opacity-50">
+                    <input type="text" name="name" id="edit_name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-lgu-headline focus:ring focus:ring-lgu-headline focus:ring-opacity-50">
                     </div>
                     
                     <div>
@@ -236,9 +236,9 @@
                                 <input type="number" name="base_rate" id="edit_base_rate" required min="5000" value="5000" class="block w-full pl-7 pr-12 border-gray-300 rounded-md focus:ring-lgu-headline focus:border-lgu-headline">
                             </div>
                             <p class="text-xs text-gray-500 mt-1">Minimum ₱5,000 for 3 hours</p>
-                        </div>
-                        
-                        <div>
+                </div>
+                
+                <div>
                             <label for="edit_hourly_rate" class="block text-sm font-medium text-gray-700">Extension Rate (per hour) <span class="text-red-500">*</span></label>
                             <div class="mt-1 relative rounded-md shadow-sm">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -250,7 +250,7 @@
                         </div>
                     </div>
                 </div>
-
+                
                 <!-- Facility Type -->
                 <div>
                     <label for="edit_facility_type" class="block text-sm font-medium text-gray-700">Facility Type <span class="text-red-500">*</span></label>
@@ -334,7 +334,7 @@
                 document.getElementById('currentImage').classList.add('hidden');
             }
 
-            editForm.action = `/facilities/${id}`;
+            editForm.action = `/admin/facilities/${id}`;
 
             editFacilityModal.classList.remove('hidden');
             setTimeout(() => {
@@ -443,6 +443,22 @@ function clearEditImagePreview() {
             setTimeout(() => {
                 window.location.reload(true);
             }, 2100);
+        });
+    </script>
+@endif
+
+@if(session('edit_facility'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Find and click the edit button for the specified facility
+            const facilityId = '{{ session('edit_facility') }}';
+            const editButton = document.querySelector(`.edit-btn[data-id="${facilityId}"]`);
+            if (editButton) {
+                // Wait a moment for the page to fully load, then click the edit button
+                setTimeout(() => {
+                    editButton.click();
+                }, 500);
+            }
         });
     </script>
 @endif

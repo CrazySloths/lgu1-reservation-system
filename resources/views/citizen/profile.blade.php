@@ -1,14 +1,11 @@
-@extends('citizen.layouts.app')
+@extends('citizen.layouts.app-sidebar')
 
 @section('title', 'Profile - LGU1 Citizen Portal')
+@section('page-title', 'My Profile')
+@section('page-description', 'Manage your account information')
 
 @section('content')
 <div class="space-y-6">
-    <!-- Page Header -->
-    <div class="bg-white shadow rounded-lg p-6">
-        <h1 class="text-2xl font-bold text-gray-900">My Profile</h1>
-        <p class="text-gray-600 mt-1">Manage your account information</p>
-    </div>
 
     <!-- Profile Information -->
     <div class="bg-white shadow rounded-lg p-6">

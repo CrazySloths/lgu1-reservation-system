@@ -571,7 +571,7 @@ class FacilityController extends Controller
             'id_type' => 'required|string',
             'id_front' => 'required|file|mimes:jpg,jpeg,png|max:5120',
             'id_back' => 'required|file|mimes:jpg,jpeg,png|max:5120',
-            'id_selfie' => 'required|file|mimes:jpg,jpeg,png|max:5120',
+            'selfie_with_id' => 'required|file|mimes:jpg,jpeg,png|max:5120',
             
             // Optional documents
             'authorization_letter' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
@@ -587,10 +587,9 @@ class FacilityController extends Controller
             // Get facility by name
             $facility = Facility::where('name', $validatedData['facility_name'])->first();
             if (!$facility) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Selected facility not found.'
-                ], 404);
+                return redirect()->back()
+                            ->withInput()
+                            ->withErrors(['facility_name' => 'Selected facility not found.']);
             }
 
             // Initialize AI Recommendation Service
@@ -606,23 +605,16 @@ class FacilityController extends Controller
                 'general'
             );
 
-            // If there are conflicts, return recommendations instead of booking
+            // If there are conflicts, redirect back with conflict information
             if ($aiResponse['status'] === 'conflict') {
-                return response()->json([
-                    'status' => 'conflict',
-                    'message' => $aiResponse['message'],
-                    'recommendations' => $aiResponse['ai_response']['recommendations'] ?? [],
-                    'requested_facility' => [
-                        'id' => $facility->facility_id,
-                        'name' => $facility->name,
-                        'requested_date' => $validatedData['event_date'],
-                        'requested_time' => $validatedData['start_time'] . ' - ' . $validatedData['end_time']
-                    ]
-                ]);
+                return redirect()->back()
+                            ->withInput()
+                            ->with('conflict', $aiResponse['message'])
+                            ->with('recommendations', $aiResponse['ai_response']['recommendations'] ?? []);
             }
 
             // No conflicts detected, proceed with booking
-            return $this->processReservationBooking($validatedData, $facility, $aiService);
+            return $this->processReservationBooking($request, $validatedData, $facility, $aiService);
 
         } catch (\Exception $e) {
             \Log::error('AI-Enhanced Reservation Error:', [
@@ -630,21 +622,20 @@ class FacilityController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return response()->json([
-                'status' => 'error',
-                'message' => 'An error occurred while processing your reservation. Please try again later.'
-            ], 500);
+            return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['error' => 'An error occurred while processing your reservation. Please try again later.']);
         }
     }
 
     /**
      * Process the actual booking when no conflicts exist
      */
-    private function processReservationBooking($validatedData, $facility, $aiService)
+    private function processReservationBooking($request, $validatedData, $facility, $aiService)
     {
         try {
             // Handle file uploads
-            $uploadedFiles = $this->handleReservationFileUploads($validatedData);
+            $uploadedFiles = $this->handleReservationFileUploads($request, $validatedData);
 
             // Calculate fees based on facility pricing
             $duration = $this->calculateEventDuration($validatedData['start_time'], $validatedData['end_time']);
@@ -670,6 +661,8 @@ class FacilityController extends Controller
                 
                 // Store file paths
                 'valid_id_path' => $uploadedFiles['id_front'] ?? null,
+                'id_back_path' => $uploadedFiles['id_back'] ?? null,
+                'id_selfie_path' => $uploadedFiles['id_selfie'] ?? null,
                 'authorization_letter_path' => $uploadedFiles['authorization_letter'] ?? null,
                 'event_proposal_path' => $uploadedFiles['event_proposal'] ?? null,
                 'digital_signature' => $uploadedFiles['signature'] ?? null,
@@ -680,16 +673,8 @@ class FacilityController extends Controller
 
             \Log::info('Booking created successfully:', ['booking_id' => $booking->id]);
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Your reservation has been submitted successfully and is pending approval.',
-                'booking_id' => $booking->id,
-                'total_fee' => $totalFee,
-                'facility' => [
-                    'name' => $facility->name,
-                    'location' => $facility->location
-                ]
-            ]);
+            return redirect()->route('citizen.reservation.history')
+                        ->with('success', 'Your reservation has been submitted successfully and is pending approval!');
 
         } catch (\Exception $e) {
             \Log::error('Booking creation failed:', [
@@ -704,40 +689,50 @@ class FacilityController extends Controller
     /**
      * Handle file uploads for citizen reservations
      */
-    private function handleReservationFileUploads($validatedData)
+    private function handleReservationFileUploads($request, $validatedData)
     {
         $uploadedFiles = [];
 
+        \Log::info('Starting file upload handling...', ['files' => array_keys($request->allFiles())]);
+
         // Handle ID verification files
-        if (request()->hasFile('id_front')) {
-            $uploadedFiles['id_front'] = request()->file('id_front')->store('documents/citizen_ids', 'public');
+        if ($request->hasFile('id_front')) {
+            $uploadedFiles['id_front'] = $request->file('id_front')->store('documents/citizen_ids', 'public');
+            \Log::info('ID Front uploaded:', ['path' => $uploadedFiles['id_front']]);
         }
         
-        if (request()->hasFile('id_back')) {
-            $uploadedFiles['id_back'] = request()->file('id_back')->store('documents/citizen_ids', 'public');
+        if ($request->hasFile('id_back')) {
+            $uploadedFiles['id_back'] = $request->file('id_back')->store('documents/citizen_ids', 'public');
+            \Log::info('ID Back uploaded:', ['path' => $uploadedFiles['id_back']]);
         }
         
-        if (request()->hasFile('id_selfie')) {
-            $uploadedFiles['id_selfie'] = request()->file('id_selfie')->store('documents/citizen_ids', 'public');
+        if ($request->hasFile('selfie_with_id')) {
+            $uploadedFiles['id_selfie'] = $request->file('selfie_with_id')->store('documents/citizen_ids', 'public');
+            \Log::info('Selfie with ID uploaded:', ['path' => $uploadedFiles['id_selfie']]);
         }
 
         // Handle optional documents
-        if (request()->hasFile('authorization_letter')) {
-            $uploadedFiles['authorization_letter'] = request()->file('authorization_letter')->store('documents/authorization_letters', 'public');
+        if ($request->hasFile('authorization_letter')) {
+            $uploadedFiles['authorization_letter'] = $request->file('authorization_letter')->store('documents/authorization_letters', 'public');
+            \Log::info('Authorization letter uploaded:', ['path' => $uploadedFiles['authorization_letter']]);
         }
         
-        if (request()->hasFile('event_proposal')) {
-            $uploadedFiles['event_proposal'] = request()->file('event_proposal')->store('documents/event_proposals', 'public');
+        if ($request->hasFile('event_proposal')) {
+            $uploadedFiles['event_proposal'] = $request->file('event_proposal')->store('documents/event_proposals', 'public');
+            \Log::info('Event proposal uploaded:', ['path' => $uploadedFiles['event_proposal']]);
         }
 
         // Handle signature (drawn or uploaded)
-        if ($validatedData['signature_method'] === 'upload' && request()->hasFile('signature_upload')) {
-            $uploadedFiles['signature'] = request()->file('signature_upload')->store('documents/signatures', 'public');
+        if ($validatedData['signature_method'] === 'upload' && $request->hasFile('signature_upload')) {
+            $uploadedFiles['signature'] = $request->file('signature_upload')->store('documents/signatures', 'public');
+            \Log::info('Signature uploaded:', ['path' => $uploadedFiles['signature']]);
         } elseif ($validatedData['signature_method'] === 'draw' && !empty($validatedData['signature_data'])) {
             // Store drawn signature as base64 data
             $uploadedFiles['signature'] = $validatedData['signature_data'];
+            \Log::info('Digital signature saved:', ['length' => strlen($validatedData['signature_data'])]);
         }
 
+        \Log::info('File upload handling completed:', ['uploaded_files' => $uploadedFiles]);
         return $uploadedFiles;
     }
 
@@ -829,5 +824,55 @@ class FacilityController extends Controller
                 'message' => 'AI System test failed: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Show citizen management dashboard
+     */
+    public function citizenManagement()
+    {
+        $pendingCitizens = User::where('role', 'citizen')
+                              ->where('is_verified', false)
+                              ->get();
+        
+        $allCitizens = User::where('role', 'citizen')->get();
+        
+        return view('admin.citizen-management', compact('pendingCitizens', 'allCitizens'));
+    }
+
+    /**
+     * Approve a citizen account
+     */
+    public function approveCitizen($id)
+    {
+        $citizen = User::findOrFail($id);
+        
+        $citizen->update([
+            'is_verified' => true,
+            'verified_at' => now()
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Citizen account approved successfully!'
+        ]);
+    }
+
+    /**
+     * Reject a citizen account
+     */
+    public function rejectCitizen($id)
+    {
+        $citizen = User::findOrFail($id);
+        
+        $citizen->update([
+            'is_verified' => false,
+            'verified_at' => null
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Citizen account verification rejected.'
+        ]);
     }
 }

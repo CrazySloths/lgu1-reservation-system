@@ -57,21 +57,66 @@
                 <i class="fas fa-user mr-2 text-green-600"></i>Personal Information
             </h3>
 
-            <!-- Full Name -->
+            <!-- Name Fields -->
             <div class="mb-6">
-                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-                    Full Name <span class="text-red-500">*</span>
-                </label>
-                <input id="name" 
-                       name="name" 
-                       type="text" 
-                       required 
-                       value="{{ old('name') }}"
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('name') border-red-500 @enderror"
-                       placeholder="Enter your full name">
-                @error('name')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- First Name -->
+                    <div>
+                        <label for="first_name" class="block text-sm font-medium text-gray-700 mb-2">
+                            First Name <span class="text-red-500">*</span>
+                        </label>
+                        <input id="first_name" 
+                               name="first_name" 
+                               type="text" 
+                               required 
+                               value="{{ old('first_name') }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('first_name') border-red-500 @enderror"
+                               placeholder="e.g., Cristian">
+                        @error('first_name')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Middle Name -->
+                    <div>
+                        <label for="middle_name" class="block text-sm font-medium text-gray-700 mb-2">
+                            Middle Name <span class="text-gray-400">(Optional)</span>
+                        </label>
+                        <input id="middle_name" 
+                               name="middle_name" 
+                               type="text" 
+                               value="{{ old('middle_name') }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('middle_name') border-red-500 @enderror"
+                               placeholder="e.g., Mark">
+                        @error('middle_name')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Last Name -->
+                    <div>
+                        <label for="last_name" class="block text-sm font-medium text-gray-700 mb-2">
+                            Last Name <span class="text-red-500">*</span>
+                        </label>
+                        <input id="last_name" 
+                               name="last_name" 
+                               type="text" 
+                               required 
+                               value="{{ old('last_name') }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('last_name') border-red-500 @enderror"
+                               placeholder="e.g., Llaneta">
+                        @error('last_name')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+                <p class="mt-2 text-xs text-gray-500">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Your initials will be generated from your first and last name for your profile avatar
+                </p>
+
+                <!-- Hidden field for backward compatibility -->
+                <input type="hidden" id="name" name="name">
             </div>
 
             <!-- Email -->
@@ -264,9 +309,16 @@
                 <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
                     Password <span class="text-red-500">*</span>
                 </label>
-                <input id="password" name="password" type="password" required
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('password') border-red-500 @enderror"
-                       placeholder="Enter a strong password">
+                <div class="relative">
+                    <input id="password" name="password" type="password" required
+                           class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('password') border-red-500 @enderror"
+                           placeholder="Enter a strong password">
+                    <button type="button" 
+                            onclick="togglePassword('password')" 
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                        <i id="password-toggle-icon" class="fas fa-eye"></i>
+                    </button>
+                </div>
                 @error('password')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
@@ -278,9 +330,16 @@
                 <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-2">
                     Confirm Password <span class="text-red-500">*</span>
                 </label>
-                <input id="password_confirmation" name="password_confirmation" type="password" required
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                       placeholder="Confirm your password">
+                <div class="relative">
+                    <input id="password_confirmation" name="password_confirmation" type="password" required
+                           class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                           placeholder="Confirm your password">
+                    <button type="button" 
+                            onclick="togglePassword('password_confirmation')" 
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                        <i id="password_confirmation-toggle-icon" class="fas fa-eye"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- Terms and Conditions -->
@@ -416,11 +475,57 @@ let currentBirthMonth = 0; // January
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'];
 
+// Password visibility toggle function
+function togglePassword(inputId) {
+    const passwordInput = document.getElementById(inputId);
+    const toggleIcon = document.getElementById(inputId + '-toggle-icon');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.classList.remove('fa-eye');
+        toggleIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        toggleIcon.classList.remove('fa-eye-slash');
+        toggleIcon.classList.add('fa-eye');
+    }
+}
+
 // Initialize the form
 document.addEventListener('DOMContentLoaded', function() {
     updateProgressSteps();
     initializeBirthYearOptions();
+    setupNameFieldUpdates();
 });
+
+// Setup automatic name field updates
+function setupNameFieldUpdates() {
+    const firstNameInput = document.getElementById('first_name');
+    const middleNameInput = document.getElementById('middle_name');
+    const lastNameInput = document.getElementById('last_name');
+    const nameInput = document.getElementById('name');
+    
+    function updateFullName() {
+        const firstName = firstNameInput.value.trim();
+        const middleName = middleNameInput.value.trim();
+        const lastName = lastNameInput.value.trim();
+        
+        let fullName = firstName;
+        if (middleName) {
+            fullName += ' ' + middleName;
+        }
+        if (lastName) {
+            fullName += ' ' + lastName;
+        }
+        
+        nameInput.value = fullName;
+    }
+    
+    // Add event listeners
+    firstNameInput.addEventListener('input', updateFullName);
+    middleNameInput.addEventListener('input', updateFullName);
+    lastNameInput.addEventListener('input', updateFullName);
+}
 
 // Step Navigation Functions
 function proceedToStep2() {
@@ -490,16 +595,17 @@ function updateProgressSteps() {
 
 // Form Validation Functions
 function validateStep1() {
-    const name = document.getElementById('name').value.trim();
+    const firstName = document.getElementById('first_name').value.trim();
+    const lastName = document.getElementById('last_name').value.trim();
     const email = document.getElementById('email').value.trim();
     const phone = document.getElementById('phone_number').value.trim();
     const birthDate = document.getElementById('date_of_birth').value;
     
-    if (!name || !email || !phone || !birthDate) {
+    if (!firstName || !lastName || !email || !phone || !birthDate) {
         Swal.fire({
             icon: 'warning',
             title: 'Required Fields Missing',
-            text: 'Please fill in all required fields in Step 1.'
+            text: 'Please fill in all required fields in Step 1 (First Name, Last Name, Email, Phone, Birth Date).'
         });
         return false;
     }

@@ -19,6 +19,9 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'first_name',
+        'middle_name',
+        'last_name',
         'email',
         'password',
         'role',
@@ -91,5 +94,67 @@ class User extends Authenticatable
     public function reservations()
     {
         return $this->hasMany(Booking::class, 'user_id');
+    }
+
+    /**
+     * Get user's payment slips
+     */
+    public function paymentSlips()
+    {
+        return $this->hasMany(\App\Models\PaymentSlip::class, 'user_id');
+    }
+
+    /**
+     * Get full name from components (fallback to 'name' if components are empty)
+     */
+    public function getFullNameAttribute(): string
+    {
+        if ($this->first_name && $this->last_name) {
+            $fullName = $this->first_name;
+            if ($this->middle_name) {
+                $fullName .= ' ' . $this->middle_name;
+            }
+            $fullName .= ' ' . $this->last_name;
+            return $fullName;
+        }
+
+        return $this->name ?: 'User';
+    }
+
+    /**
+     * Get avatar initials for profile display
+     */
+    public function getAvatarInitialsAttribute(): string
+    {
+        if ($this->first_name && $this->last_name) {
+            return strtoupper(
+                substr($this->first_name, 0, 1) . 
+                substr($this->last_name, 0, 1)
+            );
+        }
+
+        // Fallback to generating from the 'name' field
+        $nameParts = explode(' ', $this->name ?: 'U');
+        $firstName = $nameParts[0] ?? 'U';
+        $lastName = end($nameParts);
+        
+        return strtoupper(
+            substr($firstName, 0, 1) . 
+            (($lastName !== $firstName) ? substr($lastName, 0, 1) : '')
+        );
+    }
+
+    /**
+     * Auto-populate 'name' field when saving (for backward compatibility)
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($user) {
+            if ($user->first_name && $user->last_name) {
+                $user->name = $user->full_name;
+            }
+        });
     }
 }

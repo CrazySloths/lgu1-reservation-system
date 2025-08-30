@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Facility;
 use App\Models\User;
+use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -24,13 +25,18 @@ class CitizenDashboardController extends Controller
     {
         $user = Auth::user();
         
-        // Get user's reservations (if booking system exists)
-        // $reservations = $user->reservations()->latest()->take(5)->get();
+        // Get user's recent reservations
+        $recentReservations = $user->reservations()->latest()->take(5)->get();
+        $totalReservations = $user->reservations()->count();
+        
+        // Get user's payment slips
+        $paymentSlips = $user->paymentSlips()->with('booking')->latest()->take(3)->get();
+        $unpaidPaymentSlips = $user->paymentSlips()->where('status', 'unpaid')->count();
         
         // Get available facilities
         $availableFacilities = Facility::where('status', 'active')->count();
         
-        return view('citizen.dashboard', compact('user', 'availableFacilities'));
+        return view('citizen.dashboard', compact('user', 'availableFacilities', 'totalReservations', 'recentReservations', 'paymentSlips', 'unpaidPaymentSlips'));
     }
 
     /**
@@ -53,9 +59,27 @@ class CitizenDashboardController extends Controller
     {
         $user = Auth::user();
         
-        // Get user's reservations (when booking system is implemented)
-        // $reservations = $user->reservations()->orderBy('created_at', 'desc')->paginate(10);
-        $reservations = collect(); // Empty collection for now
+        // Debug: Log current user information
+        \Log::info('Reservation History - Current User:', [
+            'user_id' => $user ? $user->id : 'Not authenticated',
+            'email' => $user ? $user->email : 'N/A'
+        ]);
+        
+        if (!$user) {
+            return redirect()->route('citizen.login')->with('error', 'Please log in to view your reservations.');
+        }
+        
+        // Get user's reservations with facility and payment slip information
+        $reservations = $user->reservations()
+                            ->with(['facility', 'paymentSlip'])
+                            ->orderBy('created_at', 'desc')
+                            ->get();
+        
+        // Debug: Log reservations count
+        \Log::info('Reservation History - Found reservations:', [
+            'count' => $reservations->count(),
+            'user_id' => $user->id
+        ]);
         
         return view('citizen.reservation-history', compact('user', 'reservations'));
     }
@@ -92,5 +116,78 @@ class CitizenDashboardController extends Controller
         ]);
 
         return back()->with('success', 'Profile updated successfully!');
+    }
+
+    /**
+     * Show facility availability calendar
+     */
+    public function viewAvailability()
+    {
+        $user = Auth::user();
+        
+        // Get all active facilities
+        $facilities = Facility::where('status', 'active')->get();
+        
+        return view('citizen.availability', compact('user', 'facilities'));
+    }
+
+    /**
+     * API endpoint to get bookings for a specific facility
+     */
+    public function getFacilityBookings($facilityId)
+    {
+        try {
+            // Get all bookings for the facility (not just approved ones for better visibility)
+            $bookings = Booking::where('facility_id', $facilityId)
+                             ->whereIn('status', ['approved', 'pending']) // Show both approved and pending
+                             ->with('facility')
+                             ->get();
+
+            // Debug: Log booking query
+            \Log::info('Facility Bookings Query:', [
+                'facility_id' => $facilityId,
+                'found_bookings' => $bookings->count(),
+                'total_bookings_in_db' => Booking::count()
+            ]);
+
+            $events = [];
+
+            foreach ($bookings as $booking) {
+                // Set different colors for different statuses
+                $backgroundColor = $booking->status === 'approved' ? '#ef4444' : '#f59e0b'; // Red for approved, Yellow for pending
+                $borderColor = $booking->status === 'approved' ? '#dc2626' : '#d97706';
+                
+                // Format events for FullCalendar
+                $events[] = [
+                    'id' => $booking->id,
+                    'title' => $booking->event_name . ' - ' . $booking->applicant_name,
+                    'start' => $booking->event_date . 'T' . $booking->start_time,
+                    'end' => $booking->event_date . 'T' . $booking->end_time,
+                    'backgroundColor' => $backgroundColor,
+                    'borderColor' => $borderColor,
+                    'textColor' => '#ffffff',
+                    'extendedProps' => [
+                        'applicant' => $booking->applicant_name,
+                        'attendees' => $booking->expected_attendees,
+                        'status' => $booking->status,
+                        'description' => $booking->event_description
+                    ]
+                ];
+            }
+
+            \Log::info('Facility Bookings Response:', [
+                'facility_id' => $facilityId,
+                'events_count' => count($events)
+            ]);
+
+            return response()->json($events);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching facility bookings:', [
+                'facility_id' => $facilityId,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([], 500);
+        }
     }
 }
