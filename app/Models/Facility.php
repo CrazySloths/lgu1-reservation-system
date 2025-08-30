@@ -24,8 +24,30 @@ class Facility extends Model
     protected $fillable = [
         'name',
         'description',
-        'address',
+        'location',
         'capacity',
-        'rate_per_hour',
+        'hourly_rate',
+        'daily_rate',
+        'facility_type',
+        'amenities',
+        'operating_hours_start',
+        'operating_hours_end',
+        'status',
+        'image_path',
+        'latitude',
+        'longitude',
+    ];
+
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'hourly_rate' => 'float',
+        'daily_rate' => 'float',
+        'latitude' => 'float',
+        'longitude' => 'float',
+        'capacity' => 'integer',
     ];
 }

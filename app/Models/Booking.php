@@ -32,10 +32,24 @@ class Booking extends Model
      */
     protected $fillable = [
         'facility_id',
+        'user_id',
         'user_name',
+        'applicant_name',
+        'applicant_email', 
+        'applicant_phone',
+        'applicant_address',
+        'event_name',
+        'event_description',
+        'event_date',
         'start_time',
         'end_time',
-        'status', // Add 'status' here if it's not already
+        'expected_attendees',
+        'total_fee',
+        'status',
+        'admin_notes',
+        'approved_by',
+        'approved_at',
+        'rejected_reason'
     ];
 
     /**
@@ -44,8 +58,12 @@ class Booking extends Model
      * @var array
      */
     protected $casts = [
-        'start_time' => 'datetime',
-        'end_time' => 'datetime',
+        'event_date' => 'date',
+        'start_time' => 'string',
+        'end_time' => 'string',
+        'expected_attendees' => 'integer',
+        'total_fee' => 'float',
+        'approved_at' => 'datetime',
     ];
 
     /**
@@ -54,5 +72,53 @@ class Booking extends Model
     public function facility(): BelongsTo
     {
         return $this->belongsTo(Facility::class, 'facility_id', 'facility_id');
+    }
+
+    /**
+     * Get the user that owns the booking.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Scope to get approved bookings only
+     */
+    public function scopeApproved($query)
+    {
+        return $query->where('status', 'approved');
+    }
+
+    /**
+     * Scope to get pending bookings only
+     */
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
+    }
+
+    /**
+     * Check if booking is approved
+     */
+    public function isApproved(): bool
+    {
+        return $this->status === 'approved';
+    }
+
+    /**
+     * Check if booking is pending
+     */
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    /**
+     * Check if booking is rejected
+     */
+    public function isRejected(): bool
+    {
+        return $this->status === 'rejected';
     }
 }

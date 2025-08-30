@@ -21,6 +21,18 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'phone_number',
+        'region',
+        'city',
+        'barangay',
+        'street_address',
+        'address',
+        'date_of_birth',
+        'id_type',
+        'id_number',
+        'is_verified',
+        'verified_at',
     ];
 
     /**
@@ -43,6 +55,41 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'date_of_birth' => 'date',
+            'is_verified' => 'boolean',
+            'verified_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Check if user is an admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Check if user is a citizen
+     */
+    public function isCitizen(): bool
+    {
+        return $this->role === 'citizen';
+    }
+
+    /**
+     * Check if citizen is verified
+     */
+    public function isVerified(): bool
+    {
+        return $this->is_verified;
+    }
+
+    /**
+     * Get user's reservations
+     */
+    public function reservations()
+    {
+        return $this->hasMany(Booking::class, 'user_id');
     }
 }
