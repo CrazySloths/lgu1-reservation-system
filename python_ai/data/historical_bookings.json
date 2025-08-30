@@ -1,1 +1,24 @@
-[{"id":1,"facility_id":1,"start_time":"2025-08-30 08:00:00","end_time":"2025-08-30 08:30:00","user_name":"test 1","status":"approved","created_at":"2025-08-28 20:44:56","updated_at":"2025-08-28 20:47:03","deleted_at":null,"facility":{"facility_id":1,"name":"Sports Complex","description":"looks like a gym","address":"Deparo\/Bagumbong","capacity":1500,"rate_per_hour":"3000.00","created_at":"2025-08-28T20:44:37.000000Z","updated_at":"2025-08-28T20:44:37.000000Z","deleted_at":null}},{"id":2,"facility_id":1,"start_time":"2025-08-31 08:00:00","end_time":"2025-08-31 08:30:00","user_name":"test2","status":"approved","created_at":"2025-08-28 20:45:03","updated_at":"2025-08-28 20:47:04","deleted_at":null,"facility":{"facility_id":1,"name":"Sports Complex","description":"looks like a gym","address":"Deparo\/Bagumbong","capacity":1500,"rate_per_hour":"3000.00","created_at":"2025-08-28T20:44:37.000000Z","updated_at":"2025-08-28T20:44:37.000000Z","deleted_at":null}},{"id":3,"facility_id":1,"start_time":"2025-09-01 08:00:00","end_time":"2025-09-01 08:30:00","user_name":"test3","status":"approved","created_at":"2025-08-28 20:45:12","updated_at":"2025-08-28 20:47:04","deleted_at":null,"facility":{"facility_id":1,"name":"Sports Complex","description":"looks like a gym","address":"Deparo\/Bagumbong","capacity":1500,"rate_per_hour":"3000.00","created_at":"2025-08-28T20:44:37.000000Z","updated_at":"2025-08-28T20:44:37.000000Z","deleted_at":null}},{"id":4,"facility_id":1,"start_time":"2025-09-02 08:00:00","end_time":"2025-09-02 08:30:00","user_name":"test 4","status":"approved","created_at":"2025-08-28 20:45:19","updated_at":"2025-08-28 20:47:05","deleted_at":null,"facility":{"facility_id":1,"name":"Sports Complex","description":"looks like a gym","address":"Deparo\/Bagumbong","capacity":1500,"rate_per_hour":"3000.00","created_at":"2025-08-28T20:44:37.000000Z","updated_at":"2025-08-28T20:44:37.000000Z","deleted_at":null}},{"id":5,"facility_id":1,"start_time":"2025-09-04 08:00:00","end_time":"2025-09-04 08:30:00","user_name":"test 5","status":"approved","created_at":"2025-08-28 20:45:43","updated_at":"2025-08-28 20:47:06","deleted_at":null,"facility":{"facility_id":1,"name":"Sports Complex","description":"looks like a gym","address":"Deparo\/Bagumbong","capacity":1500,"rate_per_hour":"3000.00","created_at":"2025-08-28T20:44:37.000000Z","updated_at":"2025-08-28T20:44:37.000000Z","deleted_at":null}},{"id":6,"facility_id":1,"start_time":"2025-09-05 08:00:00","end_time":"2025-09-05 08:30:00","user_name":"test 6","status":"approved","created_at":"2025-08-28 20:46:03","updated_at":"2025-08-28 20:47:07","deleted_at":null,"facility":{"facility_id":1,"name":"Sports Complex","description":"looks like a gym","address":"Deparo\/Bagumbong","capacity":1500,"rate_per_hour":"3000.00","created_at":"2025-08-28T20:44:37.000000Z","updated_at":"2025-08-28T20:44:37.000000Z","deleted_at":null}},{"id":7,"facility_id":1,"start_time":"2025-09-06 08:30:00","end_time":"2025-09-06 09:00:00","user_name":"test 7","status":"approved","created_at":"2025-08-28 20:46:10","updated_at":"2025-08-28 20:47:10","deleted_at":null,"facility":{"facility_id":1,"name":"Sports Complex","description":"looks like a gym","address":"Deparo\/Bagumbong","capacity":1500,"rate_per_hour":"3000.00","created_at":"2025-08-28T20:44:37.000000Z","updated_at":"2025-08-28T20:44:37.000000Z","deleted_at":null}},{"id":8,"facility_id":1,"start_time":"2025-09-07 10:00:00","end_time":"2025-09-07 10:30:00","user_name":"test 8","status":"approved","created_at":"2025-08-28 20:47:24","updated_at":"2025-08-28 20:48:13","deleted_at":null,"facility":{"facility_id":1,"name":"Sports Complex","description":"looks like a gym","address":"Deparo\/Bagumbong","capacity":1500,"rate_per_hour":"3000.00","created_at":"2025-08-28T20:44:37.000000Z","updated_at":"2025-08-28T20:44:37.000000Z","deleted_at":null}}]
+[
+    {
+        "id": 1,
+        "facility_id": 1,
+        "start_time": "2025-08-30 08:00:00",
+        "end_time": "2025-08-30 11:00:00",
+        "user_name": "Demo User 1",
+        "status": "approved",
+        "created_at": "2025-08-30T08:00:00.000000Z",
+        "updated_at": "2025-08-30T08:00:00.000000Z",
+        "deleted_at": null,
+        "facility": {
+            "facility_id": 1,
+            "name": "Sports Complex",
+            "description": "Main sports facility",
+            "address": "Bagumbong, Caloocan City",
+            "capacity": 500,
+            "rate_per_hour": "2000.00",
+            "created_at": "2025-08-30T08:00:00.000000Z",
+            "updated_at": "2025-08-30T08:00:00.000000Z",
+            "deleted_at": null
+        }
+    }
+]
