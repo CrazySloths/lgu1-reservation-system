@@ -1,0 +1,24 @@
+[
+    {
+        "id": 1,
+        "facility_id": 1,
+        "start_time": "2025-08-30 08:00:00",
+        "end_time": "2025-08-30 11:00:00",
+        "user_name": "Demo User 1",
+        "status": "approved",
+        "created_at": "2025-08-30T08:00:00.000000Z",
+        "updated_at": "2025-08-30T08:00:00.000000Z",
+        "deleted_at": null,
+        "facility": {
+            "facility_id": 1,
+            "name": "Sports Complex",
+            "description": "Main sports facility",
+            "address": "Bagumbong, Caloocan City",
+            "capacity": 500,
+            "rate_per_hour": "2000.00",
+            "created_at": "2025-08-30T08:00:00.000000Z",
+            "updated_at": "2025-08-30T08:00:00.000000Z",
+            "deleted_at": null
+        }
+    }
+]
