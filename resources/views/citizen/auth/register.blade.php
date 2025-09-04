@@ -59,7 +59,7 @@
 
             <!-- Name Fields -->
             <div class="mb-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="space-y-6">
                     <!-- First Name -->
                     <div>
                         <label for="first_name" class="block text-sm font-medium text-gray-700 mb-2">
@@ -70,8 +70,7 @@
                                type="text" 
                                required 
                                value="{{ old('first_name') }}"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('first_name') border-red-500 @enderror"
-                               placeholder="e.g., Cristian">
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('first_name') border-red-500 @enderror">
                         @error('first_name')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -86,8 +85,7 @@
                                name="middle_name" 
                                type="text" 
                                value="{{ old('middle_name') }}"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('middle_name') border-red-500 @enderror"
-                               placeholder="e.g., Mark">
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('middle_name') border-red-500 @enderror">
                         @error('middle_name')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -103,8 +101,7 @@
                                type="text" 
                                required 
                                value="{{ old('last_name') }}"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('last_name') border-red-500 @enderror"
-                               placeholder="e.g., Llaneta">
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('last_name') border-red-500 @enderror">
                         @error('last_name')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -147,7 +144,7 @@
                        required 
                        value="{{ old('phone_number') }}"
                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('phone_number') border-red-500 @enderror"
-                       placeholder="e.g., 09123456789">
+                       placeholder="Enter Your Phone Number">
                 @error('phone_number')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
@@ -244,8 +241,7 @@
                        name="street_address" 
                        type="text" 
                        required 
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                       placeholder="e.g., 123 Sample Street, Building Name, Unit #">
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
                 <input type="hidden" id="address" name="address">
             </div>
 
@@ -414,7 +410,7 @@
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-blue-700">
-                        <strong>Account Verification:</strong> Your account will be verified by our staff before you can make reservations. This process typically takes 1-2 business days.
+                        <strong>Account Security:</strong> After registration, you'll need to verify your email and phone number for account security. This ensures your account is protected and enables important notifications.
                     </p>
                 </div>
             </div>

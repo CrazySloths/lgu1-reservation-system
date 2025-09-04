@@ -36,6 +36,21 @@ class User extends Authenticatable
         'id_number',
         'is_verified',
         'verified_at',
+        // Authentication Security Fields
+        'email_verified',
+        'email_verification_token',
+        'email_verification_sent_at',
+        'phone_verified',
+        'phone_verification_code',
+        'phone_verification_sent_at',
+        'phone_verification_attempts',
+        'two_factor_enabled',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'two_factor_enabled_at',
+        'failed_verification_attempts',
+        'verification_locked_until',
+        'last_security_check',
     ];
 
     /**
@@ -46,6 +61,10 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'email_verification_token',
+        'phone_verification_code',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     /**
@@ -61,6 +80,16 @@ class User extends Authenticatable
             'date_of_birth' => 'date',
             'is_verified' => 'boolean',
             'verified_at' => 'datetime',
+            // Authentication Security Casts
+            'email_verified' => 'boolean',
+            'email_verification_sent_at' => 'datetime',
+            'phone_verified' => 'boolean',
+            'phone_verification_sent_at' => 'datetime',
+            'two_factor_enabled' => 'boolean',
+            'two_factor_enabled_at' => 'datetime',
+            'two_factor_recovery_codes' => 'json',
+            'verification_locked_until' => 'datetime',
+            'last_security_check' => 'datetime',
         ];
     }
 
@@ -142,6 +171,135 @@ class User extends Authenticatable
             substr($firstName, 0, 1) . 
             (($lastName !== $firstName) ? substr($lastName, 0, 1) : '')
         );
+    }
+
+    // ========================================
+    // AUTHENTICATION SECURITY METHODS
+    // ========================================
+
+    /**
+     * Check if email is verified
+     */
+    public function hasVerifiedEmail(): bool
+    {
+        return $this->email_verified;
+    }
+
+    /**
+     * Check if phone is verified
+     */
+    public function hasVerifiedPhone(): bool
+    {
+        return $this->phone_verified;
+    }
+
+    /**
+     * Check if user has two-factor authentication enabled
+     */
+    public function hasTwoFactorEnabled(): bool
+    {
+        return $this->two_factor_enabled && !empty($this->two_factor_secret);
+    }
+
+    /**
+     * Check if user is currently locked due to failed verification attempts
+     */
+    public function isVerificationLocked(): bool
+    {
+        return $this->verification_locked_until && $this->verification_locked_until->isFuture();
+    }
+
+    /**
+     * Generate email verification token
+     */
+    public function generateEmailVerificationToken(): string
+    {
+        $token = \Str::random(64);
+        $this->update([
+            'email_verification_token' => $token,
+            'email_verification_sent_at' => now(),
+        ]);
+        return $token;
+    }
+
+    /**
+     * Generate phone verification code
+     */
+    public function generatePhoneVerificationCode(): string
+    {
+        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $this->update([
+            'phone_verification_code' => $code,
+            'phone_verification_sent_at' => now(),
+            'phone_verification_attempts' => 0,
+        ]);
+        return $code;
+    }
+
+    /**
+     * Verify email with token
+     */
+    public function verifyEmail(string $token): bool
+    {
+        if ($this->email_verification_token === $token) {
+            $this->update([
+                'email_verified' => true,
+                'email_verification_token' => null,
+                'email_verification_sent_at' => null,
+                'failed_verification_attempts' => 0,
+            ]);
+            return true;
+        }
+        
+        $this->incrementFailedVerificationAttempts();
+        return false;
+    }
+
+    /**
+     * Verify phone with code
+     */
+    public function verifyPhone(string $code): bool
+    {
+        if ($this->phone_verification_code === $code && 
+            $this->phone_verification_sent_at && 
+            $this->phone_verification_sent_at->diffInMinutes(now()) <= 10) {
+            
+            $this->update([
+                'phone_verified' => true,
+                'phone_verification_code' => null,
+                'phone_verification_sent_at' => null,
+                'phone_verification_attempts' => 0,
+                'failed_verification_attempts' => 0,
+            ]);
+            return true;
+        }
+        
+        $this->increment('phone_verification_attempts');
+        $this->incrementFailedVerificationAttempts();
+        return false;
+    }
+
+    /**
+     * Increment failed verification attempts and apply security locks
+     */
+    public function incrementFailedVerificationAttempts(): void
+    {
+        $this->increment('failed_verification_attempts');
+        
+        // Lock account for 30 minutes after 5 failed attempts
+        if ($this->failed_verification_attempts >= 5) {
+            $this->update([
+                'verification_locked_until' => now()->addMinutes(30),
+            ]);
+        }
+    }
+
+    /**
+     * Check if user has completed all required verifications
+     */
+    public function hasCompletedRequiredVerifications(): bool
+    {
+        return $this->hasVerifiedEmail() && $this->hasVerifiedPhone();
     }
 
     /**

@@ -14,37 +14,15 @@
                 <p class="text-gray-600 mt-1">Manage your facility reservations and profile</p>
             </div>
             <div class="flex items-center space-x-4">
-                @if($user->isVerified())
-                    <div class="flex items-center text-green-600">
-                        <i class="fas fa-check-circle mr-2"></i>
-                        <span class="text-sm font-medium">Verified Account</span>
-                    </div>
-                @else
-                    <div class="flex items-center text-yellow-600">
-                        <i class="fas fa-clock mr-2"></i>
-                        <span class="text-sm font-medium">Pending Verification</span>
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
-
-    <!-- Account Status Alert -->
-    @if(!$user->isVerified())
-    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <div class="flex">
-            <div class="flex-shrink-0">
-                <i class="fas fa-exclamation-triangle text-yellow-400"></i>
-            </div>
-            <div class="ml-3">
-                <h3 class="text-sm font-medium text-yellow-800">Account Verification Pending</h3>
-                <div class="mt-2 text-sm text-yellow-700">
-                    <p>Your account is currently under review by our staff. Once verified, you'll be able to make facility reservations. This process typically takes 1-2 business days.</p>
+                <div class="flex items-center text-green-600">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    <span class="text-sm font-medium">Active Account</span>
                 </div>
             </div>
         </div>
     </div>
-    @endif
+
+
 
     <!-- Quick Stats -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -94,8 +72,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <!-- New Reservation -->
             <a href="{{ route('citizen.reservations') }}" 
-               class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-200 {{ !$user->isVerified() ? 'opacity-50 cursor-not-allowed' : 'hover:border-blue-300' }}"
-               {{ !$user->isVerified() ? 'onclick="event.preventDefault(); showVerificationAlert()"' : '' }}>
+               class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-blue-300 transition duration-200">
                 <div class="flex-shrink-0">
                     <div class="p-2 bg-blue-100 rounded-lg">
                         <i class="fas fa-calendar-plus text-blue-600"></i>
@@ -105,11 +82,6 @@
                     <h3 class="text-sm font-medium text-gray-900">New Reservation</h3>
                     <p class="text-xs text-gray-600">Book a facility</p>
                 </div>
-                @if(!$user->isVerified())
-                    <div class="ml-auto">
-                        <i class="fas fa-lock text-gray-400"></i>
-                    </div>
-                @endif
             </a>
 
             <!-- Reservation History -->
