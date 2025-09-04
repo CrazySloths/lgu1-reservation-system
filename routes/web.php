@@ -38,10 +38,7 @@ Route::get('/facilities/{facility_id}/events', [FacilityController::class, 'getE
     // AI System Management
     Route::get('/test-ai', [FacilityController::class, 'testAISystem'])->name('admin.test.ai');
 
-    // Citizen Account Management
-    Route::get('/citizens', [FacilityController::class, 'citizenManagement'])->name('admin.citizens');
-    Route::post('/citizens/{id}/approve', [FacilityController::class, 'approveCitizen'])->name('admin.citizens.approve');
-    Route::post('/citizens/{id}/reject', [FacilityController::class, 'rejectCitizen'])->name('admin.citizens.reject');
+
 
     // Announcement Management
     Route::get('/announcements', [AnnouncementController::class, 'adminIndex'])->name('admin.announcements.index');
@@ -126,6 +123,13 @@ Route::prefix('citizen')->group(function () {
         Route::post('/login', [CitizenAuthController::class, 'login'])->name('citizen.login.submit');
         Route::get('/register', [CitizenAuthController::class, 'showRegistrationForm'])->name('citizen.register');
         Route::post('/register', [CitizenAuthController::class, 'register'])->name('citizen.register.submit');
+        
+        // Authentication Security Routes (during registration)
+        Route::get('/verify', [CitizenAuthController::class, 'showVerificationForm'])->name('citizen.auth.verify');
+        Route::get('/verify-email', [CitizenAuthController::class, 'verifyEmail'])->name('citizen.auth.verify-email');
+        Route::post('/verify-phone', [CitizenAuthController::class, 'verifyPhone'])->name('citizen.auth.verify-phone');
+        Route::post('/resend-email-verification', [CitizenAuthController::class, 'resendEmailVerification'])->name('citizen.auth.resend-email');
+        Route::post('/resend-sms-verification', [CitizenAuthController::class, 'resendSmsVerification'])->name('citizen.auth.resend-sms');
     });
 
     // Authenticated citizen routes
@@ -143,6 +147,10 @@ Route::prefix('citizen')->group(function () {
         Route::get('/profile', [CitizenDashboardController::class, 'profile'])->name('citizen.profile');
         Route::put('/profile', [CitizenDashboardController::class, 'updateProfile'])->name('citizen.profile.update');
         Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('citizen.logout');
+        
+        // Two-Factor Authentication Routes (for authenticated users)
+        Route::get('/security/setup-2fa', [CitizenAuthController::class, 'showTwoFactorSetup'])->name('citizen.security.setup-2fa');
+        Route::post('/security/enable-2fa', [CitizenAuthController::class, 'enableTwoFactor'])->name('citizen.security.enable-2fa');
         
         // AI-Enhanced reservation store route
         Route::post('/reservations/store', [FacilityController::class, 'storeReservationWithAI'])->name('citizen.reservations.store');

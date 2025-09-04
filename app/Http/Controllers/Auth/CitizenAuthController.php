@@ -4,13 +4,22 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\AuthSecurityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Session;
 
 class CitizenAuthController extends Controller
 {
+    protected $authSecurityService;
+
+    public function __construct(AuthSecurityService $authSecurityService)
+    {
+        $this->authSecurityService = $authSecurityService;
+    }
+
     /**
      * Show citizen registration form
      */
@@ -31,7 +40,7 @@ class CitizenAuthController extends Controller
             'name' => 'nullable|string|max:500', // Auto-generated from name components
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'phone_number' => 'required|string|max:20',
+            'phone_number' => 'required|string|regex:/^09[0-9]{9}$/',
             'region' => 'required|string|max:100',
             'city' => 'required|string|max:100',
             'barangay' => 'required|string|max:100',
@@ -46,6 +55,7 @@ class CitizenAuthController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
+        // Create user with verification flags set to false initially
         $user = User::create([
             'first_name' => $request->first_name,
             'middle_name' => $request->middle_name,
@@ -63,12 +73,32 @@ class CitizenAuthController extends Controller
             'date_of_birth' => $request->date_of_birth,
             'id_type' => $request->id_type,
             'id_number' => $request->id_number,
-            'is_verified' => false,
+            'is_verified' => false, // Account verified only after completing security verifications
+            'verified_at' => null,
+            // Security verification flags - all start as false
+            'email_verified' => false,
+            'phone_verified' => false,
+            'two_factor_enabled' => false,
         ]);
 
-        Auth::login($user);
+        // Send email verification
+        $emailSent = $this->authSecurityService->sendEmailVerification($user);
+        
+        // Send SMS verification
+        $smsSent = $this->authSecurityService->sendSmsVerification($user);
 
-        return redirect()->route('citizen.dashboard')->with('success', 'Registration successful! Welcome to the Citizen Portal.');
+        // Store user ID in session for verification process
+        Session::put('verification_user_id', $user->id);
+        Session::put('verification_step', 'pending');
+
+        if (!$emailSent || !$smsSent) {
+            return back()->withErrors([
+                'verification' => 'Failed to send verification messages. Please try again.'
+            ])->withInput();
+        }
+
+        return redirect()->route('citizen.auth.verify')
+            ->with('success', 'Account created! Please check your email to verify your account and then proceed with phone verification.');
     }
 
     /**
@@ -148,5 +178,250 @@ class CitizenAuthController extends Controller
         } else {
             return redirect()->route('citizen.login')->with('success', 'You have been logged out successfully.');
         }
+    }
+
+    // ========================================
+    // VERIFICATION METHODS
+    // ========================================
+
+    /**
+     * Show verification form
+     */
+    public function showVerificationForm()
+    {
+        $userId = Session::get('verification_user_id');
+        if (!$userId) {
+            return redirect()->route('citizen.register')
+                ->withErrors(['verification' => 'Verification session expired. Please register again.']);
+        }
+
+        $user = User::find($userId);
+        if (!$user) {
+            return redirect()->route('citizen.register')
+                ->withErrors(['verification' => 'User not found. Please register again.']);
+        }
+
+        return view('citizen.auth.verify', compact('user'));
+    }
+
+    /**
+     * Handle email verification
+     */
+    public function verifyEmail(Request $request)
+    {
+        $token = $request->get('token');
+        $userId = Session::get('verification_user_id');
+
+        if (!$userId || !$token) {
+            return redirect()->route('citizen.register')
+                ->withErrors(['verification' => 'Invalid verification link.']);
+        }
+
+        $user = User::find($userId);
+        if (!$user) {
+            return redirect()->route('citizen.register')
+                ->withErrors(['verification' => 'User not found.']);
+        }
+
+        if (!$this->authSecurityService->canProceedWithVerification($user)) {
+            return redirect()->route('citizen.auth.verify')
+                ->withErrors(['verification' => 'Account is temporarily locked due to failed attempts. Please try again later.']);
+        }
+
+        if ($user->verifyEmail($token)) {
+            $this->checkVerificationCompletion($user);
+            return redirect()->route('citizen.auth.verify')
+                ->with('success', 'Email verified successfully!');
+        }
+
+        return redirect()->route('citizen.auth.verify')
+            ->withErrors(['email_verification' => 'Invalid verification token.']);
+    }
+
+    /**
+     * Handle phone verification
+     */
+    public function verifyPhone(Request $request)
+    {
+        $request->validate([
+            'phone_code' => 'required|string|size:6'
+        ]);
+
+        $userId = Session::get('verification_user_id');
+        if (!$userId) {
+            return redirect()->route('citizen.register')
+                ->withErrors(['verification' => 'Verification session expired.']);
+        }
+
+        $user = User::find($userId);
+        if (!$user) {
+            return redirect()->route('citizen.register')
+                ->withErrors(['verification' => 'User not found.']);
+        }
+
+        if (!$this->authSecurityService->canProceedWithVerification($user)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Account is temporarily locked due to failed attempts. Please try again later.'
+            ]);
+        }
+
+        if ($user->verifyPhone($request->phone_code)) {
+            $this->checkVerificationCompletion($user);
+            return response()->json([
+                'success' => true,
+                'message' => 'Phone verified successfully!'
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid verification code or code has expired.'
+        ]);
+    }
+
+    /**
+     * Resend email verification
+     */
+    public function resendEmailVerification()
+    {
+        $userId = Session::get('verification_user_id');
+        if (!$userId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Verification session expired.'
+            ]);
+        }
+
+        $user = User::find($userId);
+        if (!$user || $user->hasVerifiedEmail()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email already verified or user not found.'
+            ]);
+        }
+
+        if (!$this->authSecurityService->canProceedWithVerification($user)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Account is temporarily locked. Please try again later.'
+            ]);
+        }
+
+        $sent = $this->authSecurityService->sendEmailVerification($user);
+        
+        return response()->json([
+            'success' => $sent,
+            'message' => $sent ? 'Email verification sent!' : 'Failed to send email. Please try again.'
+        ]);
+    }
+
+    /**
+     * Resend SMS verification
+     */
+    public function resendSmsVerification()
+    {
+        $userId = Session::get('verification_user_id');
+        if (!$userId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Verification session expired.'
+            ]);
+        }
+
+        $user = User::find($userId);
+        if (!$user || $user->hasVerifiedPhone()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Phone already verified or user not found.'
+            ]);
+        }
+
+        if (!$this->authSecurityService->canProceedWithVerification($user)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Account is temporarily locked. Please try again later.'
+            ]);
+        }
+
+        $sent = $this->authSecurityService->sendSmsVerification($user);
+        
+        return response()->json([
+            'success' => $sent,
+            'message' => $sent ? 'SMS verification sent!' : 'Failed to send SMS. Please try again.'
+        ]);
+    }
+
+    /**
+     * Check if verification is complete and redirect accordingly
+     */
+    protected function checkVerificationCompletion(User $user)
+    {
+        if ($user->hasCompletedRequiredVerifications()) {
+            // Mark account as verified
+            $user->update([
+                'is_verified' => true,
+                'verified_at' => now(),
+                'last_security_check' => now(),
+            ]);
+
+            // Clear verification session
+            Session::forget(['verification_user_id', 'verification_step']);
+
+            // Log the user in
+            Auth::login($user);
+        }
+    }
+
+    /**
+     * Show 2FA setup page (optional step)
+     */
+    public function showTwoFactorSetup()
+    {
+        if (!Auth::check()) {
+            return redirect()->route('citizen.login');
+        }
+
+        $user = Auth::user();
+        if ($user->hasTwoFactorEnabled()) {
+            return redirect()->route('citizen.dashboard');
+        }
+
+        $secret = $this->authSecurityService->generateTotpSecret($user);
+        $qrCodeUrl = $this->authSecurityService->generateQrCodeUrl($user);
+
+        return view('citizen.auth.setup-2fa', compact('secret', 'qrCodeUrl'));
+    }
+
+    /**
+     * Enable 2FA after verification
+     */
+    public function enableTwoFactor(Request $request)
+    {
+        $request->validate([
+            'verification_code' => 'required|string|size:6'
+        ]);
+
+        if (!Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Authentication required.'
+            ]);
+        }
+
+        $user = Auth::user();
+        
+        if ($this->authSecurityService->enableTwoFactor($user, $request->verification_code)) {
+            return response()->json([
+                'success' => true,
+                'message' => '2FA enabled successfully!',
+                'recovery_codes' => $user->two_factor_recovery_codes
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid verification code.'
+        ]);
     }
 }

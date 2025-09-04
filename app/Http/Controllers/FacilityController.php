@@ -826,53 +826,5 @@ class FacilityController extends Controller
         }
     }
 
-    /**
-     * Show citizen management dashboard
-     */
-    public function citizenManagement()
-    {
-        $pendingCitizens = User::where('role', 'citizen')
-                              ->where('is_verified', false)
-                              ->get();
-        
-        $allCitizens = User::where('role', 'citizen')->get();
-        
-        return view('admin.citizen-management', compact('pendingCitizens', 'allCitizens'));
-    }
 
-    /**
-     * Approve a citizen account
-     */
-    public function approveCitizen($id)
-    {
-        $citizen = User::findOrFail($id);
-        
-        $citizen->update([
-            'is_verified' => true,
-            'verified_at' => now()
-        ]);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Citizen account approved successfully!'
-        ]);
-    }
-
-    /**
-     * Reject a citizen account
-     */
-    public function rejectCitizen($id)
-    {
-        $citizen = User::findOrFail($id);
-        
-        $citizen->update([
-            'is_verified' => false,
-            'verified_at' => null
-        ]);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Citizen account verification rejected.'
-        ]);
-    }
 }
