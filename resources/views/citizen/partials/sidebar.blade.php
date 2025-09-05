@@ -53,10 +53,10 @@
                 
                 <!-- Status Badge -->
                 <div class="flex items-center justify-center mt-3">
-                    <div class="flex items-center px-3 py-1 rounded-full {{ $user->isVerified() ? 'bg-green-900/30' : 'bg-yellow-900/30' }}">
-                        <div class="w-2 h-2 {{ $user->isVerified() ? 'bg-green-400' : 'bg-yellow-400' }} rounded-full mr-2"></div>
-                        <span class="{{ $user->isVerified() ? 'text-green-400' : 'text-yellow-400' }} text-xs font-medium">
-                            {{ $user->isVerified() ? 'Verified Account' : 'Pending Verification' }}
+                    <div class="flex items-center px-3 py-1 rounded-full bg-green-900/30">
+                        <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                        <span class="text-green-400 text-xs font-medium">
+                            Active Account
                         </span>
                     </div>
                 </div>

@@ -14,30 +14,7 @@
         </div>
     </div>
 
-    <!-- Verification Check -->
-    @if(!$user->isVerified())
-    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-        <div class="flex">
-            <div class="flex-shrink-0">
-                <i class="fas fa-exclamation-circle text-red-400"></i>
-            </div>
-            <div class="ml-3">
-                <h3 class="text-sm font-medium text-red-800">Account Verification Required</h3>
-                <div class="mt-2 text-sm text-red-700">
-                    <p>Your account must be verified before you can make reservations. Please wait for staff approval or contact our office for assistance.</p>
-                </div>
-                <div class="mt-3">
-                    <a href="{{ route('citizen.dashboard') }}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                        <i class="fas fa-arrow-left mr-1"></i>
-                        Back to Dashboard
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
 
-    @if($user->isVerified())
     <!-- Progress Indicator -->
     <div class="bg-white shadow rounded-lg p-6">
         <div class="flex items-center justify-between">
@@ -598,7 +575,6 @@
         </div>
         
     </form>
-    @endif
 </div>
 
 <!-- Date Picker Modal -->

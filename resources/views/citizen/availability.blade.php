@@ -63,7 +63,7 @@
                     @endforeach
                 </div>
 
-                @if($user->isVerified())
+
                     <div class="mt-6 pt-4 border-t border-gray-200">
                         <a href="{{ route('citizen.reservations') }}" 
                            class="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
@@ -71,14 +71,6 @@
                             Make Reservation
                         </a>
                     </div>
-                @else
-                    <div class="mt-6 pt-4 border-t border-gray-200">
-                        <div class="text-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                            <i class="fas fa-clock text-yellow-600 mb-2"></i>
-                            <p class="text-sm text-yellow-800">Account verification required</p>
-                        </div>
-                    </div>
-                @endif
             </div>
 
             <!-- Calendar -->
