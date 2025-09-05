@@ -79,6 +79,9 @@
 
     <!-- Development Mode: Show Verification Codes (only after email verification) -->
     @if(config('app.env') === 'local' && $user->hasVerifiedEmail() && $user->phone_verification_code)
+    
+    <!-- Development Mode: Show Verification Codes -->
+    @if(config('app.env') === 'local' && session('dev_sms_verification'))
         <div class="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <div class="flex">
                 <i class="fas fa-tools text-yellow-400"></i>
@@ -94,6 +97,16 @@
                         <p class="text-xs text-yellow-600">
                             <i class="fas fa-info-circle mr-1"></i>
                             This SMS code is only shown in development mode for testing purposes.
+                        @if(session('dev_sms_verification'))
+                            <div class="p-2 bg-yellow-100 rounded border">
+                                <strong>SMS Code:</strong>
+                                <span class="font-mono text-lg">{{ session('dev_sms_verification.code') }}</span>
+                                <br><small>Expires: {{ session('dev_sms_verification.expires_at') }}</small>
+                            </div>
+                        @endif
+                        <p class="text-xs text-yellow-600">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            This SMS code is only shown in development mode for testing purposes. The email verification link has been sent to your email.
                         </p>
                     </div>
                 </div>
@@ -151,6 +164,7 @@
 
         <!-- Phone Verification Section -->
         <div class="border border-gray-200 rounded-lg p-6 {{ !$user->hasVerifiedEmail() ? 'opacity-50' : '' }}">
+        <div class="border border-gray-200 rounded-lg p-6">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center">
                     <i class="fas fa-mobile-alt text-green-600 mr-3"></i>

@@ -69,6 +69,8 @@ class CitizenAuthController extends Controller
             'street_address' => $request->street_address,
             'address' => $request->address,
             'date_of_birth' => $request->date_of_birth,
+            'id_type' => $request->id_type,
+            'id_number' => $request->id_number,
             'is_verified' => false, // Account verified only after completing security verifications
             'verified_at' => null,
             // Security verification flags - all start as false
@@ -87,11 +89,26 @@ class CitizenAuthController extends Controller
         if (!$emailSent) {
             return back()->withErrors([
                 'verification' => 'Failed to send email verification. Please try again.'
+              
+        // Send email verification
+        $emailSent = $this->authSecurityService->sendEmailVerification($user);
+        
+        // Send SMS verification
+        $smsSent = $this->authSecurityService->sendSmsVerification($user);
+
+        // Store user ID in session for verification process
+        Session::put('verification_user_id', $user->id);
+        Session::put('verification_step', 'pending');
+
+        if (!$emailSent || !$smsSent) {
+            return back()->withErrors([
+                'verification' => 'Failed to send verification messages. Please try again.'
             ])->withInput();
         }
 
         return redirect()->route('citizen.auth.verify')
             ->with('success', 'Account created! Please check your email to verify your account. Phone verification will be available after email verification.');
+            ->with('success', 'Account created! Please check your email to verify your account and then proceed with phone verification.');
     }
 
     /**
@@ -238,6 +255,9 @@ class CitizenAuthController extends Controller
                     ->with('success', 'Email verified successfully!')
                     ->withErrors(['sms' => 'Failed to send SMS verification. Please use the "Resend SMS" button.']);
             }
+            $this->checkVerificationCompletion($user);
+            return redirect()->route('citizen.auth.verify')
+                ->with('success', 'Email verified successfully!');
         }
 
         return redirect()->route('citizen.auth.verify')
