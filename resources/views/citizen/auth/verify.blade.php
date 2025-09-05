@@ -19,32 +19,32 @@
             <!-- Email Verification -->
             <div class="flex items-center">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
-                    {{ $user->hasVerifiedEmail() ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-600' }}">
-                    @if($user->hasVerifiedEmail())
+                    {{ $user->email_verified ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-600' }}">
+                    @if($user->email_verified)
                         <i class="fas fa-check"></i>
                     @else
                         1
                     @endif
                 </div>
-                <span class="ml-3 text-sm font-medium {{ $user->hasVerifiedEmail() ? 'text-green-600' : 'text-gray-900' }}">
+                <span class="ml-3 text-sm font-medium {{ $user->email_verified ? 'text-green-600' : 'text-gray-900' }}">
                     Email Verification
                 </span>
             </div>
             
             <!-- Progress Line -->
-            <div class="flex-1 mx-4 h-0.5 {{ $user->hasVerifiedEmail() ? 'bg-green-600' : 'bg-gray-300' }}"></div>
+            <div class="flex-1 mx-4 h-0.5 {{ $user->email_verified ? 'bg-green-600' : 'bg-gray-300' }}"></div>
             
             <!-- Phone Verification -->
             <div class="flex items-center">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
-                    {{ $user->hasVerifiedPhone() ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-600' }}">
-                    @if($user->hasVerifiedPhone())
+                    {{ $user->phone_verified ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-600' }}">
+                    @if($user->phone_verified)
                         <i class="fas fa-check"></i>
                     @else
                         2
                     @endif
                 </div>
-                <span class="ml-3 text-sm font-medium {{ $user->hasVerifiedPhone() ? 'text-green-600' : 'text-gray-900' }}">
+                <span class="ml-3 text-sm font-medium {{ $user->phone_verified ? 'text-green-600' : 'text-gray-900' }}">
                     Phone Verification
                 </span>
             </div>
@@ -78,7 +78,7 @@
     @endif
 
     <!-- Development Mode: Show Verification Codes (only after email verification) -->
-    @if(config('app.env') === 'local' && $user->hasVerifiedEmail() && $user->phone_verification_code)
+    @if(config('app.env') === 'local' && $user->email_verified && $user->phone_verification_code)
         <div class="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <div class="flex">
                 <i class="fas fa-tools text-yellow-400"></i>
@@ -111,7 +111,7 @@
                     <h3 class="text-lg font-semibold text-gray-900">Email Verification</h3>
                 </div>
                 <div class="flex items-center">
-                    @if($user->hasVerifiedEmail())
+                    @if($user->email_verified)
                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             <i class="fas fa-check mr-1"></i>
                             Verified
@@ -125,7 +125,7 @@
                 </div>
             </div>
             
-            @if($user->hasVerifiedEmail())
+            @if($user->email_verified)
                 <p class="text-sm text-gray-600">
                     <i class="fas fa-check-circle text-green-500 mr-2"></i>
                     Your email address <strong>{{ $user->email }}</strong> has been verified successfully.
@@ -150,19 +150,19 @@
         </div>
 
         <!-- Phone Verification Section -->
-        <div class="border border-gray-200 rounded-lg p-6 {{ !$user->hasVerifiedEmail() ? 'opacity-50' : '' }}">
+        <div class="border border-gray-200 rounded-lg p-6 {{ !$user->email_verified ? 'opacity-50' : '' }}">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center">
                     <i class="fas fa-mobile-alt text-green-600 mr-3"></i>
                     <h3 class="text-lg font-semibold text-gray-900">Phone Verification</h3>
                 </div>
                 <div class="flex items-center">
-                    @if($user->hasVerifiedPhone())
+                    @if($user->phone_verified)
                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             <i class="fas fa-check mr-1"></i>
                             Verified
                         </span>
-                    @elseif(!$user->hasVerifiedEmail())
+                    @elseif(!$user->email_verified)
                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
                             <i class="fas fa-lock mr-1"></i>
                             Waiting for Email
@@ -176,12 +176,12 @@
                 </div>
             </div>
             
-            @if($user->hasVerifiedPhone())
+            @if($user->phone_verified)
                 <p class="text-sm text-gray-600">
                     <i class="fas fa-check-circle text-green-500 mr-2"></i>
                     Your phone number <strong>{{ $user->phone_number }}</strong> has been verified successfully.
                 </p>
-            @elseif(!$user->hasVerifiedEmail())
+            @elseif(!$user->email_verified)
                 <div class="text-center py-4">
                     <i class="fas fa-lock text-4xl text-gray-400 mb-3"></i>
                     <p class="text-sm text-gray-500 mb-2">
@@ -205,13 +205,13 @@
                             <label for="phone_code" class="block text-sm font-medium text-gray-700 mb-2">
                                 Verification Code
                             </label>
-                            <div class="flex space-x-2">
+                            <div class="space-y-3">
                                 <input type="text" id="phone_code" name="phone_code" 
                                        maxlength="6" placeholder="000000"
-                                       class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-center text-lg font-mono tracking-widest">
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-center text-lg font-mono tracking-widest">
                                 <button type="submit" id="verifyPhoneBtn"
-                                        class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200">
-                                    Verify
+                                        class="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200 font-medium">
+                                    <i class="fas fa-shield-alt mr-2"></i>Verify Phone Number
                                 </button>
                             </div>
                         </div>
@@ -220,9 +220,9 @@
                     <!-- Resend SMS Button -->
                     <div class="mt-4">
                         <button type="button" id="resendSmsBtn" 
-                                class="inline-flex items-center px-4 py-2 border border-green-300 text-green-700 bg-green-50 rounded-lg hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200">
+                                class="w-full inline-flex items-center justify-center px-4 py-2 border border-green-300 text-green-700 bg-green-50 rounded-lg hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200">
                             <i class="fas fa-sms mr-2"></i>
-                            Resend SMS
+                            Resend SMS Code
                         </button>
                         
                         <div id="smsResendMessage" class="hidden mt-2"></div>
@@ -233,7 +233,7 @@
     </div>
 
     <!-- Completion Status -->
-    @if($user->hasCompletedRequiredVerifications())
+    @if($user->email_verified && $user->phone_verified)
         <div class="mt-8 p-6 bg-green-50 border border-green-200 rounded-lg">
             <div class="flex items-center">
                 <i class="fas fa-check-circle text-green-500 text-2xl mr-4"></i>
