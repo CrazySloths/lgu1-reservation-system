@@ -57,6 +57,43 @@ class AuthSecurityService
     }
 
     /**
+     * Send email verification for registration (before user account is created)
+     */
+    public function sendEmailVerificationForRegistration(string $email, string $name, string $token): bool
+    {
+        try {
+            $verificationUrl = route('citizen.auth.verify-email', ['token' => $token]);
+
+            // Log the intent to send a registration verification email
+            Log::info('Attempting to send registration email verification', [
+                'email' => $email,
+                'name' => $name,
+                'verification_url' => $verificationUrl,
+            ]);
+
+            // Send the email using the registration-specific Mailable
+            Mail::to($email)->send(new \App\Mail\RegistrationVerificationMail($name, $email, $verificationUrl));
+            
+            Log::info('Registration email verification Mailable dispatched successfully', [
+                'email' => $email,
+                'name' => $name
+            ]);
+            
+            return true;
+
+        } catch (\Exception $e) {
+            // Log the email sending failure
+            Log::error('Failed to send registration verification email', [
+                'email' => $email,
+                'name' => $name,
+                'error' => $e->getMessage(),
+            ]);
+            
+            return false;
+        }
+    }
+
+    /**
      * Send SMS OTP verification
      */
     public function sendSmsVerification(User $user): bool
@@ -96,6 +133,44 @@ class AuthSecurityService
         }
     }
 
+    /**
+     * Send SMS OTP verification for registration (before user account is created)
+     */
+    public function sendSmsVerificationForRegistration(string $phoneNumber, string $name, string $code): bool
+    {
+        try {
+            // Log the SMS details
+            Log::info('SMS Registration Verification Sent', [
+                'phone' => $phoneNumber,
+                'name' => $name,
+                'code' => $code
+            ]);
+
+            // Send SMS via Twilio
+            $this->sendSms($phoneNumber, "Your LGU1 verification code is: {$code}");
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Failed to send SMS registration verification', [
+                'phone' => $phoneNumber,
+                'name' => $name,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Generate SMS verification code
+     */
+    public function generateSmsCode(): string
+    {
+        return str_pad(random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Send SMS via Twilio
+     */
     protected function sendSms(string $recipient, string $message): void
     {
         $accountSid = config('services.twilio.sid');
