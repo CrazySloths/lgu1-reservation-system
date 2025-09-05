@@ -77,6 +77,9 @@
         </div>
     @endif
 
+    <!-- Development Mode: Show Verification Codes (only after email verification) -->
+    @if(config('app.env') === 'local' && $user->hasVerifiedEmail() && $user->phone_verification_code)
+    
     <!-- Development Mode: Show Verification Codes -->
     @if(config('app.env') === 'local' && session('dev_sms_verification'))
         <div class="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -85,6 +88,15 @@
                 <div class="ml-3">
                     <h3 class="text-sm font-medium text-yellow-800">Development Mode - SMS Code</h3>
                     <div class="mt-2 text-sm text-yellow-700 space-y-2">
+                        <div class="p-2 bg-yellow-100 rounded border">
+                            <strong>SMS Code:</strong>
+                            <span class="font-mono text-lg">{{ $user->phone_verification_code }}</span>
+                            <br><small>Expires: {{ $user->phone_verification_sent_at?->addMinutes(10)->format('Y-m-d H:i:s') }}</small>
+                            <br><small>Sent to: {{ $user->phone_number }}</small>
+                        </div>
+                        <p class="text-xs text-yellow-600">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            This SMS code is only shown in development mode for testing purposes.
                         @if(session('dev_sms_verification'))
                             <div class="p-2 bg-yellow-100 rounded border">
                                 <strong>SMS Code:</strong>
@@ -151,6 +163,7 @@
         </div>
 
         <!-- Phone Verification Section -->
+        <div class="border border-gray-200 rounded-lg p-6 {{ !$user->hasVerifiedEmail() ? 'opacity-50' : '' }}">
         <div class="border border-gray-200 rounded-lg p-6">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center">
@@ -162,6 +175,11 @@
                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             <i class="fas fa-check mr-1"></i>
                             Verified
+                        </span>
+                    @elseif(!$user->hasVerifiedEmail())
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                            <i class="fas fa-lock mr-1"></i>
+                            Waiting for Email
                         </span>
                     @else
                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
@@ -177,6 +195,16 @@
                     <i class="fas fa-check-circle text-green-500 mr-2"></i>
                     Your phone number <strong>{{ $user->phone_number }}</strong> has been verified successfully.
                 </p>
+            @elseif(!$user->hasVerifiedEmail())
+                <div class="text-center py-4">
+                    <i class="fas fa-lock text-4xl text-gray-400 mb-3"></i>
+                    <p class="text-sm text-gray-500 mb-2">
+                        <strong>Please verify your email first</strong>
+                    </p>
+                    <p class="text-xs text-gray-400">
+                        SMS verification will be available after you verify your email address.
+                    </p>
+                </div>
             @else
                 <div>
                     <p class="text-sm text-gray-600 mb-4">

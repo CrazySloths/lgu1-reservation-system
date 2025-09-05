@@ -34,7 +34,7 @@
                 <div class="w-10 h-10 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-medium">
                     3
                 </div>
-                <span class="ml-3 text-sm text-gray-600">ID & Security</span>
+                <span class="ml-3 text-sm text-gray-600">Security</span>
             </div>
         </div>
     </div>
@@ -254,51 +254,17 @@
                 </button>
                 <button type="button" onclick="proceedToStep3()" 
                         class="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200">
-                    Next: ID & Security
+                    Next: Security
                     <i class="fas fa-arrow-right ml-2"></i>
                 </button>
             </div>
         </div>
 
-        <!-- Step 3: ID Verification & Account Security -->
+        <!-- Step 3: Account Security -->
         <div id="registrationStep3" class="registration-step hidden">
             <h3 class="text-lg font-semibold text-gray-800 mb-6">
-                <i class="fas fa-id-card mr-2 text-green-600"></i>ID Verification & Account Security
+                <i class="fas fa-lock mr-2 text-green-600"></i>Account Security
             </h3>
-
-            <!-- ID Type -->
-            <div class="mb-6">
-                <label for="id_type" class="block text-sm font-medium text-gray-700 mb-2">
-                    Valid ID Type <span class="text-red-500">*</span>
-                </label>
-                <select id="id_type" name="id_type" required
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('id_type') border-red-500 @enderror">
-                    <option value="">Select ID Type</option>
-                    <option value="Government-Issued ID">Government-Issued ID</option>
-                    <option value="School ID">School ID</option>
-                    <option value="Driver's License">Driver's License</option>
-                    <option value="Passport">Passport</option>
-                    <option value="Senior Citizen ID">Senior Citizen ID</option>
-                    <option value="PWD ID">PWD ID</option>
-                    <option value="Voter's ID">Voter's ID</option>
-                </select>
-                @error('id_type')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- ID Number -->
-            <div class="mb-6">
-                <label for="id_number" class="block text-sm font-medium text-gray-700 mb-2">
-                    ID Number <span class="text-red-500">*</span>
-                </label>
-                <input id="id_number" name="id_number" type="text" required value="{{ old('id_number') }}"
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('id_number') border-red-500 @enderror"
-                       placeholder="Enter your ID number">
-                @error('id_number')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
 
             <!-- Password -->
             <div class="mb-6">

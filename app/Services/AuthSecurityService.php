@@ -7,6 +7,7 @@ use App\Mail\EmailVerificationMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use PragmaRX\Google2FA\Google2FA;
+use Twilio\Rest\Client;
 
 class AuthSecurityService
 {
@@ -62,7 +63,7 @@ class AuthSecurityService
     {
         try {
             $code = $user->generatePhoneVerificationCode();
-
+          
             // For development: Store SMS code in session for easy access
             if (config('app.env') === 'local') {
                 session()->put('dev_sms_verification', [
@@ -79,6 +80,9 @@ class AuthSecurityService
                 'code' => $code
             ]);
 
+            // Send SMS via Twilio
+            $this->sendSms($user->phone_number, "Your LGU1 verification code is: {$code}");
+
             // TODO: In production, integrate with actual SMS service (Twilio, Nexmo, etc.)
             // $this->sendSms($user->phone_number, "Your LGU1 verification code is: {$code}");
 
@@ -92,9 +96,70 @@ class AuthSecurityService
         }
     }
 
+    protected function sendSms(string $recipient, string $message): void
+    {
+        $accountSid = config('services.twilio.sid');
+        $authToken = config('services.twilio.token');
+        $fromNumber = config('services.twilio.from');
+
+        if (!$accountSid || !$authToken || !$fromNumber) {
+            Log::error('Twilio credentials are not configured.');
+            return;
+        }
+
+        // Format Philippine phone numbers for international use
+        $formattedRecipient = $this->formatPhoneNumber($recipient);
+
+        try {
+            $client = new Client($accountSid, $authToken);
+            $client->messages->create($formattedRecipient, [
+                'from' => $fromNumber,
+                'body' => $message,
+            ]);
+
+            Log::info('SMS sent successfully via Twilio', [
+                'original' => $recipient,
+                'formatted' => $formattedRecipient
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send SMS via Twilio', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
     /**
-     * Generate TOTP secret for authenticator apps
+     * Format phone number for international use (specifically for Philippine numbers)
      */
+    protected function formatPhoneNumber(string $phoneNumber): string
+    {
+        // Remove any spaces, dashes, or other non-digit characters
+        $cleaned = preg_replace('/[^\d+]/', '', $phoneNumber);
+        
+        // If it already starts with +63, return as is
+        if (str_starts_with($cleaned, '+63')) {
+            return $cleaned;
+        }
+        
+        // If it starts with 63, add +
+        if (str_starts_with($cleaned, '63')) {
+            return '+' . $cleaned;
+        }
+        
+        // If it starts with 09, convert to +639
+        if (str_starts_with($cleaned, '09')) {
+            return '+63' . substr($cleaned, 1);
+        }
+        
+        // If it starts with 9 (without the 0), convert to +639
+        if (str_starts_with($cleaned, '9') && strlen($cleaned) === 10) {
+            return '+63' . $cleaned;
+        }
+        
+        // For any other format, assume it's Philippine and add +63
+        return '+63' . ltrim($cleaned, '0');
+    }
+
     public function generateTotpSecret(User $user): string
     {
         $secret = $this->google2fa->generateSecretKey();
@@ -244,4 +309,3 @@ class AuthSecurityService
             'sms' => session('dev_sms_verification'),
         ];
     }
-}

@@ -47,8 +47,6 @@ class CitizenAuthController extends Controller
             'street_address' => 'required|string|max:255',
             'address' => 'required|string|max:500', // This will be auto-generated from the components
             'date_of_birth' => 'required|date|before:today',
-            'id_type' => 'required|in:Government-Issued ID,School ID,Driver\'s License,Passport,Senior Citizen ID,PWD ID,Voter\'s ID',
-            'id_number' => 'required|string|max:50',
         ]);
 
         if ($validator->fails()) {
@@ -81,6 +79,17 @@ class CitizenAuthController extends Controller
             'two_factor_enabled' => false,
         ]);
 
+        // Send email verification only (SMS will be sent after email verification)
+        $emailSent = $this->authSecurityService->sendEmailVerification($user);
+
+        // Store user ID in session for verification process
+        Session::put('verification_user_id', $user->id);
+        Session::put('verification_step', 'email_pending');
+
+        if (!$emailSent) {
+            return back()->withErrors([
+                'verification' => 'Failed to send email verification. Please try again.'
+              
         // Send email verification
         $emailSent = $this->authSecurityService->sendEmailVerification($user);
         
@@ -98,6 +107,7 @@ class CitizenAuthController extends Controller
         }
 
         return redirect()->route('citizen.auth.verify')
+            ->with('success', 'Account created! Please check your email to verify your account. Phone verification will be available after email verification.');
             ->with('success', 'Account created! Please check your email to verify your account and then proceed with phone verification.');
     }
 
@@ -229,6 +239,22 @@ class CitizenAuthController extends Controller
         }
 
         if ($user->verifyEmail($token)) {
+            // Email verified successfully, now send SMS verification
+            $smsSent = $this->authSecurityService->sendSmsVerification($user);
+            
+            // Update verification step
+            Session::put('verification_step', 'sms_pending');
+            
+            $this->checkVerificationCompletion($user);
+            
+            if ($smsSent) {
+                return redirect()->route('citizen.auth.verify')
+                    ->with('success', 'Email verified successfully! We\'ve sent a verification code to your phone number.');
+            } else {
+                return redirect()->route('citizen.auth.verify')
+                    ->with('success', 'Email verified successfully!')
+                    ->withErrors(['sms' => 'Failed to send SMS verification. Please use the "Resend SMS" button.']);
+            }
             $this->checkVerificationCompletion($user);
             return redirect()->route('citizen.auth.verify')
                 ->with('success', 'Email verified successfully!');

@@ -15,6 +15,10 @@ return new class extends Migration
             $table->string('first_name')->nullable()->after('name');
             $table->string('middle_name')->nullable()->after('first_name');
             $table->string('last_name')->nullable()->after('middle_name');
+            $table->string('region')->nullable()->after('address');
+            $table->string('city')->nullable()->after('region');
+            $table->string('barangay')->nullable()->after('city');
+            $table->string('street_address')->nullable()->after('barangay');
         });
     }
 
@@ -24,7 +28,15 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['first_name', 'middle_name', 'last_name']);
+            $table->dropColumn([
+                'first_name',
+                'middle_name', 
+                'last_name',
+                'region',
+                'city',
+                'barangay',
+                'street_address'
+            ]);
         });
     }
 };

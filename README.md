@@ -34,3 +34,44 @@ If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Lar
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+- **Real-time AI Recommendations**: Get smart facility suggestions based on historical data.
+
+## 🚀 Getting Started
+
+Follow these instructions to get a copy of the project up and running on your local machine for development and testing purposes.
+
+- `DB_DATABASE=lgu1-reservation`
+- `DB_USERNAME=root`
+- `DB_PASSWORD=`
+
+### Email Configuration
+
+For email verification and notifications to work, you need to configure your mail server settings. Update the following variables in your `.env` file with your SMTP server details:
+
+```
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=your_mailtrap_username
+MAIL_USERNAME=your_mailtrap_password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="hello@example.com"
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+### SMS OTP Configuration
+
+For SMS OTP verification to work, you need a Twilio account. Update the following variables in your `.env` file with your Twilio credentials:
+
+```
+TWILIO_SID=your_twilio_sid
+TWILIO_AUTH_TOKEN=your_twilio_auth_token
+TWILIO_FROM=your_twilio_phone_number
+```
+
+### Step 4: Run Database Migrations
+
+```bash
+php artisan migrate
+```

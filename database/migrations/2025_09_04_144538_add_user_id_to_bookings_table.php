@@ -12,13 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('bookings', function (Blueprint $table) {
-            // Add document file path columns if they don't exist
-            if (!Schema::hasColumn('bookings', 'id_back_path')) {
-                $table->string('id_back_path')->nullable()->after('valid_id_path');
-            }
-            if (!Schema::hasColumn('bookings', 'id_selfie_path')) {
-                $table->string('id_selfie_path')->nullable()->after('id_back_path');
-            }
+            $table->unsignedBigInteger('user_id')->nullable()->after('id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
@@ -28,7 +23,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('bookings', function (Blueprint $table) {
-            $table->dropColumn(['id_back_path', 'id_selfie_path']);
+            $table->dropForeign(['user_id']);
+            $table->dropColumn('user_id');
         });
     }
 };
