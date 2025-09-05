@@ -100,6 +100,15 @@ class AuthSecurityService
     {
         try {
             $code = $user->generatePhoneVerificationCode();
+          
+            // For development: Store SMS code in session for easy access
+            if (config('app.env') === 'local') {
+                session()->put('dev_sms_verification', [
+                    'phone' => $user->phone_number,
+                    'code' => $code,
+                    'expires_at' => now()->addMinutes(10)->format('Y-m-d H:i:s')
+                ]);
+            }
 
             // Log the SMS details
             Log::info('SMS Verification Sent', [
@@ -110,6 +119,9 @@ class AuthSecurityService
 
             // Send SMS via Twilio
             $this->sendSms($user->phone_number, "Your LGU1 verification code is: {$code}");
+
+            // TODO: In production, integrate with actual SMS service (Twilio, Nexmo, etc.)
+            // $this->sendSms($user->phone_number, "Your LGU1 verification code is: {$code}");
 
             return true;
         } catch (\Exception $e) {
@@ -223,9 +235,6 @@ class AuthSecurityService
         return '+63' . ltrim($cleaned, '0');
     }
 
-    /**
-     * Generate TOTP secret for authenticator apps
-     */
     public function generateTotpSecret(User $user): string
     {
         $secret = $this->google2fa->generateSecretKey();
@@ -361,4 +370,17 @@ class AuthSecurityService
         ]);
     }
 
-}
+    /**
+     * Get development verification codes (for testing only)
+     */
+    public function getDevVerificationCodes(): array
+    {
+        if (config('app.env') !== 'local') {
+            return [];
+        }
+
+        return [
+            'email' => session('dev_email_verification'),
+            'sms' => session('dev_sms_verification'),
+        ];
+    }
