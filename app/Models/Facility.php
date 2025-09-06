@@ -50,4 +50,12 @@ class Facility extends Model
         'longitude' => 'float',
         'capacity' => 'integer',
     ];
+    
+    /**
+     * Get the bookings for the facility.
+     */
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class, 'facility_id', 'facility_id');
+    }
 }

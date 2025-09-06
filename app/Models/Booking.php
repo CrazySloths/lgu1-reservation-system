@@ -46,6 +46,9 @@ class Booking extends Model
         'expected_attendees',
         'total_fee',
         'status',
+        'staff_verified_by',
+        'staff_verified_at',
+        'staff_notes',
         'admin_notes',
         'approved_by',
         'approved_at',
@@ -70,6 +73,7 @@ class Booking extends Model
         'end_time' => 'string',
         'expected_attendees' => 'integer',
         'total_fee' => 'float',
+        'staff_verified_at' => 'datetime',
         'approved_at' => 'datetime',
     ];
 
@@ -87,6 +91,22 @@ class Booking extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Get the staff member who verified the booking requirements.
+     */
+    public function staffVerifier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'staff_verified_by');
+    }
+
+    /**
+     * Get the admin who approved the booking.
+     */
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     /**

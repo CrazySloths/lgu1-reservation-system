@@ -54,8 +54,8 @@
         .verify-button {
             display: inline-block;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            text-decoration: none;
+            color: white !important;
+            text-decoration: none !important;
             padding: 15px 30px;
             border-radius: 6px;
             font-weight: 600;
@@ -63,6 +63,8 @@
             text-align: center;
             margin: 20px 0;
             transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
         }
         .verify-button:hover {
             transform: translateY(-2px);
@@ -145,7 +147,19 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>🏛️ LGU1 Portal</h1>
+            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                <!-- Replace this with your actual logo -->
+                <div style="margin-right: 15px;">
+                    <img src="{{ asset('images/lgu-logo.png') }}" 
+                        alt="LGU1 Logo" 
+                        width="48" 
+                        height="48" 
+                        style="border-radius: 8px;">
+                </div>
+                <div>
+                    <h1 style="margin: 0; font-size: 28px; font-weight: 600;">LGU1 Portal</h1>
+                </div>
+            </div>
             <p>Local Government Unit Facility Reservation System</p>
         </div>
 
@@ -162,7 +176,7 @@
             </div>
 
             <div class="button-container">
-                <a href="{{ $verificationUrl }}" class="verify-button">
+                <a href="{{ $verificationUrl }}" class="verify-button" target="_blank" style="color: white !important; text-decoration: none !important;">
                     ✉️ Verify Email Address
                 </a>
             </div>

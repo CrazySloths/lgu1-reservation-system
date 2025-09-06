@@ -1,3 +1,28 @@
+@php
+    // Helper function to determine if a route is active
+    function isActiveRoute($routeNames, $exactMatch = false) {
+        $currentRoute = Route::currentRouteName();
+        
+        if (is_string($routeNames)) {
+            $routeNames = [$routeNames];
+        }
+        
+        foreach ($routeNames as $routeName) {
+            if ($exactMatch) {
+                if ($currentRoute === $routeName) {
+                    return true;
+                }
+            } else {
+                if (str_starts_with($currentRoute, $routeName)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+@endphp
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -110,7 +135,7 @@
                 <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Main</h4>
                 <ul class="space-y-1">
                     <li>
-                        <a href="{{ route('home') }}" class="sidebar-link active flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
+                        <a href="{{ route('admin.dashboard') }}" class="sidebar-link {{ isActiveRoute(['admin.dashboard'], true) ? 'active' : '' }} flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
                             <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
                             </svg>
@@ -118,15 +143,24 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('admin.reservations.index') }}" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
+                        <a href="{{ route('admin.reservations.index') }}" class="sidebar-link {{ isActiveRoute(['admin.reservations']) ? 'active' : '' }} flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
                             <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clip-rule="evenodd"/>
+                                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm2.5 4a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm2.45 4a2.5 2.5 0 10-4.9 0h4.9zM12 9a1 1 0 100 2h3a1 1 0 100-2h-3zm-1 4a1 1 0 011-1h2a1 1 0 110 2h-2a1 1 0 01-1-1z" clip-rule="evenodd"/>
                             </svg>
                             Reservation Review
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('admin.payment-slips.index') }}" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
+                        <a href="{{ route('calendar') }}" class="sidebar-link {{ isActiveRoute(['calendar'], true) ? 'active' : '' }} flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
+                            <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                            </svg>
+                            Calendar Overview
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.payment-slips.index') }}" class="sidebar-link {{ isActiveRoute(['admin.payment-slips']) ? 'active' : '' }} flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
                             <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"/>
                             </svg>
@@ -182,13 +216,13 @@
                                 </svg>
                                 Approval & Oversight
                             </div>
-                            <svg class="w-4 h-4 transform transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-4 h-4 transform transition-transform duration-200 {{ isActiveRoute(['bookings', 'reservation']) ? 'rotate-180' : '' }}" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
                             </svg>
                         </button>
-                        <ul class="sidebar-submenu hidden ml-8 mt-2 space-y-1">
-                            <li><a href="{{ route('bookings.approval') }}" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Pending Approvals</a></li>
-                            <li><a href="{{ route('reservation.status') }}" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>All Reservations</a></li>
+                        <ul class="sidebar-submenu {{ isActiveRoute(['bookings', 'reservation']) ? '' : 'hidden' }} ml-8 mt-2 space-y-1">
+                            <li><a href="{{ route('bookings.approval') }}" class="sidebar-link {{ isActiveRoute(['bookings']) ? 'active' : '' }} flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Pending Approvals</a></li>
+                            <li><a href="{{ route('reservation.status') }}" class="sidebar-link {{ isActiveRoute(['reservation']) ? 'active' : '' }} flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>All Reservations</a></li>
                             <li><a href="#conflict-resolution" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>Schedule Conflicts</a></li>
                         </ul>
                     </li>
@@ -208,13 +242,13 @@
                                 </svg>
                                 Facility Management
                             </div>
-                            <svg class="w-4 h-4 transform transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-4 h-4 transform transition-transform duration-200 {{ isActiveRoute(['facility.list']) ? 'rotate-180' : '' }}" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
                             </svg>
                         </button>
-                        <ul class="sidebar-submenu hidden ml-8 mt-2 space-y-1">
-                            <li><a href="{{ route('facility.list') }}" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm6 6H7v2h6v-2z" clip-rule="evenodd"/></svg>Manage Facilities</a></li>
-                            <li><a href="{{ route('calendar') }}" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>Calendar Overview</a></li>
+                        <ul class="sidebar-submenu {{ isActiveRoute(['facility.list']) ? '' : 'hidden' }} ml-8 mt-2 space-y-1">
+                            <li><a href="{{ route('facility.list') }}" class="sidebar-link {{ isActiveRoute(['facility.list'], true) ? 'active' : '' }} flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm6 6H7v2h6v-2z" clip-rule="evenodd"/></svg>Manage Facilities</a></li>
+                            <li><a href="{{ route('calendar') }}" class="sidebar-link {{ isActiveRoute(['calendar']) ? 'active' : '' }} flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>Calendar Overview</a></li>
                             <li><a href="#facility-maintenance" class="sidebar-link flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg"><svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/></svg>Maintenance Logs</a></li>
                         </ul>
                     </li>
@@ -229,7 +263,7 @@
                 <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Reports</h4>
                 <ul class="space-y-1">
                     <li>
-                        <a href="{{ route('forecast') }}" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
+                        <a href="{{ route('forecast') }}" class="sidebar-link {{ isActiveRoute(['forecast']) ? 'active' : '' }} flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
                             <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
                             </svg>
@@ -309,28 +343,13 @@
                 });
             });
 
-            // Active link functionality
+            // Mobile sidebar close functionality
             sidebarLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
-                    
-                    
-                    // Remove active class from all links
-                    sidebarLinks.forEach(l => l.classList.remove('active'));
-                    
-                    // Add active class to clicked link
-                    this.classList.add('active');
-                    
                     // Close sidebar on mobile after clicking a link
                     if (window.innerWidth < 1024) {
                         closeSidebar();
                     }
-                    
-                    // Simulate navigation (replace with actual routing logic)
-                    const href = this.getAttribute('href');
-                    console.log('Navigating to:', href);
-                    
-                    // You can add actual navigation logic here
-                    // For example: window.location.hash = href;
                 });
             });
 

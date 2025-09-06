@@ -88,7 +88,10 @@ class FacilityController extends Controller
         // Handle image upload
         $imagePath = null;
         if ($request->hasFile('facility_image')) {
-            $imagePath = $request->file('facility_image')->store('facilities', 'public');
+            $file = $request->file('facility_image');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('images/facilities'), $filename);
+            $imagePath = 'images/facilities/' . $filename;
         }
 
         // Set facility data with new pricing structure (based on interview findings)
@@ -151,11 +154,14 @@ class FacilityController extends Controller
         $imagePath = $facility->image_path; // Keep existing image by default
         if ($request->hasFile('facility_image')) {
             // Delete old image if it exists
-            if ($facility->image_path && \Storage::disk('public')->exists($facility->image_path)) {
-                \Storage::disk('public')->delete($facility->image_path);
+            if ($facility->image_path && file_exists(public_path($facility->image_path))) {
+                unlink(public_path($facility->image_path));
             }
             // Store new image
-            $imagePath = $request->file('facility_image')->store('facilities', 'public');
+            $file = $request->file('facility_image');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('images/facilities'), $filename);
+            $imagePath = 'images/facilities/' . $filename;
         }
 
         // Set facility data with new pricing structure (based on interview findings)
@@ -505,13 +511,23 @@ class FacilityController extends Controller
             // In a full microservices implementation, this would call the Booking Service
             Booking::create([
                 'facility_id' => $this->mapFacilityNameToId($validatedData['facility_id']),
+                'user_id' => Auth::id(), // ✅ FIX: Link booking to current user
                 'user_name' => $validatedData['applicant_name'],
+                'applicant_name' => $validatedData['applicant_name'],
+                'applicant_email' => $validatedData['email'],
+                'applicant_phone' => $validatedData['contact_number'],
                 'event_name' => $validatedData['event_name'],
-                'booking_date' => $validatedData['event_date'],
+                'event_description' => $validatedData['event_description'],
+                'event_date' => $validatedData['event_date'],
                 'start_time' => $validatedData['start_time'],
                 'end_time' => $validatedData['end_time'],
+                'expected_attendees' => $validatedData['expected_participants'],
+                'total_fee' => $totalFee,
                 'status' => 'pending',
-                'notes' => $validatedData['event_description'],
+                'valid_id_path' => $validIdPath,
+                'authorization_letter_path' => $authLetterPath,
+                'event_proposal_path' => $eventProposalPath,
+                'digital_signature' => $validatedData['digital_signature'],
             ]);
 
             return redirect()->route('reservations.status')
@@ -554,7 +570,8 @@ class FacilityController extends Controller
         \Log::info('AI-Enhanced Reservation request:', $request->all());
 
         // Validate the request
-        $validatedData = $request->validate([
+        try {
+            $validatedData = $request->validate([
             'facility_name' => 'required|string',
             'applicant_name' => 'required|string|max:255',
             'applicant_email' => 'required|email|max:255',
@@ -581,7 +598,11 @@ class FacilityController extends Controller
             'signature_method' => 'required|in:draw,upload',
             'signature_data' => 'nullable|string', // For drawn signature
             'signature_upload' => 'nullable|file|mimes:jpg,jpeg,png|max:2048', // For uploaded signature
-        ]);
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation failed:', ['errors' => $e->errors()]);
+            throw $e;  // Re-throw to maintain normal validation behavior
+        }
 
         try {
             // Get facility by name
@@ -641,7 +662,12 @@ class FacilityController extends Controller
             $duration = $this->calculateEventDuration($validatedData['start_time'], $validatedData['end_time']);
             $totalFee = $this->calculateTotalFee($facility, $duration);
 
+            // Convert time format from "09:00 AM" to "09:00:00"
+            $startTime = date('H:i:s', strtotime($validatedData['start_time']));
+            $endTime = date('H:i:s', strtotime($validatedData['end_time']));
+            
             // Create the booking record
+            
             $booking = Booking::create([
                 'facility_id' => $facility->facility_id,
                 'user_id' => Auth::id(),
@@ -653,8 +679,8 @@ class FacilityController extends Controller
                 'event_name' => $validatedData['event_name'],
                 'event_description' => $validatedData['event_description'],
                 'event_date' => $validatedData['event_date'],
-                'start_time' => $validatedData['start_time'],
-                'end_time' => $validatedData['end_time'],
+                'start_time' => $startTime,
+                'end_time' => $endTime,
                 'expected_attendees' => $validatedData['expected_attendees'],
                 'total_fee' => $totalFee,
                 'status' => 'pending',
@@ -697,18 +723,24 @@ class FacilityController extends Controller
 
         // Handle ID verification files
         if ($request->hasFile('id_front')) {
-            $uploadedFiles['id_front'] = $request->file('id_front')->store('documents/citizen_ids', 'public');
-            \Log::info('ID Front uploaded:', ['path' => $uploadedFiles['id_front']]);
+            $file = $request->file('id_front');
+            $filename = time() . '_front_' . $file->getClientOriginalName();
+            $file->move(public_path('documents/citizen_ids'), $filename);
+            $uploadedFiles['id_front'] = 'documents/citizen_ids/' . $filename;
         }
         
         if ($request->hasFile('id_back')) {
-            $uploadedFiles['id_back'] = $request->file('id_back')->store('documents/citizen_ids', 'public');
-            \Log::info('ID Back uploaded:', ['path' => $uploadedFiles['id_back']]);
+            $file = $request->file('id_back');
+            $filename = time() . '_back_' . $file->getClientOriginalName();
+            $file->move(public_path('documents/citizen_ids'), $filename);
+            $uploadedFiles['id_back'] = 'documents/citizen_ids/' . $filename;
         }
         
         if ($request->hasFile('selfie_with_id')) {
-            $uploadedFiles['id_selfie'] = $request->file('selfie_with_id')->store('documents/citizen_ids', 'public');
-            \Log::info('Selfie with ID uploaded:', ['path' => $uploadedFiles['id_selfie']]);
+            $file = $request->file('selfie_with_id');
+            $filename = time() . '_selfie_' . $file->getClientOriginalName();
+            $file->move(public_path('documents/citizen_ids'), $filename);
+            $uploadedFiles['id_selfie'] = 'documents/citizen_ids/' . $filename;
         }
 
         // Handle optional documents
@@ -723,6 +755,13 @@ class FacilityController extends Controller
         }
 
         // Handle signature (drawn or uploaded)
+        \Log::info('Processing signature...', [
+            'signature_method' => $validatedData['signature_method'] ?? 'not set',
+            'has_signature_upload' => $request->hasFile('signature_upload'),
+            'has_signature_data' => !empty($validatedData['signature_data'] ?? ''),
+            'signature_data_length' => isset($validatedData['signature_data']) ? strlen($validatedData['signature_data']) : 0
+        ]);
+        
         if ($validatedData['signature_method'] === 'upload' && $request->hasFile('signature_upload')) {
             $uploadedFiles['signature'] = $request->file('signature_upload')->store('documents/signatures', 'public');
             \Log::info('Signature uploaded:', ['path' => $uploadedFiles['signature']]);
@@ -730,6 +769,11 @@ class FacilityController extends Controller
             // Store drawn signature as base64 data
             $uploadedFiles['signature'] = $validatedData['signature_data'];
             \Log::info('Digital signature saved:', ['length' => strlen($validatedData['signature_data'])]);
+        } else {
+            \Log::warning('No signature processed', [
+                'signature_method' => $validatedData['signature_method'] ?? 'not set',
+                'validation_data_keys' => array_keys($validatedData)
+            ]);
         }
 
         \Log::info('File upload handling completed:', ['uploaded_files' => $uploadedFiles]);

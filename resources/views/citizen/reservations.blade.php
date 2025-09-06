@@ -70,8 +70,8 @@
                          data-hourly-rate="{{ $facility->hourly_rate }}">
                         
                         <!-- Facility Image -->
-                        @if($facility->image_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($facility->image_path))
-                            <img src="{{ asset('storage/' . $facility->image_path) }}" 
+                        @if($facility->image_path && file_exists(public_path($facility->image_path)))
+                            <img src="{{ asset($facility->image_path) }}" 
                                  alt="{{ $facility->name }}" 
                                  class="w-full h-40 object-cover rounded-lg mb-4">
                         @else
@@ -1465,6 +1465,37 @@ function clearSignature() {
 function isSignatureCanvasEmpty() {
     return !hasSignature;
 }
+
+// Add form submission handler to capture signature data
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('reservationForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const signatureMethod = document.querySelector('input[name="signature_method"]:checked').value;
+            
+            if (signatureMethod === 'draw') {
+                // Capture signature canvas data
+                const canvas = document.getElementById('signature_canvas');
+                if (canvas && !isSignatureCanvasEmpty()) {
+                    const signatureData = canvas.toDataURL('image/png');
+                    
+                    // Create or update hidden input for signature data
+                    let signatureInput = document.getElementById('signature_data_input');
+                    if (!signatureInput) {
+                        signatureInput = document.createElement('input');
+                        signatureInput.type = 'hidden';
+                        signatureInput.name = 'signature_data';
+                        signatureInput.id = 'signature_data_input';
+                        form.appendChild(signatureInput);
+                    }
+                    signatureInput.value = signatureData;
+                    
+                    console.log('Signature data captured:', signatureData.substring(0, 50) + '...');
+                }
+            }
+        });
+    }
+});
 
 function toggleSignatureMethod(method) {
     const drawSection = document.getElementById('signature_draw_section');

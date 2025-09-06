@@ -13,10 +13,17 @@ use App\Http\Controllers\PaymentSlipController;
 // ADMIN PORTAL ROUTES (Protected)
 // ============================================
 
-// Group all admin routes with role-based protection
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
+// Group all admin routes with LGU session timeout and role-based protection  
+Route::middleware(['auth', 'lgu.session.timeout', 'role:admin'])->prefix('admin')->group(function () {
+    // Dashboard (Main Overview)
+    Route::get('/dashboard', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/dashboard/quick-stats', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'getQuickStats'])->name('admin.dashboard.quick-stats');
+    
     // Facility Management
 Route::get('/facilities', [FacilityController::class, 'index'])->name('facility.list');
+    Route::get('/facilities/{id}', function($id) {
+        return redirect()->route('facility.list')->with('edit_facility', $id);
+    })->name('facilities.show');
     Route::post('/facilities', [FacilityController::class, 'store'])->name('facilities.store');
     Route::put('/facilities/{facility_id}', [FacilityController::class, 'update'])->name('facilities.update');
     Route::delete('/facilities/{facility_id}', [FacilityController::class, 'destroy'])->name('facilities.destroy');
@@ -77,21 +84,6 @@ Route::get('/facilities', function() {
     return redirect()->route('citizen.login');
 });
 
-// Individual facility view/edit routes
-Route::get('/facilities/{id}', function($id) {
-    if (auth()->check() && auth()->user()->isAdmin()) {
-        return redirect()->route('facility.list')->with('edit_facility', $id);
-    }
-    return redirect()->route('citizen.login');
-})->name('facilities.show');
-
-// Handle PUT requests to /facilities/{id} (forward to admin controller)
-Route::put('/facilities/{id}', function(Request $request, $id) {
-    if (auth()->check() && auth()->user()->isAdmin()) {
-        return app(\App\Http\Controllers\FacilityController::class)->update($request, $id);
-    }
-    return redirect()->route('citizen.login');
-});
 
 Route::get('/calendar', function() {
     if (auth()->check() && auth()->user()->isAdmin()) {
@@ -101,15 +93,37 @@ Route::get('/calendar', function() {
 });
 
 // ============================================
+// STAFF PORTAL ROUTES (Protected)
+// ============================================
+
+// Group all staff routes with LGU session timeout and role-based protection
+Route::middleware(['auth', 'lgu.session.timeout', 'role:staff'])->prefix('staff')->group(function () {
+    // Staff Dashboard (Main Overview)
+    Route::get('/dashboard', [\App\Http\Controllers\Staff\StaffDashboardController::class, 'index'])->name('staff.dashboard');
+    
+    // Booking Requirement Verification
+    Route::get('/verification', [\App\Http\Controllers\Staff\RequirementVerificationController::class, 'index'])->name('staff.verification.index');
+    Route::get('/verification/{booking}', [\App\Http\Controllers\Staff\RequirementVerificationController::class, 'show'])->name('staff.verification.show');
+    Route::post('/verification/{booking}/approve', [\App\Http\Controllers\Staff\RequirementVerificationController::class, 'approve'])->name('staff.verification.approve');
+    Route::post('/verification/{booking}/reject', [\App\Http\Controllers\Staff\RequirementVerificationController::class, 'reject'])->name('staff.verification.reject');
+    
+    // Staff Statistics and Reports
+    Route::get('/my-stats', [\App\Http\Controllers\Staff\StaffDashboardController::class, 'myStats'])->name('staff.stats');
+});
+
+// ============================================
 // CITIZEN PORTAL ROUTES
 // ============================================
 
-// Admin Authentication Routes (Public)
+// LGU Authentication Routes (Public)
 Route::prefix('admin')->group(function () {
     Route::middleware('guest')->group(function () {
-        Route::get('/login', [CitizenAuthController::class, 'showLoginForm'])->name('admin.login');
-        Route::post('/login', [CitizenAuthController::class, 'login'])->name('admin.login.submit');
+        Route::get('/login', [\App\Http\Controllers\Auth\LGUAuthController::class, 'showLoginForm'])->name('admin.login');
+        Route::get('/auth', [\App\Http\Controllers\Auth\LGUAuthController::class, 'handleTokenLogin'])->name('admin.lgu.auth');
     });
+    
+    // LGU Logout (for authenticated users)
+    Route::post('/logout', [\App\Http\Controllers\Auth\LGUAuthController::class, 'logout'])->name('admin.logout');
 });
 
 // Logout Route (for both admin and citizen)
@@ -183,7 +197,9 @@ Route::get('/login', function () {
 Route::get('/', function () {
     if (auth()->check()) {
         if (auth()->user()->isAdmin()) {
-            return redirect()->route('facility.list');
+            return redirect()->route('admin.dashboard');
+        } elseif (auth()->user()->isStaff()) {
+            return redirect()->route('staff.dashboard');
         } elseif (auth()->user()->isCitizen()) {
             return redirect()->route('citizen.dashboard');
         }

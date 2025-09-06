@@ -141,22 +141,28 @@ class CitizenAuthController extends Controller
             $currentRoute = $request->route()->getName();
             
             if ($currentRoute === 'admin.login.submit' || str_contains($request->url(), '/admin')) {
-                // Admin login attempt
+                // Admin/Staff login attempt (shared login portal)
                 if ($user->isAdmin()) {
-                    return redirect()->intended('/admin/facilities');
+                    return redirect()->intended('/admin/dashboard');
+                } elseif ($user->isStaff()) {
+                    return redirect()->intended('/staff/dashboard');
                 } else {
                     Auth::logout();
                     return back()->withErrors([
-                        'email' => 'Access denied. Admin credentials required for administrative access.',
+                        'email' => 'Access denied. Administrative or staff credentials required.',
                     ]);
                 }
             } else {
                 // Citizen login attempt
                 if ($user->isCitizen()) {
                     return redirect()->intended('citizen/dashboard');
-                } elseif ($user->isAdmin()) {
-                    // Admin trying to access citizen portal - redirect to admin
-                    return redirect()->route('admin.login')->with('info', 'Redirected to admin portal.');
+                } elseif ($user->isAdmin() || $user->isStaff()) {
+                    // Admin/Staff trying to access citizen portal - logout and give helpful guidance
+                    // Don't reveal that these accounts exist, but help users find the right portal
+                    Auth::logout();
+                    return back()->withErrors([
+                        'email' => 'Unable to sign in.',
+                    ]);
                 }
             }
         }
@@ -167,19 +173,20 @@ class CitizenAuthController extends Controller
     }
 
     /**
-     * Handle logout for both admin and citizen users
+     * Handle logout for admin, staff, and citizen users
      */
     public function logout(Request $request)
     {
         $user = Auth::user();
         $isAdmin = $user && $user->isAdmin();
+        $isStaff = $user && $user->isStaff();
         
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         // Redirect based on user role
-        if ($isAdmin) {
+        if ($isAdmin || $isStaff) {
             return redirect()->route('admin.login')->with('success', 'You have been logged out successfully.');
         } else {
             return redirect()->route('citizen.login')->with('success', 'You have been logged out successfully.');
@@ -407,11 +414,11 @@ class CitizenAuthController extends Controller
                 'email' => $registrationData['email'],
                 'error' => $e->getMessage()
             ]);
-            
-            return response()->json([
-                'success' => false,
+
+        return response()->json([
+            'success' => false,
                 'message' => 'Failed to complete registration. Please try again or contact support.'
-            ]);
+        ]);
         }
     }
 

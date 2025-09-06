@@ -2,9 +2,6 @@
 
 @section('title', 'New Reservation - LGU Facility Reservation System')
 
-@php
-    use Illuminate\Support\Facades\Storage;
-@endphp
 
 @section('content')
 <div class="min-h-screen bg-gray-50 py-8">
@@ -53,8 +50,8 @@
                                 @forelse($facilities as $facility)
                                     <label class="facility-option block border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all overflow-hidden">
                                         <div class="relative">
-                                            @if($facility->image_path && Storage::disk('public')->exists($facility->image_path))
-                                                <img src="{{ asset('storage/' . $facility->image_path) }}" 
+                                            @if($facility->image_path && file_exists(public_path($facility->image_path)))
+                                                <img src="{{ asset($facility->image_path) }}" 
                                                      alt="{{ $facility->name }}" 
                                                      class="w-full h-32 object-cover">
                                             @else

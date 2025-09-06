@@ -328,7 +328,7 @@
             
             // Show current image if exists
             if (imagePath && imagePath !== 'null' && imagePath !== '') {
-                document.getElementById('currentImageDisplay').src = `/storage/${imagePath}`;
+                document.getElementById('currentImageDisplay').src = `/${imagePath}`;
                 document.getElementById('currentImage').classList.remove('hidden');
             } else {
                 document.getElementById('currentImage').classList.add('hidden');

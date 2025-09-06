@@ -85,12 +85,12 @@
                 <div class="ml-3">
                     <h3 class="text-sm font-medium text-yellow-800">Development Mode - SMS Code</h3>
                     <div class="mt-2 text-sm text-yellow-700 space-y-2">
-                        <div class="p-2 bg-yellow-100 rounded border">
-                            <strong>SMS Code:</strong>
+                            <div class="p-2 bg-yellow-100 rounded border">
+                                <strong>SMS Code:</strong>
                             <span class="font-mono text-lg">{{ $user->phone_verification_code }}</span>
                             <br><small>Expires: {{ $user->phone_verification_sent_at?->addMinutes(10)->format('Y-m-d H:i:s') }}</small>
                             <br><small>Sent to: {{ $user->phone_number }}</small>
-                        </div>
+                            </div>
                         <p class="text-xs text-yellow-600">
                             <i class="fas fa-info-circle mr-1"></i>
                             This SMS code is only shown in development mode for testing purposes.

@@ -25,14 +25,29 @@ class RoleMiddleware
 
         // Check if user has the required role
         if ($user->role !== $role) {
-            // If citizen tries to access admin routes, redirect to citizen portal
-            if ($role === 'admin' && $user->isCitizen()) {
-                return redirect()->route('citizen.dashboard')->with('error', 'Access denied. You do not have administrative privileges.');
+            // Redirect based on user's actual role and what they're trying to access
+            if ($role === 'admin') {
+                if ($user->isCitizen()) {
+                    return redirect()->route('citizen.dashboard')->with('error', 'Access denied. You do not have administrative privileges.');
+                } elseif ($user->isStaff()) {
+                    return redirect()->route('staff.dashboard')->with('error', 'Access denied. Admin privileges required.');
+                }
             }
 
-            // If admin tries to access citizen routes, redirect to admin portal
-            if ($role === 'citizen' && $user->isAdmin()) {
-                return redirect()->route('facility.list')->with('error', 'Access denied. Please use the admin portal.');
+            if ($role === 'staff') {
+                if ($user->isCitizen()) {
+                    return redirect()->route('citizen.dashboard')->with('error', 'Access denied. Staff privileges required.');
+                } elseif ($user->isAdmin()) {
+                    return redirect()->route('admin.dashboard')->with('error', 'Access denied. This is a staff-only area.');
+                }
+            }
+
+            if ($role === 'citizen') {
+                if ($user->isAdmin()) {
+                    return redirect()->route('admin.dashboard')->with('error', 'Access denied. Please use the admin portal.');
+                } elseif ($user->isStaff()) {
+                    return redirect()->route('staff.dashboard')->with('error', 'Access denied. Please use the staff portal.');
+                }
             }
 
             // Default: Access denied

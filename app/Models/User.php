@@ -36,6 +36,9 @@ class User extends Authenticatable
         'id_number',
         'is_verified',
         'verified_at',
+        // LGU Authentication Fields
+        'lgu_user_id',
+        'lgu_username',
         // Authentication Security Fields
         'email_verified',
         'email_verification_token',
@@ -107,6 +110,14 @@ class User extends Authenticatable
     public function isCitizen(): bool
     {
         return $this->role === 'citizen';
+    }
+
+    /**
+     * Check if user is staff
+     */
+    public function isStaff(): bool
+    {
+        return $this->role === 'staff';
     }
 
     /**
