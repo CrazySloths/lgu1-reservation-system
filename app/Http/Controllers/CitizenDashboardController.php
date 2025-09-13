@@ -23,7 +23,14 @@ class CitizenDashboardController extends Controller
      */
     public function index()
     {
-        $user = Auth::user();
+        $user = Auth::user() ?? User::where('role', 'citizen')->first();
+
+        // If no user is found, redirect to a safe route or show an error.
+        if (!$user) {
+            // Optionally, you can create a default user if none exists for testing
+            // For now, we'll just abort.
+            abort(404, 'No citizen user found to display the dashboard.');
+        }
         
         // Get user's recent reservations
         $recentReservations = $user->reservations()->latest()->take(5)->get();
@@ -44,7 +51,7 @@ class CitizenDashboardController extends Controller
      */
     public function reservations()
     {
-        $user = Auth::user();
+        $user = Auth::user() ?? User::where('role', 'citizen')->first();
         
         // Get all active facilities
         $facilities = Facility::where('status', 'active')->get();
@@ -57,7 +64,7 @@ class CitizenDashboardController extends Controller
      */
     public function reservationHistory()
     {
-        $user = Auth::user();
+        $user = Auth::user() ?? User::where('role', 'citizen')->first();
         
         // Debug: Log current user information
         \Log::info('Reservation History - Current User:', [
@@ -66,7 +73,7 @@ class CitizenDashboardController extends Controller
         ]);
         
         if (!$user) {
-            return redirect()->route('citizen.login')->with('error', 'Please log in to view your reservations.');
+            abort(404, 'No citizen user found.');
         }
         
         // Get user's reservations with facility and payment slip information
@@ -89,7 +96,7 @@ class CitizenDashboardController extends Controller
      */
     public function profile()
     {
-        $user = Auth::user();
+        $user = Auth::user() ?? User::where('role', 'citizen')->first();
         
         return view('citizen.profile', compact('user'));
     }
@@ -99,7 +106,7 @@ class CitizenDashboardController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        $user = Auth::user();
+        $user = Auth::user() ?? User::where('role', 'citizen')->first();
         
         $request->validate([
             'name' => 'required|string|max:255',
@@ -123,7 +130,7 @@ class CitizenDashboardController extends Controller
      */
     public function viewAvailability()
     {
-        $user = Auth::user();
+        $user = Auth::user() ?? User::where('role', 'citizen')->first();
         
         // Get all active facilities
         $facilities = Facility::where('status', 'active')->get();

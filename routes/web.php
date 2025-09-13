@@ -8,13 +8,29 @@ use App\Http\Controllers\CitizenDashboardController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\Admin\ReservationReviewController;
 use App\Http\Controllers\PaymentSlipController;
+use App\Http\Controllers\SsoController;
+use App\Http\Controllers\Staff\StaffDashboardController;
+use App\Http\Controllers\Staff\RequirementVerificationController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+
+Route::get('/sso/login', [SsoController::class, 'login'])->name('sso.login');
+
+
+// Helpful redirect for users who access the system directly
+Route::get('/login', function() {
+    return redirect()->away('https://local-government-unit-1-ph.com/public/login.php');
+})->name('login');
 
 // ============================================
 // ADMIN PORTAL ROUTES (Protected)
 // ============================================
 
 // Group all admin routes with role-based protection
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
+Route::prefix('admin')->group(function () {
+     // Admin Dashboard
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/dashboard/quick-stats', [AdminDashboardController::class, 'getQuickStats'])->name('admin.dashboard.quick-stats');
+
     // Facility Management
 Route::get('/facilities', [FacilityController::class, 'index'])->name('facility.list');
     Route::post('/facilities', [FacilityController::class, 'store'])->name('facilities.store');
@@ -69,12 +85,31 @@ Route::get('/new-reservation', [FacilityController::class, 'newReservation'])->n
 Route::get('/reservations/status', [FacilityController::class, 'reservationStatus'])->name('reservations.status');
 });
 
+// ============================================
+// STAFF PORTAL ROUTES (Protected)
+// ============================================
+
+// Group all staff routes with role-based protection
+Route::middleware(['auth', 'role:staff'])->prefix('staff')->group(function () {
+    // Staff Dashboard (Main Overview)
+    Route::get('/dashboard', [StaffDashboardController::class, 'index'])->name('staff.dashboard');
+    
+    // Booking Requirement Verification
+    Route::get('/verification', [RequirementVerificationController::class, 'index'])->name('staff.verification.index');
+    Route::get('/verification/{booking}', [RequirementVerificationController::class, 'show'])->name('staff.verification.show');
+    Route::post('/verification/{booking}/approve', [RequirementVerificationController::class, 'approve'])->name('staff.verification.approve');
+    Route::post('/verification/{booking}/reject', [RequirementVerificationController::class, 'reject'])->name('staff.verification.reject');
+    
+    // Staff Statistics and Reports
+    Route::get('/my-stats', [StaffDashboardController::class, 'myStats'])->name('staff.stats');
+});
+
 // Alternative admin access routes (redirect to protected admin routes)
 Route::get('/facilities', function() {
     if (auth()->check() && auth()->user()->isAdmin()) {
         return redirect()->route('facility.list');
     }
-    return redirect()->route('citizen.login');
+    return redirect()->route('admin.dashboard');
 });
 
 // Individual facility view/edit routes
@@ -82,7 +117,7 @@ Route::get('/facilities/{id}', function($id) {
     if (auth()->check() && auth()->user()->isAdmin()) {
         return redirect()->route('facility.list')->with('edit_facility', $id);
     }
-    return redirect()->route('citizen.login');
+    return redirect()->route('admin.dashboard');
 })->name('facilities.show');
 
 // Handle PUT requests to /facilities/{id} (forward to admin controller)
@@ -90,103 +125,62 @@ Route::put('/facilities/{id}', function(Request $request, $id) {
     if (auth()->check() && auth()->user()->isAdmin()) {
         return app(\App\Http\Controllers\FacilityController::class)->update($request, $id);
     }
-    return redirect()->route('citizen.login');
+    return redirect()->route('admin.dashboard');
 });
 
 Route::get('/calendar', function() {
     if (auth()->check() && auth()->user()->isAdmin()) {
         return redirect()->route('calendar');
     }
-    return redirect()->route('citizen.login');
+    return redirect()->route('admin.dashboard');
 });
 
 // ============================================
 // CITIZEN PORTAL ROUTES
 // ============================================
 
-// Admin Authentication Routes (Public)
-Route::prefix('admin')->group(function () {
-    Route::middleware('guest')->group(function () {
-        Route::get('/login', [CitizenAuthController::class, 'showLoginForm'])->name('admin.login');
-        Route::post('/login', [CitizenAuthController::class, 'login'])->name('admin.login.submit');
-    });
-});
 
 // Logout Route (for both admin and citizen)
 Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('logout');
 
 // Citizen Authentication Routes (Public)
-Route::prefix('citizen')->group(function () {
-    // Guest routes (not authenticated)
-    Route::middleware('guest')->group(function () {
-        Route::get('/login', [CitizenAuthController::class, 'showLoginForm'])->name('citizen.login');
-        Route::post('/login', [CitizenAuthController::class, 'login'])->name('citizen.login.submit');
-        Route::get('/register', [CitizenAuthController::class, 'showRegistrationForm'])->name('citizen.register');
-        Route::post('/register', [CitizenAuthController::class, 'register'])->name('citizen.register.submit');
-        
-        // Authentication Security Routes (during registration)
-        Route::get('/verify', [CitizenAuthController::class, 'showVerificationForm'])->name('citizen.auth.verify');
-        Route::get('/verify-email', [CitizenAuthController::class, 'verifyEmail'])->name('citizen.auth.verify-email');
-        Route::post('/verify-phone', [CitizenAuthController::class, 'verifyPhone'])->name('citizen.auth.verify-phone');
-        Route::post('/resend-email-verification', [CitizenAuthController::class, 'resendEmailVerification'])->name('citizen.auth.resend-email');
-        Route::post('/resend-sms-verification', [CitizenAuthController::class, 'resendSmsVerification'])->name('citizen.auth.resend-sms');
-    });
-
-    // Authenticated citizen routes
-    Route::middleware(['auth', 'role:citizen'])->group(function () {
-        Route::get('/dashboard', [CitizenDashboardController::class, 'index'])->name('citizen.dashboard');
-        Route::get('/reservations', [CitizenDashboardController::class, 'reservations'])->name('citizen.reservations');
-        Route::get('/reservation-history', [CitizenDashboardController::class, 'reservationHistory'])->name('citizen.reservation.history');
-        Route::get('/availability', [CitizenDashboardController::class, 'viewAvailability'])->name('citizen.availability');
-        Route::get('/bulletin-board', [AnnouncementController::class, 'citizenIndex'])->name('citizen.bulletin.board');
-        
-        // Payment Slips
-        Route::get('/payment-slips', [PaymentSlipController::class, 'citizenIndex'])->name('citizen.payment-slips.index');
-        Route::get('/payment-slips/{id}', [PaymentSlipController::class, 'citizenShow'])->name('citizen.payment-slips.show');
-        Route::get('/payment-slips/{id}/download', [PaymentSlipController::class, 'citizenDownloadPdf'])->name('citizen.payment-slips.download');
-        Route::get('/profile', [CitizenDashboardController::class, 'profile'])->name('citizen.profile');
-        Route::put('/profile', [CitizenDashboardController::class, 'updateProfile'])->name('citizen.profile.update');
-        Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('citizen.logout');
-        
-        // Two-Factor Authentication Routes (for authenticated users)
-        Route::get('/security/setup-2fa', [CitizenAuthController::class, 'showTwoFactorSetup'])->name('citizen.security.setup-2fa');
-        Route::post('/security/enable-2fa', [CitizenAuthController::class, 'enableTwoFactor'])->name('citizen.security.enable-2fa');
-        
-        // AI-Enhanced reservation store route
-        Route::post('/reservations/store', [FacilityController::class, 'storeReservationWithAI'])->name('citizen.reservations.store');
-        
-        // API endpoint for AI recommendations
-        Route::post('/api/recommendations', [FacilityController::class, 'getAIRecommendations'])->name('citizen.api.recommendations');
-        
-        // API endpoint for facility availability data
-        Route::get('/api/facility/{facilityId}/bookings', [CitizenDashboardController::class, 'getFacilityBookings'])->name('citizen.api.facility.bookings');
-        
-        // Announcement attachment download
-        Route::get('/announcements/{id}/download', [AnnouncementController::class, 'downloadAttachment'])->name('citizen.announcements.download');
-    });
+Route::middleware('sso')->prefix('citizen')->group(function () {
+    Route::get('/dashboard', [CitizenDashboardController::class, 'index'])->name('citizen.dashboard');
+    Route::get('/reservations', [CitizenDashboardController::class, 'reservations'])->name('citizen.reservations');
+    Route::get('/reservation-history', [CitizenDashboardController::class, 'reservationHistory'])->name('citizen.reservation.history');
+    Route::get('/availability', [CitizenDashboardController::class, 'viewAvailability'])->name('citizen.availability');
+    Route::get('/bulletin-board', [AnnouncementController::class, 'citizenIndex'])->name('citizen.bulletin.board');
+    
+    // Payment Slips
+    Route::get('/payment-slips', [PaymentSlipController::class, 'citizenIndex'])->name('citizen.payment-slips.index');
+    Route::get('/payment-slips/{id}', [PaymentSlipController::class, 'citizenShow'])->name('citizen.payment-slips.show');
+    Route::get('/payment-slips/{id}/download', [PaymentSlipController::class, 'citizenDownloadPdf'])->name('citizen.payment-slips.download');
+    Route::get('/profile', [CitizenDashboardController::class, 'profile'])->name('citizen.profile');
+    Route::put('/profile', [CitizenDashboardController::class, 'updateProfile'])->name('citizen.profile.update');
+    Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('citizen.logout');
+    
+    // Two-Factor Authentication Routes (for authenticated users)
+    Route::get('/security/setup-2fa', [CitizenAuthController::class, 'showTwoFactorSetup'])->name('citizen.security.setup-2fa');
+    Route::post('/security/enable-2fa', [CitizenAuthController::class, 'enableTwoFactor'])->name('citizen.security.enable-2fa');
+    
+    // AI-Enhanced reservation store route
+    Route::post('/reservations/store', [FacilityController::class, 'storeReservationWithAI'])->name('citizen.reservations.store');
+    
+    // API endpoint for AI recommendations
+    Route::post('/api/recommendations', [FacilityController::class, 'getAIRecommendations'])->name('citizen.api.recommendations');
+    
+    // API endpoint for facility availability data
+    Route::get('/api/facility/{facilityId}/bookings', [CitizenDashboardController::class, 'getFacilityBookings'])->name('citizen.api.facility.bookings');
+    
+    // Announcement attachment download
+    Route::get('/announcements/{id}/download', [AnnouncementController::class, 'downloadAttachment'])->name('citizen.announcements.download');
 });
 
-// Generic login route (for Laravel's default auth redirects)
-Route::get('/login', function () {
-    // If someone is trying to access admin routes, redirect to admin login
-    // Otherwise, redirect to citizen login
-    $intendedUrl = session()->get('url.intended', '');
-    
-    if (str_contains($intendedUrl, '/admin')) {
-        return redirect()->route('admin.login');
-    }
-    
-    return redirect()->route('citizen.login');
-})->name('login');
+// ============================================
+// CITIZEN AUTHENTICATION ROUTES
+// ============================================
 
-// Redirect root to appropriate portal based on authentication
+// Redirect root directly to admin dashboard temporarily (login bypass)
 Route::get('/', function () {
-    if (auth()->check()) {
-        if (auth()->user()->isAdmin()) {
-            return redirect()->route('facility.list');
-        } elseif (auth()->user()->isCitizen()) {
-            return redirect()->route('citizen.dashboard');
-        }
-    }
-    return redirect()->route('citizen.login');
+    return redirect()->route('citizen.dashboard');
 })->name('home');

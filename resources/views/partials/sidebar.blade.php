@@ -110,7 +110,7 @@
                 <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Main</h4>
                 <ul class="space-y-1">
                     <li>
-                        <a href="{{ route('home') }}" class="sidebar-link active flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
+                        <a href="{{ route('admin.dashboard') }}" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
                             <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
                             </svg>
@@ -269,6 +269,67 @@
             const dropdownButtons = document.querySelectorAll('.sidebar-dropdown');
             const sidebarLinks = document.querySelectorAll('.sidebar-link');
 
+            // Set active link based on current URL
+            function setActiveLink() {
+                const currentPath = window.location.pathname;
+                const currentUrl = window.location.href;
+                
+                // Remove active from all links first
+                sidebarLinks.forEach(link => {
+                    link.classList.remove('active');
+                });
+                
+                let activeFound = false;
+                
+                // Check links in order of specificity (most specific first)
+                sidebarLinks.forEach(link => {
+                    if (activeFound) return; // Skip if we already found an active link
+                    
+                    const linkHref = link.getAttribute('href');
+                    if (!linkHref) return;
+                    
+                    // Most specific matches first
+                    if (linkHref.includes('reservations') && currentPath.includes('reservations')) {
+                        link.classList.add('active');
+                        activeFound = true;
+                    }
+                    else if (linkHref.includes('payment-slips') && currentPath.includes('payment')) {
+                        link.classList.add('active');
+                        activeFound = true;
+                    }
+                    else if (linkHref.includes('calendar') && currentPath.includes('calendar')) {
+                        link.classList.add('active');
+                        activeFound = true;
+                    }
+                    else if (linkHref.includes('facility') && currentPath.includes('facility')) {
+                        link.classList.add('active');
+                        activeFound = true;
+                    }
+                    else if (linkHref.includes('forecast') && currentPath.includes('forecast')) {
+                        link.classList.add('active');
+                        activeFound = true;
+                    }
+                    else if (linkHref.includes('booking') && currentPath.includes('booking')) {
+                        link.classList.add('active');
+                        activeFound = true;
+                    }
+                    else if (currentUrl === linkHref || currentPath === linkHref) {
+                        link.classList.add('active');
+                        activeFound = true;
+                    }
+                    else if ((linkHref.includes('/admin/dashboard') || linkHref.includes('admin.dashboard')) && currentPath === '/admin/dashboard') {
+                        // Admin Dashboard should only be active if no other specific match was found
+                        if (!activeFound) {
+                            link.classList.add('active');
+                            activeFound = true;
+                        }
+                    }
+                });
+            }
+
+            // Set active link on page load
+            setActiveLink();
+
             // Mobile sidebar toggle functionality
             function toggleSidebar() {
                 sidebar.classList.toggle('-translate-x-full');
@@ -312,7 +373,26 @@
             // Active link functionality
             sidebarLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
                     
+                    // Don't prevent default for actual routes - let Laravel handle navigation
+                    if (href && !href.startsWith('#')) {
+                        // Remove active class from all links
+                        sidebarLinks.forEach(l => l.classList.remove('active'));
+                        
+                        // Add active class to clicked link
+                        this.classList.add('active');
+                        
+                        // Close sidebar on mobile after clicking a link
+                        if (window.innerWidth < 1024) {
+                            closeSidebar();
+                        }
+                        
+                        // Let the browser handle the navigation
+                        return true;
+                    } else {
+                        // For hash links or non-route links, prevent default
+                        e.preventDefault();
                     
                     // Remove active class from all links
                     sidebarLinks.forEach(l => l.classList.remove('active'));
@@ -325,12 +405,8 @@
                         closeSidebar();
                     }
                     
-                    // Simulate navigation (replace with actual routing logic)
-                    const href = this.getAttribute('href');
-                    console.log('Navigating to:', href);
-                    
-                    // You can add actual navigation logic here
-                    // For example: window.location.hash = href;
+                        console.log('Non-route link clicked:', href);
+                    }
                 });
             });
 

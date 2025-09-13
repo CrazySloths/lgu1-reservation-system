@@ -38,9 +38,7 @@
     <!-- Citizen Profile Section -->
     <div class="p-6 border-b border-lgu-stroke">
         <div class="text-center">
-            @php
-                $user = Auth::user();
-            @endphp
+            @if(isset($user))
             <!-- Large Centered Avatar -->
             <div class="w-20 h-20 bg-lgu-highlight rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <span class="text-lgu-button-text font-bold text-2xl">{{ $user->avatar_initials }}</span>
@@ -50,6 +48,15 @@
             <div class="space-y-2">
                 <h3 class="text-white font-semibold text-base leading-tight">{{ $user->full_name }}</h3>
                 <p class="text-gray-300 text-sm break-all">{{ $user->email }}</p>
+            @else
+            <!-- Placeholder for when user is not available -->
+            <div class="w-20 h-20 bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <span class="text-white font-bold text-2xl">?</span>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-white font-semibold text-base leading-tight">Guest User</h3>
+                <p class="text-gray-300 text-sm">Not logged in</p>
+            @endif
                 
                 <!-- Status Badge -->
                 <div class="flex items-center justify-center mt-3">

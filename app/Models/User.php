@@ -18,6 +18,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'external_id',
         'name',
         'first_name',
         'middle_name',
@@ -107,6 +108,14 @@ class User extends Authenticatable
     public function isCitizen(): bool
     {
         return $this->role === 'citizen';
+    }
+
+    /**
+     * Check if user is a staff member
+     */
+    public function isStaff(): bool
+    {
+        return $this->role === 'staff';
     }
 
     /**

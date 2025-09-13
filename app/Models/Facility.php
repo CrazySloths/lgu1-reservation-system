@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Facility extends Model
 {
@@ -50,4 +51,12 @@ class Facility extends Model
         'longitude' => 'float',
         'capacity' => 'integer',
     ];
+
+    /**
+     * Relationship: Facility has many bookings
+     */
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'facility_id', 'facility_id');
+    }
 }
