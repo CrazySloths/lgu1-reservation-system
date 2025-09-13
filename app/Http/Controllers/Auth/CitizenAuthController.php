@@ -72,9 +72,6 @@ class CitizenAuthController extends Controller
             'date_of_birth' => $request->date_of_birth,
             'id_type' => $request->id_type,
             'id_number' => $request->id_number,
-            'is_verified' => false, // Account verified only after completing security verifications
-            'verified_at' => null,
-          
             // Security verification flags - all start as false
             'is_verified' => false,
             'verified_at' => null,
@@ -105,27 +102,11 @@ class CitizenAuthController extends Controller
         if (!$emailSent) {
             return back()->withErrors([
                 'verification' => 'Failed to send email verification. Please try again.'
-              
-        // Send email verification
-        $emailSent = $this->authSecurityService->sendEmailVerification($user);
-        
-        // Send SMS verification
-        $smsSent = $this->authSecurityService->sendSmsVerification($user);
-
-        // Store user ID in session for verification process
-        Session::put('verification_user_id', $user->id);
-        Session::put('verification_step', 'pending');
-
-        if (!$emailSent || !$smsSent) {
-            return back()->withErrors([
-                'verification' => 'Failed to send verification messages. Please try again.'
             ])->withInput();
         }
 
         return redirect()->route('citizen.auth.verify')
             ->with('success', 'Registration data received! Please check your email to verify your account. Your data will be saved after both email and SMS verification are completed.');
-            ->with('success', 'Account created! Please check your email to verify your account. Phone verification will be available after email verification.');
-            ->with('success', 'Account created! Please check your email to verify your account and then proceed with phone verification.');
     }
 
     /**
@@ -148,12 +129,24 @@ class CitizenAuthController extends Controller
      */
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => 'required|email',
+        // Accept either a real email or a username-style identifier in the 'email' field.
+        // If a non-email username is provided, normalize it to the local placeholder domain
+        // used by our seeder (for example: Admin-Facilities123 -> admin-facilities123@sso.local).
+        $data = $request->validate([
+            'email' => 'required|string',
             'password' => 'required',
         ]);
 
-        if (Auth::attempt($credentials)) {
+        $loginInput = $data['email'];
+        if (!filter_var($loginInput, FILTER_VALIDATE_EMAIL)) {
+            // normalize username to placeholder email used in DB seeder
+            $loginEmail = strtolower($loginInput) . '@sso.local';
+        } else {
+            $loginEmail = $loginInput;
+        }
+
+        // Attempt authentication with normalized email and provided password
+        if (Auth::attempt(['email' => $loginEmail, 'password' => $data['password']])) {
             $request->session()->regenerate();
 
             $user = Auth::user();
@@ -192,19 +185,14 @@ class CitizenAuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $user = Auth::user();
-        $isAdmin = $user && $user->isAdmin();
-        
         Auth::logout();
+
         $request->session()->invalidate();
+
         $request->session()->regenerateToken();
 
-        // Redirect based on user role
-        if ($isAdmin) {
-            return redirect()->route('admin.login')->with('success', 'You have been logged out successfully.');
-        } else {
-            return redirect()->route('citizen.login')->with('success', 'You have been logged out successfully.');
-        }
+        // Redirect to the central LGU1 login page after logout.
+        return redirect()->away('https://local-government-unit-1-ph.com/public/login.php');
     }
 
     // ========================================
@@ -277,12 +265,12 @@ class CitizenAuthController extends Controller
             return redirect()->route('citizen.auth.verify')
                 ->withErrors(['email_verification' => 'Invalid verification token.']);
         }
-      
+
         // Mark email as verified in session data
         $registrationData['email_verified'] = true;
         $registrationData['email_verification_token'] = null; // Clear token after use
         Session::put($sessionKey, $registrationData);
-        
+
         // Update verification step
         Session::put('verification_step', 'sms_pending');
 
@@ -298,35 +286,15 @@ class CitizenAuthController extends Controller
             $registrationData['first_name'] . ' ' . $registrationData['last_name'],
             $smsCode
         );
-        
+
         if ($smsSent) {
             return redirect()->route('citizen.auth.verify')
                 ->with('success', 'Email verified successfully! We\'ve sent a verification code to your phone number.');
-        } else {
-            return redirect()->route('citizen.auth.verify')
-                ->with('success', 'Email verified successfully!')
-                ->withErrors(['sms' => 'Failed to send SMS verification. Please use the "Resend SMS" button.']);
-        if ($user->verifyEmail($token)) {
-            // Email verified successfully, now send SMS verification
-            $smsSent = $this->authSecurityService->sendSmsVerification($user);
-            
-            // Update verification step
-            Session::put('verification_step', 'sms_pending');
-            
-            $this->checkVerificationCompletion($user);
-            
-            if ($smsSent) {
-                return redirect()->route('citizen.auth.verify')
-                    ->with('success', 'Email verified successfully! We\'ve sent a verification code to your phone number.');
-            } else {
-                return redirect()->route('citizen.auth.verify')
-                    ->with('success', 'Email verified successfully!')
-                    ->withErrors(['sms' => 'Failed to send SMS verification. Please use the "Resend SMS" button.']);
-            }
-            $this->checkVerificationCompletion($user);
-            return redirect()->route('citizen.auth.verify')
-                ->with('success', 'Email verified successfully!');
         }
+
+        return redirect()->route('citizen.auth.verify')
+            ->with('success', 'Email verified successfully!')
+            ->withErrors(['sms' => 'Failed to send SMS verification. Please use the "Resend SMS" button.']);
     }
 
     /**
@@ -593,7 +561,8 @@ class CitizenAuthController extends Controller
     public function showTwoFactorSetup()
     {
         if (!Auth::check()) {
-            return redirect()->route('citizen.login');
+            // Redirect to the single sign-on (SSO) login route if not authenticated.
+            return redirect()->route('sso.login');
         }
 
         $user = Auth::user();

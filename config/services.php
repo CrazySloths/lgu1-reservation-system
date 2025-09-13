@@ -41,4 +41,8 @@ return [
         ],
     ],
 
+    'sso' => [
+        'shared_secret' => env('SSO_SHARED_SECRET'),
+    ],
+
 ];

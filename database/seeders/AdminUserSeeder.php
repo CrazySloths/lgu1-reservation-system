@@ -91,6 +91,27 @@ class AdminUserSeeder extends Seeder
             ]
         );
 
+        // Create / Update LGU1 Facilities Admin from provided credentials
+        // Provided username may not be a valid email; create a local placeholder email if needed
+        $providedUsername = 'Admin-Facilities123';
+        $providedPassword = 'Admin-Facilities123';
+        $providedEmail = filter_var($providedUsername, FILTER_VALIDATE_EMAIL)
+            ? $providedUsername
+            : strtolower($providedUsername) . '@sso.local';
+
+        User::updateOrCreate(
+            ['email' => $providedEmail],
+            [
+                'name' => 'LGU1 Facilities Admin',
+                'email' => $providedEmail,
+                'password' => Hash::make($providedPassword),
+                'role' => 'admin',
+                'is_verified' => true,
+                'verified_at' => now(),
+                'email_verified_at' => now(),
+            ]
+        );
+
         $this->command->info('Admin and test users created successfully!');
         $this->command->table(
             ['Role', 'Email', 'Password', 'Status'],
