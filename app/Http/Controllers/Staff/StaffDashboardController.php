@@ -6,26 +6,75 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Booking;
 use Illuminate\Support\Facades\Auth;
+use App\Models\PaymentSlip;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class StaffDashboardController extends Controller
 {
     /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+
+
+    /**
      * Display the staff dashboard with verification metrics
      */
-    public function index()
+    public function index(Request $request)
     {
-        $staff = Auth::user();
+        // Handle SSO token-based login
+        if ($request->has('user_id') && $request->has('sig')) {
+            $user = User::find($request->input('user_id'));
+
+            // Verify the token and its expiration
+            if (
+                $user &&
+                $user->sso_token === $request->input('sig') &&
+                $user->sso_token_expires_at &&
+                now()->isBefore($user->sso_token_expires_at)
+            ) {
+                // Invalidate the token to prevent reuse
+                $user->forceFill(['sso_token' => null, 'sso_token_expires_at' => null])->save();
+
+                // Log the user in to create a persistent session
+                Auth::login($user);
+                session()->regenerate(); // Regenerate session to prevent fixation
+
+                // Redirect to the same page without the token in the URL
+                return redirect()->route('staff.dashboard');
+            }
+
+            // If token is invalid or expired, redirect back to SSO
+            return redirect()->away('https://local-government-unit-1-ph.com/public/login.php');
+        }
+
+        if (!Auth::check() || Auth::user() === null) {
+            // If user is not authenticated and no valid token is present, redirect to external SSO login
+            $ssoLoginUrl = 'https://local-government-unit-1-ph.com/public/login.php';
+            return redirect()->away($ssoLoginUrl);
+        }
+
+        $user = Auth::user();
+
+        // Handle case where user might not be fully authenticated yet
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Please login to access the staff dashboard.');
+        }
         
         // Get verification metrics
         $pendingVerifications = Booking::where('status', 'pending')
             ->whereNull('staff_verified_by')
             ->count();
             
-        $myVerificationsToday = Booking::where('staff_verified_by', $staff->id)
+        $myVerificationsToday = Booking::where('staff_verified_by', $user->id)
             ->whereDate('staff_verified_at', today())
             ->count();
             
-        $myTotalVerifications = Booking::where('staff_verified_by', $staff->id)
+        $myTotalVerifications = Booking::where('staff_verified_by', $user->id)
             ->count();
             
         $totalPendingAdmin = Booking::where('status', 'pending')
@@ -42,7 +91,7 @@ class StaffDashboardController extends Controller
 
         // Get my recent verifications
         $myRecentVerifications = Booking::with(['user', 'facility'])
-            ->where('staff_verified_by', $staff->id)
+            ->where('staff_verified_by', $user->id)
             ->orderBy('staff_verified_at', 'desc')
             ->take(5)
             ->get();
@@ -63,6 +112,11 @@ class StaffDashboardController extends Controller
     public function myStats()
     {
         $staff = Auth::user();
+        
+        // Handle case where user might not be fully authenticated yet
+        if (!$staff) {
+            return redirect()->route('login')->with('error', 'Please login to access staff statistics.');
+        }
         
         $stats = [
             'total_verifications' => Booking::where('staff_verified_by', $staff->id)->count(),

@@ -13,7 +13,9 @@ use App\Http\Controllers\Staff\StaffDashboardController;
 use App\Http\Controllers\Staff\RequirementVerificationController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 
+Route::middleware(['web'])->group(function () {
 Route::get('/sso/login', [SsoController::class, 'login'])->name('sso.login');
+});
 
 
 // Helpful redirect for users who access the system directly
@@ -86,13 +88,13 @@ Route::get('/reservations/status', [FacilityController::class, 'reservationStatu
 });
 
 // ============================================
-// STAFF PORTAL ROUTES (Protected)
+// STAFF PORTAL ROUTES
 // ============================================
 
-// Group all staff routes with role-based protection
-Route::middleware(['auth', 'role:staff'])->prefix('staff')->group(function () {
-    // Staff Dashboard (Main Overview)
-    Route::get('/dashboard', [StaffDashboardController::class, 'index'])->name('staff.dashboard');
+// Group all staff routes (same pattern as admin - no middleware)
+Route::prefix('staff')->middleware('web')->group(function () {
+    // Staff Dashboard (Main Overview) - Now handles SSO authentication too
+    Route::get('/dashboard', [SsoController::class, 'handleStaffDashboard'])->name('staff.dashboard');
     
     // Booking Requirement Verification
     Route::get('/verification', [RequirementVerificationController::class, 'index'])->name('staff.verification.index');

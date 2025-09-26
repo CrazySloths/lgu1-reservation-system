@@ -24,11 +24,11 @@
 @endphp
 
 <!-- Staff Sidebar -->
-<div id="staff-sidebar" class="fixed left-0 top-0 h-full w-64 bg-lgu-headline shadow-2xl transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 overflow-hidden flex flex-col">
+<div id="staff-sidebar" class="fixed left-0 top-0 h-full w-64 bg-lgu-headline shadow-2xl transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 overflow-hidden flex flex-col" style="background-color: #00473e!important;">
     <!-- Sidebar Header -->
-    <div class="flex items-center justify-between p-4 border-b border-lgu-stroke">
+    <div class="flex items-center justify-between p-4 border-b border-lgu-stroke" style="border-color: #00332c!important;">
         <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-lgu-highlight">
+            <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-lgu-highlight" style="border-color: #faae2b!important;">
                 <img src="{{ asset('image/logo.jpg') }}" alt="LGU Logo" class="w-full h-full object-cover">
             </div>
             <div>
@@ -37,7 +37,7 @@
             </div>
         </div>
         <div class="relative">
-            <button id="settings-button" class="p-2 text-white hover:text-lgu-highlight transition-colors">
+            <button id="settings-button" class="p-2 text-lgu-paragraph text-white" style="color: white!important;">
                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"></path>
                 </svg>
@@ -61,7 +61,7 @@
     </div>
 
     <!-- Staff Profile Section -->
-    <div class="p-6 border-b border-lgu-stroke">
+    <div class="p-6 border-b border-lgu-stroke" style="border-color: #00332c!important;">
         <div class="text-center">
             @auth
                 @php
@@ -74,8 +74,8 @@
                 @endphp
                 
                 <!-- Large Centered Staff Avatar -->
-                <div class="w-20 h-20 bg-lgu-highlight rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg border-2 border-lgu-button">
-                    <span class="text-lgu-button-text font-bold text-2xl">{{ $initials }}</span>
+                <div class="w-20 h-20 bg-lgu-highlight rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg border-2 border-lgu-button" style="background: #faae2b!important; border-color: #faae2b!important;">
+                    <span class="text-lgu-button-text font-bold text-2xl" style="color: #00473e!important;">{{ $initials }}</span>
                 </div>
                 
                 <!-- Staff Information -->
@@ -271,18 +271,18 @@
         const style = document.createElement('style');
         style.textContent = `
             .sidebar-link {
-                color: #9CA3AF;
+                color: #9CA3AF !important;
             }
             
             .sidebar-link:hover {
-                color: #FFFFFF;
-                background-color: #00332c;
+                color: #FFFFFF !important;
+                background-color: #00332c !important;
             }
             
             .sidebar-link.active {
-                color: #faae2b;
-                background-color: #00332c;
-                border-left: 3px solid #faae2b;
+                color: #faae2b !important;
+                background-color: #00332c !important;
+                border-left: 3px solid #faae2b !important;
             }
             
             /* Custom scrollbar for sidebar */
@@ -291,16 +291,16 @@
             }
             
             #staff-sidebar nav::-webkit-scrollbar-track {
-                background: #00332c;
+                background: #00332c !important;
             }
             
             #staff-sidebar nav::-webkit-scrollbar-thumb {
-                background: #faae2b;
+                background: #faae2b !important;
                 border-radius: 2px;
             }
             
             #staff-sidebar nav::-webkit-scrollbar-thumb:hover {
-                background: #e09900;
+                background: #e09900 !important;
             }
         `;
         document.head.appendChild(style);
