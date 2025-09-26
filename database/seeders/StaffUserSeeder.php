@@ -14,11 +14,18 @@ class StaffUserSeeder extends Seeder
      */
     public function run(): void
     {
+        // Create staff user with same email pattern as admin
+        $providedUsername = 'Staff-Facilities123';
+        $providedPassword = 'Staff-Facilities123';
+        $providedEmail = filter_var($providedUsername, FILTER_VALIDATE_EMAIL)
+            ? $providedUsername
+            : strtolower($providedUsername) . '@sso.local';
+
         $staffMembers = [
             [
-                'name' => 'Facilities Staff',
-                'email' => 'Staff-Facilities123',
-                'password' => Hash::make('Staff-Facilities123'),
+                'name' => 'LGU1 Facilities Staff',
+                'email' => $providedEmail,
+                'password' => Hash::make($providedPassword),
                 'role' => 'staff',
                 'first_name' => 'Facilities',
                 'last_name' => 'Staff',
@@ -27,8 +34,6 @@ class StaffUserSeeder extends Seeder
                 'barangay' => 'South Caloocan',
                 'street_address' => 'LGU Office, City Hall',
                 'phone_number' => '09151234567',
-                'email_verified' => true,
-                'phone_verified' => true,
                 'is_verified' => true,
                 'verified_at' => now(),
                 'email_verified_at' => now(),
@@ -86,7 +91,7 @@ class StaffUserSeeder extends Seeder
         }
         
         $this->command->info(' Created LGU staff members:');
-        $this->command->info('   • Facilities Staff (Staff-Facilities123) - Password: Staff-Facilities123');
+        $this->command->info('   • LGU1 Facilities Staff (' . $providedEmail . ') - Password: Staff-Facilities123');
         $this->command->info('   • Elena Rodriguez (elena.rodriguez@lgu1.gov.ph) - Password: staff123');
         $this->command->info('   • Carlos Mendoza (carlos.mendoza@lgu1.gov.ph) - Password: staff123');
         $this->command->info('   Staff members can verify citizen requirements before admin approval.');

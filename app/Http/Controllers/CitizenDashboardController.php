@@ -21,9 +21,35 @@ class CitizenDashboardController extends Controller
     /**
      * Show citizen dashboard
      */
-    public function index()
+    public function index(Request $request)
     {
+        // WORKAROUND: Check if this is an SSO request meant for staff
+        // If staff users are being misrouted here due to external SSO config
+        if ($request->has(['user_id', 'sig']) || $request->has(['username', 'role', 'subsystem_role_name'])) {
+            $role = $request->query('role');
+            $subsystemRole = $request->query('subsystem_role_name');
+            
+            // Check if this should be a staff user
+            if (strtolower($role ?? '') === 'staff' || strtolower($subsystemRole ?? '') === 'staff') {
+                // Log this redirection for debugging
+                \Log::info('Staff user redirected from citizen dashboard to SSO handler', [
+                    'role' => $role,
+                    'subsystem_role_name' => $subsystemRole,
+                    'all_params' => $request->all()
+                ]);
+                
+                // Redirect to our SSO handler for staff
+                return app(\App\Http\Controllers\SsoController::class)->handleStaffDashboard($request);
+            }
+        }
+
         $user = Auth::user() ?? User::where('role', 'citizen')->first();
+
+        // WORKAROUND: If authenticated user is actually staff, redirect them
+        if ($user && $user->role === 'staff') {
+            \Log::info('Authenticated staff user redirected from citizen dashboard to staff dashboard');
+            return redirect()->route('staff.dashboard');
+        }
 
         // If no user is found, redirect to a safe route or show an error.
         if (!$user) {
