@@ -27,8 +27,8 @@ Route::get('/login', function() {
 // ADMIN PORTAL ROUTES (Protected)
 // ============================================
 
-// Group all admin routes with role-based protection
-Route::prefix('admin')->group(function () {
+// Group all admin routes with admin authentication
+Route::prefix('admin')->middleware('admin.auth')->group(function () {
      // Admin Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/dashboard/quick-stats', [AdminDashboardController::class, 'getQuickStats'])->name('admin.dashboard.quick-stats');

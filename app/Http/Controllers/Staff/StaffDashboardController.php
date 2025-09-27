@@ -26,30 +26,16 @@ class StaffDashboardController extends Controller
      */
     public function index(Request $request)
     {
-        // Handle SSO token-based login
-        if ($request->has('user_id') && $request->has('sig')) {
-            $user = User::find($request->input('user_id'));
-
-            // Verify the token and its expiration
-            if (
-                $user &&
-                $user->sso_token === $request->input('sig') &&
-                $user->sso_token_expires_at &&
-                now()->isBefore($user->sso_token_expires_at)
-            ) {
-                // Invalidate the token to prevent reuse
-                $user->forceFill(['sso_token' => null, 'sso_token_expires_at' => null])->save();
-
-                // Log the user in to create a persistent session
-                Auth::login($user);
-                session()->regenerate(); // Regenerate session to prevent fixation
-
-                // Redirect to the same page without the token in the URL
-                return redirect()->route('staff.dashboard');
-            }
-
-            // If token is invalid or expired, redirect back to SSO
-            return redirect()->away('https://local-government-unit-1-ph.com/public/login.php');
+        // Note: SSO authentication is now handled by SsoController::handleStaffDashboard
+        // This controller should only receive clean requests without SSO parameters
+        // If SSO parameters are present, redirect to prevent loops
+        if ($request->hasAny(['user_id', 'sig', 'username', 'role', 'subsystem', 'subsystem_role_name'])) {
+            Log::warning('StaffDashboardController received SSO parameters - redirecting to prevent loops', [
+                'parameters' => $request->only(['user_id', 'sig', 'username', 'role', 'subsystem', 'subsystem_role_name'])
+            ]);
+            
+            // Remove SSO parameters and redirect to clean dashboard URL
+            return redirect()->route('staff.dashboard');
         }
 
         if (!Auth::check() || Auth::user() === null) {
