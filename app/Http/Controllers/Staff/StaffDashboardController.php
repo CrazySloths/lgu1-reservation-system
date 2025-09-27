@@ -4,85 +4,114 @@ namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Booking;
-use Illuminate\Support\Facades\Auth;
-use App\Models\PaymentSlip;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class StaffDashboardController extends Controller
 {
     /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-
-
-    /**
-     * Display the staff dashboard with verification metrics
+     * Display the staff dashboard with static verification metrics
      */
     public function index(Request $request)
     {
-        // Note: SSO authentication is now handled by SsoController::handleStaffDashboard
-        // This controller should only receive clean requests without SSO parameters
-        // If SSO parameters are present, redirect to prevent loops
-        if ($request->hasAny(['user_id', 'sig', 'username', 'role', 'subsystem', 'subsystem_role_name'])) {
-            Log::warning('StaffDashboardController received SSO parameters - redirecting to prevent loops', [
-                'parameters' => $request->only(['user_id', 'sig', 'username', 'role', 'subsystem', 'subsystem_role_name'])
-            ]);
-            
-            // Remove SSO parameters and redirect to clean dashboard URL
-            return redirect()->route('staff.dashboard');
+        // Get static staff user from session or create from URL parameters
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
         }
-
-        if (!Auth::check() || Auth::user() === null) {
-            // If user is not authenticated and no valid token is present, redirect to external SSO login
-            $ssoLoginUrl = 'https://local-government-unit-1-ph.com/public/login.php';
-            return redirect()->away($ssoLoginUrl);
-        }
-
-        $user = Auth::user();
-
-        // Handle case where user might not be fully authenticated yet
-        if (!$user) {
-            return redirect()->route('login')->with('error', 'Please login to access the staff dashboard.');
+        $user = null;
+        
+        if (isset($_SESSION['static_staff_user'])) {
+            $staffData = $_SESSION['static_staff_user'];
+            $user = (object) $staffData;
+            $user->full_name = $user->name;
+            $user->avatar_initials = $this->generateInitials($user->name);
         }
         
-        // Get verification metrics
-        $pendingVerifications = Booking::where('status', 'pending')
-            ->whereNull('staff_verified_by')
-            ->count();
+        // Fallback staff data
+        if (!$user) {
+            $userId = $request->get('user_id', 50);
+            $username = $request->get('username', 'Staff Member');
             
-        $myVerificationsToday = Booking::where('staff_verified_by', $user->id)
-            ->whereDate('staff_verified_at', today())
-            ->count();
+            // Extract clean username 
+            $cleanUsername = str_replace(['Staff-Facilities123', '-Facilities123'], '', $username);
+            $cleanUsername = ucfirst(trim($cleanUsername, '-'));
+            if (empty($cleanUsername) || $cleanUsername === 'Staff') {
+                $cleanUsername = 'Staff Member';
+            }
             
-        $myTotalVerifications = Booking::where('staff_verified_by', $user->id)
-            ->count();
-            
-        $totalPendingAdmin = Booking::where('status', 'pending')
-            ->whereNotNull('staff_verified_by')
-            ->count();
+            $user = (object) [
+                'id' => $userId,
+                'name' => $cleanUsername,
+                'email' => 'staff@lgu1.com',
+                'role' => 'staff',
+                'status' => 'active'
+            ];
+            $user->full_name = $user->name;
+            $user->avatar_initials = $this->generateInitials($user->name);
+        }
+        
+        // Static dashboard metrics (no database queries)
+        $pendingVerifications = 8;
+        $myVerificationsToday = 3;
+        $myTotalVerifications = 45;
+        $totalPendingAdmin = 5;
 
-        // Get recent bookings pending staff verification
-        $recentPendingBookings = Booking::with(['user', 'facility'])
-            ->where('status', 'pending')
-            ->whereNull('staff_verified_by')
-            ->orderBy('created_at', 'desc')
-            ->take(5)
-            ->get();
+        // Static recent bookings pending staff verification
+        $recentPendingBookings = collect([
+            (object)[
+                'id' => 1,
+                'event_name' => 'Birthday Party',
+                'event_date' => '2024-10-05',
+                'start_time' => '14:00:00',
+                'user' => (object)['name' => 'Maria Santos'],
+                'facility' => (object)['name' => 'Community Hall'],
+                'created_at' => now()->subHours(2)
+            ],
+            (object)[
+                'id' => 2,
+                'event_name' => 'Training Workshop',
+                'event_date' => '2024-10-07',
+                'start_time' => '09:00:00',
+                'user' => (object)['name' => 'Carlos Rivera'],
+                'facility' => (object)['name' => 'Conference Room'],
+                'created_at' => now()->subHours(5)
+            ],
+            (object)[
+                'id' => 3,
+                'event_name' => 'Sports Event',
+                'event_date' => '2024-10-10',
+                'start_time' => '16:00:00',
+                'user' => (object)['name' => 'Juan Cruz'],
+                'facility' => (object)['name' => 'Sports Complex'],
+                'created_at' => now()->subHours(8)
+            ]
+        ]);
 
-        // Get my recent verifications
-        $myRecentVerifications = Booking::with(['user', 'facility'])
-            ->where('staff_verified_by', $user->id)
-            ->orderBy('staff_verified_at', 'desc')
-            ->take(5)
-            ->get();
+        // Static my recent verifications
+        $myRecentVerifications = collect([
+            (object)[
+                'id' => 10,
+                'event_name' => 'Community Meeting',
+                'event_date' => '2024-09-28',
+                'user' => (object)['name' => 'Ana Lopez'],
+                'facility' => (object)['name' => 'Meeting Room'],
+                'staff_verified_at' => now()->subHours(1),
+                'staff_notes' => 'Documents verified, approved for processing'
+            ],
+            (object)[
+                'id' => 11,
+                'event_name' => 'Wedding Reception',
+                'event_date' => '2024-09-30',
+                'user' => (object)['name' => 'Pedro Garcia'],
+                'facility' => (object)['name' => 'Function Hall'],
+                'staff_verified_at' => now()->subHours(3),
+                'staff_notes' => 'All requirements complete'
+            ]
+        ]);
+
+        error_log("Staff Dashboard loaded with static data for: " . $user->name);
 
         return view('staff.dashboard', compact(
+            'user',
             'pendingVerifications',
             'myVerificationsToday', 
             'myTotalVerifications',
@@ -93,75 +122,99 @@ class StaffDashboardController extends Controller
     }
 
     /**
-     * Get personal statistics for the staff member
+     * Generate initials from name
+     */
+    private function generateInitials($name)
+    {
+        $nameParts = explode(' ', trim($name));
+        $firstName = $nameParts[0] ?? 'S';
+        $lastName = end($nameParts);
+        
+        return strtoupper(
+            substr($firstName, 0, 1) . 
+            (($lastName !== $firstName) ? substr($lastName, 0, 1) : 'M')
+        );
+    }
+
+    /**
+     * Get personal statistics for the staff member (static data)
      */
     public function myStats()
     {
-        $staff = Auth::user();
-        
-        // Handle case where user might not be fully authenticated yet
-        if (!$staff) {
-            return redirect()->route('login')->with('error', 'Please login to access staff statistics.');
-        }
-        
         $stats = [
-            'total_verifications' => Booking::where('staff_verified_by', $staff->id)->count(),
-            'verifications_this_week' => Booking::where('staff_verified_by', $staff->id)
-                ->whereBetween('staff_verified_at', [now()->startOfWeek(), now()->endOfWeek()])
-                ->count(),
-            'verifications_this_month' => Booking::where('staff_verified_by', $staff->id)
-                ->whereMonth('staff_verified_at', now()->month)
-                ->count(),
-            'average_per_day' => round(
-                Booking::where('staff_verified_by', $staff->id)
-                    ->whereMonth('staff_verified_at', now()->month)
-                    ->count() / now()->day, 1
-            )
+            'total_verifications' => 45,
+            'verifications_this_week' => 12,
+            'verifications_this_month' => 38,
+            'average_per_day' => 1.8
         ];
 
         return view('staff.stats', compact('stats'));
     }
 
     /**
-     * Display list of bookings pending staff verification
+     * Display list of bookings pending staff verification (static data)
      */
     public function verificationIndex()
     {
-        $bookings = Booking::with(['user', 'facility'])
-            ->where('status', 'pending')
-            ->whereNull('staff_verified_by')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        $bookings = collect([
+            (object)[
+                'id' => 1,
+                'event_name' => 'Birthday Party',
+                'event_date' => '2024-10-05',
+                'user' => (object)['name' => 'Maria Santos'],
+                'facility' => (object)['name' => 'Community Hall'],
+                'created_at' => now()->subHours(2)
+            ],
+            (object)[
+                'id' => 2,
+                'event_name' => 'Training Workshop',
+                'event_date' => '2024-10-07',
+                'user' => (object)['name' => 'Carlos Rivera'],
+                'facility' => (object)['name' => 'Conference Room'],
+                'created_at' => now()->subHours(5)
+            ]
+        ]);
 
         return view('staff.verification.index', compact('bookings'));
     }
 
     /**
-     * Display booking details for verification
+     * Display booking details for verification (static data)
      */
-    public function verificationShow(Booking $booking)
+    public function verificationShow($bookingId)
     {
-        $booking->load(['user', 'facility']);
+        $booking = (object)[
+            'id' => $bookingId,
+            'event_name' => 'Sample Event',
+            'event_date' => '2024-10-05',
+            'start_time' => '14:00:00',
+            'end_time' => '18:00:00',
+            'user' => (object)[
+                'name' => 'Sample User',
+                'email' => 'sample@example.com'
+            ],
+            'facility' => (object)[
+                'name' => 'Sample Facility',
+                'capacity' => 100
+            ],
+            'created_at' => now()->subHours(2)
+        ];
         
         return view('staff.verification.show', compact('booking'));
     }
 
     /**
-     * Process staff verification
+     * Process staff verification (static response)
      */
-    public function processVerification(Request $request, Booking $booking)
+    public function processVerification(Request $request, $bookingId)
     {
         $request->validate([
             'action' => 'required|in:approve,reject',
             'staff_notes' => 'required|string|max:500'
         ]);
 
-        $booking->update([
-            'staff_verified_by' => Auth::id(),
-            'staff_verified_at' => now(),
-            'staff_notes' => $request->staff_notes,
-            'status' => $request->action === 'approve' ? 'staff_approved' : 'rejected'
-        ]);
+        // Log the verification action
+        error_log("Staff verification processed: " . $request->action . " for booking " . $bookingId);
 
         return redirect()->route('staff.verification.index')
             ->with('success', 'Booking ' . $request->action . 'd successfully!');
