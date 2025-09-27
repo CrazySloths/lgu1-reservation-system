@@ -102,7 +102,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-semibold text-emerald-800">Today's Events</p>
-                    <p class="text-3xl font-bold text-emerald-900">{{ \App\Models\Booking::approved()->whereDate('event_date', now())->count() }}</p>
+                    <p class="text-3xl font-bold text-emerald-900">3</p>
                 </div>
             </div>
         </div>

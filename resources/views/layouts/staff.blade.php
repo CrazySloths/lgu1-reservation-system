@@ -28,8 +28,7 @@
             }
         }
     </script>
-    @php($hasVite = file_exists(public_path('build/manifest.json')))
-    @if ($hasVite)
+    @if (file_exists(public_path('build/manifest.json')))
         @vite('resources/css/app.css')
     @endif
 
@@ -49,7 +48,27 @@
                     </button>
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900">Staff Portal</h1>
-                        <p class="text-sm text-gray-600">Welcome back, {{ auth()->user()->name }}</p>
+                        <p class="text-sm text-gray-600">Welcome back, @php
+                            // Inline staff name calculation to avoid scope issues
+                            if (session_status() === PHP_SESSION_NONE) {
+                                session_start();
+                            }
+                            
+                            $staffName = 'Staff Member'; // Default
+                            
+                            if (isset($_SESSION['static_staff_user']) && isset($_SESSION['static_staff_user']['name'])) {
+                                $staffName = $_SESSION['static_staff_user']['name'];
+                            } elseif (request()->has('username')) {
+                                $username = request()->get('username');
+                                $cleanUsername = str_replace(['Staff-Facilities123', '-Facilities123'], '', $username);
+                                $cleanUsername = ucfirst(trim($cleanUsername, '-'));
+                                if (!empty($cleanUsername) && $cleanUsername !== 'Staff') {
+                                    $staffName = $cleanUsername;
+                                }
+                            }
+                            
+                            echo $staffName;
+                        @endphp</p>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
@@ -114,7 +133,7 @@
         </main>
     </div>
 
-    @if ($hasVite)
+    @if (file_exists(public_path('build/manifest.json')))
         @vite('resources/js/app.js')
     @endif
 
