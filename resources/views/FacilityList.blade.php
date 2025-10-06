@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="mb-6">
-    <div class="bg-gradient-to-r from-lgu-headline to-lgu-stroke rounded-lg p-6 text-white">
+    <div class="bg-gradient-to-r rounded-lg p-6 text-white" style="background: linear-gradient(to right, #00473e, #00332c);">
         <div class="flex items-center justify-between">
             <div>
                 <h2 class="text-2xl font-bold mb-2">Facility List</h2>
@@ -10,7 +10,7 @@
             </div>
             <div>
                 <button id="addFacilityBtn"
-                    class="px-4 py-2 bg-lgu-highlight text-lgu-button-text font-semibold rounded-lg shadow hover:bg-yellow-400 transition">
+                    class="px-4 py-2 font-semibold rounded-lg shadow hover:bg-yellow-400 transition" style="background-color: #faae2b; color: #00473e;">
                     + Add Facility
                 </button>
             </div>

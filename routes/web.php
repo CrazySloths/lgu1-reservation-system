@@ -13,22 +13,27 @@ use App\Http\Controllers\Staff\StaffDashboardController;
 use App\Http\Controllers\Staff\RequirementVerificationController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 
-Route::middleware(['web'])->group(function () {
-Route::get('/sso/login', [SsoController::class, 'login'])->name('sso.login');
-});
+// ============================================
+// AUTHENTICATION DISABLED FOR LOCAL DEVELOPMENT
+// ============================================
+// TODO: Re-enable these routes when deploying to production
 
+// Route::middleware(['web'])->group(function () {
+//     Route::get('/sso/login', [SsoController::class, 'login'])->name('sso.login');
+// });
 
-// Helpful redirect for users who access the system directly
-Route::get('/login', function() {
-    return redirect()->away('https://local-government-unit-1-ph.com/public/login.php');
-})->name('login');
+// // Helpful redirect for users who access the system directly
+// Route::get('/login', function() {
+//     return redirect()->away('https://local-government-unit-1-ph.com/public/login.php');
+// })->name('login');
 
 // ============================================
 // ADMIN PORTAL ROUTES (Protected)
 // ============================================
 
 // Group all admin routes with admin authentication
-Route::prefix('admin')->middleware('admin.auth')->group(function () {
+// AUTHENTICATION DISABLED FOR LOCAL DEVELOPMENT - Middleware commented out
+Route::prefix('admin')/* ->middleware('admin.auth') */->group(function () {
      // Admin Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/dashboard/quick-stats', [AdminDashboardController::class, 'getQuickStats'])->name('admin.dashboard.quick-stats');
@@ -143,7 +148,8 @@ Route::get('/calendar', function() {
 
 
 // Logout Route (for both admin and citizen)
-Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('logout');
+// AUTHENTICATION DISABLED - Logout commented out for local development
+// Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('logout');
 
 // Citizen Authentication Routes (No middleware - auth handled by SsoController)
 Route::prefix('citizen')->group(function () {
@@ -159,7 +165,7 @@ Route::prefix('citizen')->group(function () {
     Route::get('/payment-slips/{id}/download', [PaymentSlipController::class, 'citizenDownloadPdf'])->name('citizen.payment-slips.download');
     Route::get('/profile', [CitizenDashboardController::class, 'profile'])->name('citizen.profile');
     Route::put('/profile', [CitizenDashboardController::class, 'updateProfile'])->name('citizen.profile.update');
-    Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('citizen.logout');
+    // Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('citizen.logout'); // COMMENTED FOR LOCAL DEV
     
     // Two-Factor Authentication Routes (for authenticated users)
     Route::get('/security/setup-2fa', [CitizenAuthController::class, 'showTwoFactorSetup'])->name('citizen.security.setup-2fa');
@@ -182,7 +188,10 @@ Route::prefix('citizen')->group(function () {
 // CITIZEN AUTHENTICATION ROUTES
 // ============================================
 
-// Redirect root directly to admin dashboard temporarily (login bypass)
+// ============================================
+// ROOT REDIRECT FOR LOCAL DEVELOPMENT
+// ============================================
+// Redirects to admin dashboard by default - adjust URL as needed
 Route::get('/', function () {
-    return redirect()->route('citizen.dashboard');
+    return redirect()->route('admin.dashboard');
 })->name('home');

@@ -139,15 +139,23 @@
                     </div>
                     
                     <div class="mb-4">
-                        <label for="applicant_phone" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                        <input type="tel" id="applicant_phone" name="applicant_phone" value="{{ $user->phone_number }}" readonly
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed">
+                        <label for="applicant_phone" class="block text-sm font-medium text-gray-700 mb-2">Phone Number <span class="text-red-500">*</span></label>
+                        <input type="tel" id="applicant_phone" name="applicant_phone" value="{{ $user->phone_number ?? '' }}" required
+                               placeholder="Enter your phone number (e.g., +63 912 345 6789)"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('applicant_phone') border-red-500 @enderror">
+                        @error('applicant_phone')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
                     
                     <div class="mb-4">
-                        <label for="applicant_address" class="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                        <textarea id="applicant_address" name="applicant_address" rows="3" readonly
-                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed">{{ $user->address }}</textarea>
+                        <label for="applicant_address" class="block text-sm font-medium text-gray-700 mb-2">Address <span class="text-red-500">*</span></label>
+                        <textarea id="applicant_address" name="applicant_address" rows="3" required
+                                  placeholder="Enter your complete address (Street, Barangay, City, Province)"
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('applicant_address') border-red-500 @enderror">{{ $user->address ?? '' }}</textarea>
+                        @error('applicant_address')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
 

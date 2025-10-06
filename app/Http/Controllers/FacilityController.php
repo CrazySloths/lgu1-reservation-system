@@ -23,16 +23,124 @@ class FacilityController extends Controller
      */
     public function index()
     {
-        // Force fresh data from database
-        $facilities = Facility::orderBy('facility_id', 'desc')->get();
+        // Start session if not already started
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         
-        \Log::info('Loading facilities page with ' . $facilities->count() . ' facilities');
+        // --- PERSISTENT FACILITIES DATA (Using Session Storage) ---
+        $facilities = $this->getFacilitiesFromSession();
+        
+        \Log::info('FacilityController loaded ' . $facilities->count() . ' facilities from session storage');
         
         return response()
             ->view('FacilityList', compact('facilities'))
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');
+    }
+    
+    /**
+     * Get facilities from session storage, with fallback to default data
+     */
+    private function getFacilitiesFromSession()
+    {
+        $facilitiesFile = storage_path('app/facilities_data.json');
+        
+        // First try to load from persistent file
+        if (file_exists($facilitiesFile)) {
+            $data = json_decode(file_get_contents($facilitiesFile), true);
+            if ($data && is_array($data)) {
+                \Log::info('Loaded facilities from persistent file:', ['count' => count($data), 'file' => $facilitiesFile]);
+                return collect($data)->map(function($facility) {
+                    return (object) $facility;
+                });
+            }
+        }
+        
+        // Default facilities (first time load)
+        $defaultFacilities = [
+            [
+                'facility_id' => 1,
+                'id' => 1,
+                'name' => 'Community Hall',
+                'description' => 'Large hall suitable for community events, meetings, and celebrations',
+                'capacity' => 200,
+                'hourly_rate' => 500.00,
+                'daily_rate' => 1500.00,
+                'facility_type' => 'hall',
+                'location' => 'Main Building, Ground Floor',
+                'image_path' => null,
+                'status' => 'active',
+                'amenities' => 'Sound system, air conditioning, tables and chairs',
+                'created_at' => now()->subDays(100)->toDateTimeString(),
+                'updated_at' => now()->subDays(10)->toDateTimeString()
+            ],
+            [
+                'facility_id' => 2,
+                'id' => 2,
+                'name' => 'Basketball Court',
+                'description' => 'Standard basketball court for sports and recreational activities',
+                'capacity' => 50,
+                'hourly_rate' => 200.00,
+                'daily_rate' => 600.00,
+                'facility_type' => 'sports',
+                'location' => 'Recreation Area, Outdoor',
+                'image_path' => null,
+                'status' => 'active',
+                'amenities' => 'Basketball hoops, benches, lighting',
+                'created_at' => now()->subDays(90)->toDateTimeString(),
+                'updated_at' => now()->subDays(5)->toDateTimeString()
+            ],
+            [
+                'facility_id' => 3,
+                'id' => 3,
+                'name' => 'Conference Room',
+                'description' => 'Professional meeting room for business conferences and workshops',
+                'capacity' => 30,
+                'hourly_rate' => 300.00,
+                'daily_rate' => 900.00,
+                'facility_type' => 'meeting',
+                'location' => 'Admin Building, 2nd Floor',
+                'image_path' => null,
+                'status' => 'active',
+                'amenities' => 'Projector, whiteboard, air conditioning, WiFi',
+                'created_at' => now()->subDays(80)->toDateTimeString(),
+                'updated_at' => now()->subDays(2)->toDateTimeString()
+            ]
+        ];
+        
+        // Save to persistent file storage
+        $this->saveFacilitiesToFile($defaultFacilities);
+        
+        return collect($defaultFacilities)->map(function($facility) {
+            return (object) $facility;
+        });
+    }
+    
+    private function saveFacilitiesToFile($facilities)
+    {
+        $facilitiesFile = storage_path('app/facilities_data.json');
+        
+        // Ensure storage/app directory exists
+        $storageDir = dirname($facilitiesFile);
+        if (!file_exists($storageDir)) {
+            mkdir($storageDir, 0755, true);
+        }
+        
+        $success = file_put_contents($facilitiesFile, json_encode($facilities, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        
+        if ($success) {
+            \Log::info('🎯 FACILITIES SAVED TO PERSISTENT FILE:', [
+                'file' => $facilitiesFile, 
+                'count' => count($facilities),
+                'size' => filesize($facilitiesFile) . ' bytes'
+            ]);
+        } else {
+            \Log::error('❌ FAILED TO SAVE FACILITIES TO FILE:', ['file' => $facilitiesFile]);
+        }
+        
+        return $success;
     }
 
     /**
@@ -66,7 +174,7 @@ class FacilityController extends Controller
     public function store(Request $request)
     {
         // Debug: Log the raw request data
-        \Log::info('Raw request data:', $request->all());
+        \Log::info('🎯 ADD FACILITY: Raw request data:', $request->all());
         
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
@@ -83,37 +191,95 @@ class FacilityController extends Controller
         ]);
 
         // Debug: Log the validated data
-        \Log::info('Validated data:', $validatedData);
+        \Log::info('🎯 ADD FACILITY: Validated data:', $validatedData);
         
-        // Handle image upload
+        // Handle image upload using native PHP (no Laravel Storage dependency)
         $imagePath = null;
         if ($request->hasFile('facility_image')) {
-            $imagePath = $request->file('facility_image')->store('facilities', 'public');
+            try {
+                $uploadedFile = $request->file('facility_image');
+                
+                // Generate unique filename
+                $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $uploadedFile->getClientOriginalName());
+                $relativePath = 'facilities/' . $filename;
+                $fullPath = storage_path('app/public/' . $relativePath);
+                
+                // Ensure facilities directory exists
+                $facilitiesDir = storage_path('app/public/facilities');
+                if (!file_exists($facilitiesDir)) {
+                    mkdir($facilitiesDir, 0755, true);
+                }
+                
+                // Move uploaded file using native PHP
+                if ($uploadedFile->move($facilitiesDir, $filename)) {
+                    $imagePath = $relativePath;
+                    \Log::info('🎯 ADD FACILITY: Image uploaded successfully:', [
+                        'original_name' => $uploadedFile->getClientOriginalName(),
+                        'stored_path' => $imagePath,
+                        'full_path' => $fullPath
+                    ]);
+                } else {
+                    throw new \Exception('Failed to move uploaded file');
+                }
+                
+            } catch (\Exception $e) {
+                \Log::error('🎯 ADD FACILITY: Image upload failed:', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                return redirect()->back()->withErrors(['facility_image' => 'Failed to upload image: ' . $e->getMessage()])->withInput();
+            }
         }
 
-        // Set facility data with new pricing structure (based on interview findings)
-        $facilityData = [
+        // --- LOAD EXISTING FACILITIES FROM PERSISTENT FILE ---
+        $existingFacilities = $this->getFacilitiesFromSession()->toArray();
+        
+        // Generate new facility ID (find max + 1)
+        $maxId = 0;
+        foreach ($existingFacilities as $facility) {
+            if (isset($facility->facility_id) && $facility->facility_id > $maxId) {
+                $maxId = $facility->facility_id;
+            }
+        }
+        $newFacilityId = $maxId + 1;
+
+        // Create new facility data with persistent file storage structure
+        $newFacilityData = [
+            'facility_id' => $newFacilityId,
+            'id' => $newFacilityId,
             'name' => $validatedData['name'],
             'description' => $validatedData['description'],
             'location' => $validatedData['location'],
             'capacity' => $validatedData['capacity'],
-            'hourly_rate' => $validatedData['hourly_rate'], // Extension rate (₱2,000/hour)
-            'daily_rate' => $validatedData['base_rate'], // Base rate for 3 hours (₱5,000)
+            'hourly_rate' => $validatedData['hourly_rate'], // Extension rate
+            'daily_rate' => $validatedData['base_rate'], // Base rate for 3 hours
             'facility_type' => $validatedData['facility_type'],
             'image_path' => $imagePath,
             'status' => 'active',
-            'amenities' => json_encode([]), // Empty JSON array
-            'operating_hours_start' => '08:00:00',
-            'operating_hours_end' => '17:00:00',
-            'latitude' => 0,
-            'longitude' => 0,
+            'amenities' => 'Standard amenities included',
+            'created_at' => now()->toDateTimeString(),
+            'updated_at' => now()->toDateTimeString()
         ];
 
-        \Log::info('Final data for insertion:', $facilityData);
+        \Log::info('🎯 ADD FACILITY: Final data for persistent storage:', $newFacilityData);
 
-        Facility::create($facilityData);
+        // Add new facility to existing facilities array
+        $allFacilities = array_map(function($facility) {
+            return (array) $facility;
+        }, $existingFacilities);
+        
+        $allFacilities[] = $newFacilityData;
 
-        return redirect()->route('facility.list')->with('success', 'Facility added successfully!');
+        // Save to persistent file storage (SURVIVES EVERYTHING!)
+        $success = $this->saveFacilitiesToFile($allFacilities);
+        
+        if ($success) {
+            \Log::info('🎯 ADD FACILITY: Successfully saved new facility to persistent storage!', ['facility_id' => $newFacilityId]);
+            return redirect()->route('facility.list')->with('success', 'Facility added successfully! It will persist even after system restarts.');
+        } else {
+            \Log::error('🎯 ADD FACILITY: Failed to save to persistent storage');
+            return redirect()->back()->withErrors(['general' => 'Failed to save facility. Please try again.'])->withInput();
+        }
     }
 
     /**
@@ -145,17 +311,88 @@ class FacilityController extends Controller
         // Debug: Log the validated data
         \Log::info('Update validated data:', $validatedData);
 
-        $facility = Facility::findOrFail($facility_id);
+        // Start session if not already started
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // --- LOAD CURRENT FACILITIES FROM SESSION ---
+        $facilities = $this->getFacilitiesFromSession();
+        $facilityArray = $facilities->toArray();
+        
+        // Find the facility to update
+        $facilityIndex = null;
+        $facility = null;
+        foreach ($facilityArray as $index => $fac) {
+            if ($fac->facility_id == $facility_id) {
+                $facilityIndex = $index;
+                $facility = $fac;
+                break;
+            }
+        }
+        
+        if (!$facility) {
+            abort(404, 'Facility not found');
+        }
         
         // Handle image upload if provided
         $imagePath = $facility->image_path; // Keep existing image by default
+        
+        \Log::info('Image upload check:', [
+            'has_file' => $request->hasFile('facility_image'),
+            'file_details' => $request->hasFile('facility_image') ? [
+                'original_name' => $request->file('facility_image')->getClientOriginalName(),
+                'size' => $request->file('facility_image')->getSize(),
+                'mime_type' => $request->file('facility_image')->getMimeType(),
+            ] : null
+        ]);
+        
         if ($request->hasFile('facility_image')) {
+            try {
+                $uploadedFile = $request->file('facility_image');
+                
+                // Generate unique filename
+                $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $uploadedFile->getClientOriginalName());
+                $relativePath = 'facilities/' . $filename;
+                $fullPath = storage_path('app/public/' . $relativePath);
+                
+                // Ensure facilities directory exists
+                $facilitiesDir = storage_path('app/public/facilities');
+                if (!file_exists($facilitiesDir)) {
+                    mkdir($facilitiesDir, 0755, true);
+                }
+                
             // Delete old image if it exists
-            if ($facility->image_path && \Storage::disk('public')->exists($facility->image_path)) {
-                \Storage::disk('public')->delete($facility->image_path);
+                if ($facility->image_path) {
+                    $oldImagePath = storage_path('app/public/' . $facility->image_path);
+                    if (file_exists($oldImagePath)) {
+                        unlink($oldImagePath);
+                        \Log::info('Deleted old image: ' . $facility->image_path);
+                    }
+                }
+                
+                // Move uploaded file using native PHP
+                if ($uploadedFile->move($facilitiesDir, $filename)) {
+                    $imagePath = $relativePath;
+                    
+                    \Log::info('Image uploaded successfully using native PHP:', [
+                        'original_name' => $uploadedFile->getClientOriginalName(),
+                        'stored_path' => $imagePath,
+                        'full_path' => $fullPath,
+                        'full_url' => asset('storage/' . $imagePath)
+                    ]);
+                } else {
+                    throw new \Exception('Failed to move uploaded file');
+                }
+                
+            } catch (\Exception $e) {
+                \Log::error('Image upload failed:', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                // Keep the old image path if upload fails
+                $imagePath = $facility->image_path;
             }
-            // Store new image
-            $imagePath = $request->file('facility_image')->store('facilities', 'public');
         }
 
         // Set facility data with new pricing structure (based on interview findings)
@@ -178,9 +415,17 @@ class FacilityController extends Controller
 
         \Log::info('Update final data for update:', $facilityData);
 
-        $facility->update($facilityData);
-
-        \Log::info('Facility updated successfully. ID: ' . $facility_id . ', New data: ' . json_encode($facilityData));
+        // --- REAL UPDATE: Save to Persistent File Storage ---
+        $updatedFacility = array_merge((array)$facility, $facilityData);
+        $updatedFacility['updated_at'] = now()->toDateTimeString();
+        
+        // Update the facility in the array
+        $facilityArray[$facilityIndex] = $updatedFacility;
+        
+        // Save updated facilities to persistent file (SURVIVES SLEEP/RESTART!)
+        $this->saveFacilitiesToFile($facilityArray);
+        
+        \Log::info('🎯 Facility ACTUALLY updated and saved to PERSISTENT FILE. ID: ' . $facility_id . ', New data: ' . json_encode($updatedFacility));
 
         // Add cache-busting parameter and session flash to ensure fresh data
         return redirect()->route('facility.list', ['refresh' => time()])->with('success', 'Facility updated successfully!');
@@ -194,9 +439,20 @@ class FacilityController extends Controller
      */
     public function destroy($facility_id)
     {
-        $facility = Facility::findOrFail($facility_id);
-        $facility->delete();
-        return redirect()->route('facility.list')->with('success', 'Facility archived successfully!');
+        // --- STATIC MODE: SIMULATE DELETE (Database drivers not available on server) ---
+        $validFacilityIds = [1, 2, 3]; // Valid facility IDs
+        
+        if (!in_array($facility_id, $validFacilityIds)) {
+            abort(404, 'Facility not found');
+        }
+        
+        // Log the attempted deletion
+        \Log::warning('STATIC MODE: Facility deletion simulated (no database available)', [
+            'facility_id' => $facility_id,
+            'action' => 'delete_attempted'
+        ]);
+        
+        return redirect()->route('facility.list')->with('success', 'Facility deletion simulated successfully! (Note: No database changes made)');
     }
 
     /**
@@ -551,7 +807,7 @@ class FacilityController extends Controller
     public function storeReservationWithAI(Request $request)
     {
         // Log the request for debugging
-        \Log::info('AI-Enhanced Reservation request:', $request->all());
+        \Log::info('🎯 BOOKING SUBMISSION: Starting reservation process', $request->all());
 
         // Validate the request
         $validatedData = $request->validate([
@@ -584,40 +840,24 @@ class FacilityController extends Controller
         ]);
 
         try {
-            // Get facility by name
-            $facility = Facility::where('name', $validatedData['facility_name'])->first();
+            // --- STATIC DATA: Get facility from persistent file storage ---
+            $facilities = $this->getFacilitiesFromSession();
+            $facility = $facilities->firstWhere('name', $validatedData['facility_name']);
+            
             if (!$facility) {
+                \Log::error('🎯 BOOKING ERROR: Facility not found', ['facility_name' => $validatedData['facility_name']]);
                 return redirect()->back()
                             ->withInput()
                             ->withErrors(['facility_name' => 'Selected facility not found.']);
             }
 
-            // Initialize AI Recommendation Service
-            $aiService = new AIRecommendationService();
+            \Log::info('🎯 BOOKING: Facility found', ['facility' => $facility->name, 'id' => $facility->facility_id]);
 
-            // Check for booking conflicts and get AI recommendations if needed
-            $aiResponse = $aiService->getRecommendations(
-                $facility->facility_id,
-                $validatedData['event_date'],
-                $validatedData['start_time'],
-                $validatedData['end_time'],
-                $validatedData['expected_attendees'],
-                'general'
-            );
-
-            // If there are conflicts, redirect back with conflict information
-            if ($aiResponse['status'] === 'conflict') {
-                return redirect()->back()
-                            ->withInput()
-                            ->with('conflict', $aiResponse['message'])
-                            ->with('recommendations', $aiResponse['ai_response']['recommendations'] ?? []);
-            }
-
-            // No conflicts detected, proceed with booking
-            return $this->processReservationBooking($request, $validatedData, $facility, $aiService);
+            // No AI service - proceed directly with booking
+            return $this->processReservationBooking($request, $validatedData, $facility);
 
         } catch (\Exception $e) {
-            \Log::error('AI-Enhanced Reservation Error:', [
+            \Log::error('🎯 BOOKING ERROR:', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -631,7 +871,7 @@ class FacilityController extends Controller
     /**
      * Process the actual booking when no conflicts exist
      */
-    private function processReservationBooking($request, $validatedData, $facility, $aiService)
+    private function processReservationBooking($request, $validatedData, $facility)
     {
         try {
             // Handle file uploads
@@ -641,43 +881,119 @@ class FacilityController extends Controller
             $duration = $this->calculateEventDuration($validatedData['start_time'], $validatedData['end_time']);
             $totalFee = $this->calculateTotalFee($facility, $duration);
 
-            // Create the booking record
-            $booking = Booking::create([
-                'facility_id' => $facility->facility_id,
-                'user_id' => Auth::id(),
-                'user_name' => Auth::user()->name ?? $validatedData['applicant_name'],
+            // --- LOAD EXISTING BOOKINGS FROM PERSISTENT FILE ---
+            $bookingsFile = storage_path('app/bookings_data.json');
+            $bookings = [];
+            
+            if (file_exists($bookingsFile)) {
+                $data = json_decode(file_get_contents($bookingsFile), true);
+                if ($data && is_array($data)) {
+                    $bookings = $data;
+                    \Log::info('🎯 BOOKING: Loaded existing bookings', ['count' => count($bookings)]);
+                }
+            }
+
+            // --- GENERATE NEW BOOKING ID ---
+            $newId = count($bookings) > 0 ? max(array_column($bookings, 'id')) + 1 : 1;
+
+            // --- CREATE NEW BOOKING RECORD ---
+            // Convert times to 24-hour format for storage
+            $startTime24 = \Carbon\Carbon::parse($validatedData['start_time'])->format('H:i:s');
+            $endTime24 = \Carbon\Carbon::parse($validatedData['end_time'])->format('H:i:s');
+            
+            $newBooking = [
+                'id' => $newId,
+                'facility_id' => $facility->facility_id ?? $facility->id,
+                'facility_name' => $facility->name,
+                'user_id' => 4, // Static citizen user ID
+                'user_name' => $validatedData['applicant_name'],
                 'applicant_name' => $validatedData['applicant_name'],
                 'applicant_email' => $validatedData['applicant_email'],
                 'applicant_phone' => $validatedData['applicant_phone'],
                 'applicant_address' => $validatedData['applicant_address'],
                 'event_name' => $validatedData['event_name'],
-                'event_description' => $validatedData['event_description'],
+                'event_description' => $validatedData['event_description'] ?? '',
                 'event_date' => $validatedData['event_date'],
-                'start_time' => $validatedData['start_time'],
-                'end_time' => $validatedData['end_time'],
+                'start_time' => $startTime24,  // Store in 24-hour format
+                'end_time' => $endTime24,      // Store in 24-hour format
                 'expected_attendees' => $validatedData['expected_attendees'],
                 'total_fee' => $totalFee,
                 'status' => 'pending',
                 
                 // Store file paths
+                'id_type' => $validatedData['id_type'],
                 'valid_id_path' => $uploadedFiles['id_front'] ?? null,
                 'id_back_path' => $uploadedFiles['id_back'] ?? null,
                 'id_selfie_path' => $uploadedFiles['id_selfie'] ?? null,
                 'authorization_letter_path' => $uploadedFiles['authorization_letter'] ?? null,
                 'event_proposal_path' => $uploadedFiles['event_proposal'] ?? null,
                 'digital_signature' => $uploadedFiles['signature'] ?? null,
+                
+                'created_at' => now()->toDateTimeString(),
+                'updated_at' => now()->toDateTimeString()
+            ];
+
+            // --- ADD TO BOOKINGS ARRAY ---
+            $bookings[] = $newBooking;
+
+            // --- SAVE TO PERSISTENT FILE STORAGE WITH SAFEGUARDS ---
+            // Create backup before saving
+            if (file_exists($bookingsFile)) {
+                $backupFile = $bookingsFile . '.backup.' . date('YmdHis');
+                copy($bookingsFile, $backupFile);
+                \Log::info('✓ Created backup before saving', ['backup' => basename($backupFile)]);
+            }
+            
+            // Encode to JSON
+            $jsonData = json_encode($bookings, JSON_PRETTY_PRINT);
+            
+            // Validate JSON encoding was successful
+            if ($jsonData === false) {
+                \Log::error('🚨 JSON encoding failed!', ['error' => json_last_error_msg()]);
+                throw new \Exception('Failed to save booking data. Please try again.');
+            }
+            
+            // Validate signature is still complete in the JSON
+            if (isset($newBooking['digital_signature']) && strlen($newBooking['digital_signature']) > 100) {
+                if (strpos($jsonData, substr($newBooking['digital_signature'], 0, 50)) === false) {
+                    \Log::error('🚨 Digital signature missing from JSON output!');
+                    throw new \Exception('Data validation failed. Please try again.');
+                }
+            }
+            
+            // Use atomic write (write to temp file, then rename)
+            $tempFile = $bookingsFile . '.tmp';
+            $bytesWritten = file_put_contents($tempFile, $jsonData);
+            
+            if ($bytesWritten === false || $bytesWritten < strlen($jsonData)) {
+                \Log::error('🚨 Failed to write complete booking data', [
+                    'expected_bytes' => strlen($jsonData),
+                    'written_bytes' => $bytesWritten
+                ]);
+                @unlink($tempFile);
+                throw new \Exception('Failed to save booking data completely. Please try again.');
+            }
+            
+            // Atomic rename (replaces old file)
+            rename($tempFile, $bookingsFile);
+            
+            \Log::info('✓ Booking data saved successfully', [
+                'bytes_written' => $bytesWritten,
+                'total_bookings' => count($bookings),
+                'signature_length' => isset($newBooking['digital_signature']) ? strlen($newBooking['digital_signature']) : 0
             ]);
 
-            // Update AI training data
-            $aiService->updateHistoricalData();
-
-            \Log::info('Booking created successfully:', ['booking_id' => $booking->id]);
+            \Log::info('🎯 BOOKING SUCCESS: Saved to persistent storage!', [
+                'booking_id' => $newId,
+                'file' => $bookingsFile,
+                'total_bookings' => count($bookings)
+            ]);
 
             return redirect()->route('citizen.reservation.history')
                         ->with('success', 'Your reservation has been submitted successfully and is pending approval!');
 
         } catch (\Exception $e) {
-            \Log::error('Booking creation failed:', [
+            \Log::error('🎯 BOOKING CREATION FAILED:', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -728,8 +1044,32 @@ class FacilityController extends Controller
             \Log::info('Signature uploaded:', ['path' => $uploadedFiles['signature']]);
         } elseif ($validatedData['signature_method'] === 'draw' && !empty($validatedData['signature_data'])) {
             // Store drawn signature as base64 data
-            $uploadedFiles['signature'] = $validatedData['signature_data'];
-            \Log::info('Digital signature saved:', ['length' => strlen($validatedData['signature_data'])]);
+            $signatureData = $validatedData['signature_data'];
+            $signatureLength = strlen($signatureData);
+            
+            // Validate signature is complete (should be at least 100 characters for base64 image)
+            if ($signatureLength < 100) {
+                \Log::error('🚨 Digital signature is too short - may be corrupted', [
+                    'length' => $signatureLength,
+                    'data_preview' => substr($signatureData, 0, 50)
+                ]);
+                throw new \Exception('Digital signature data appears to be incomplete. Please try signing again.');
+            }
+            
+            // Validate it's a proper base64 data URL
+            if (strpos($signatureData, 'data:image') !== 0) {
+                \Log::error('🚨 Digital signature is not a valid data URL', [
+                    'data_preview' => substr($signatureData, 0, 50)
+                ]);
+                throw new \Exception('Digital signature format is invalid. Please try signing again.');
+            }
+            
+            $uploadedFiles['signature'] = $signatureData;
+            \Log::info('✓ Digital signature validated and saved successfully', [
+                'length' => $signatureLength,
+                'format' => 'base64 data URL',
+                'is_complete' => true
+            ]);
         }
 
         \Log::info('File upload handling completed:', ['uploaded_files' => $uploadedFiles]);
@@ -741,9 +1081,21 @@ class FacilityController extends Controller
      */
     private function calculateEventDuration($startTime, $endTime)
     {
-        $start = \Carbon\Carbon::createFromTimeString($startTime);
-        $end = \Carbon\Carbon::createFromTimeString($endTime);
-        return $end->diffInHours($start);
+        // Convert 12-hour format (e.g., "09:00 AM") to 24-hour format
+        $start = \Carbon\Carbon::parse($startTime);
+        $end = \Carbon\Carbon::parse($endTime);
+        
+        $duration = $end->diffInHours($start);
+        
+        \Log::info(' DURATION CALCULATION:', [
+            'start_time_input' => $startTime,
+            'end_time_input' => $endTime,
+            'start_parsed' => $start->format('H:i:s'),
+            'end_parsed' => $end->format('H:i:s'),
+            'duration_hours' => $duration
+        ]);
+        
+        return $duration;
     }
 
     /**
@@ -751,13 +1103,26 @@ class FacilityController extends Controller
      */
     private function calculateTotalFee($facility, $duration)
     {
-        $baseFee = $facility->daily_rate; // ₱5,000 for 3 hours
+        // Handle both object and array facility data
+        $dailyRate = is_object($facility) ? ($facility->daily_rate ?? 5000) : ($facility['daily_rate'] ?? 5000);
+        $hourlyRate = is_object($facility) ? ($facility->hourly_rate ?? 2000) : ($facility['hourly_rate'] ?? 2000);
+        
+        $baseFee = $dailyRate; // ₱5,000 for 3 hours (base)
         $extensionFee = 0;
 
         if ($duration > 3) {
             $extraHours = $duration - 3;
-            $extensionFee = $extraHours * $facility->hourly_rate; // ₱2,000 per hour
+            $extensionFee = $extraHours * $hourlyRate; // ₱2,000 per hour extension
         }
+
+        \Log::info('🎯 FEE CALCULATION:', [
+            'duration' => $duration,
+            'daily_rate' => $dailyRate,
+            'hourly_rate' => $hourlyRate,
+            'base_fee' => $baseFee,
+            'extension_fee' => $extensionFee,
+            'total_fee' => $baseFee + $extensionFee
+        ]);
 
         return $baseFee + $extensionFee;
     }

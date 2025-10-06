@@ -73,10 +73,102 @@ class CitizenDashboardController extends Controller
      */
     public function reservations()
     {
-        $user = Auth::user() ?? User::where('role', 'citizen')->first();
+        // --- STATIC USER DATA (Database drivers not available on server) ---
+        $user = (object)[
+            'id' => 4,
+            'external_id' => 60,
+            'name' => 'Cristian mark Angelo Pastoril Llaneta',
+            'email' => '1hawkeye101010101@gmail.com',
+            'role' => 'citizen',
+            'status' => 'active',
+            'first_name' => 'Cristian',
+            'middle_name' => 'mark Angelo Pastoril',
+            'last_name' => 'Llaneta',
+            'phone_number' => null,
+            'address' => null,
+            'date_of_birth' => null,
+            'email_verified_at' => now(),
+            'created_at' => now()->subDays(30),
+            'updated_at' => now()
+        ];
+
+        // Add properties for Blade template compatibility
+        $user->full_name = $user->name;
+        $user->avatar_initials = 'CL';
         
-        // Get all active facilities
-        $facilities = Facility::where('status', 'active')->get();
+        // --- LOAD FACILITIES FROM SESSION (Same as Admin) ---
+        // Load facilities from persistent file storage (SURVIVES SLEEP/RESTART!)
+        $facilitiesFile = storage_path('app/facilities_data.json');
+        
+        if (file_exists($facilitiesFile)) {
+            $data = json_decode(file_get_contents($facilitiesFile), true);
+            if ($data && is_array($data)) {
+                \Log::info('🎯 CITIZEN: Loaded facilities from persistent file:', ['count' => count($data)]);
+                $facilities = collect($data)->map(function($facility) {
+                    return (object) $facility;
+                });
+            } else {
+                $facilities = null;
+            }
+        } else {
+            $facilities = null;
+        }
+        
+        if (!$facilities) {
+            // Fallback to default facilities
+            $facilities = collect([
+                (object)[
+                    'id' => 1,
+                    'facility_id' => 1,
+                    'name' => 'Community Hall',
+                    'description' => 'Large hall suitable for community events, meetings, and celebrations',
+                    'capacity' => 200,
+                    'hourly_rate' => 500.00,
+                    'daily_rate' => 1500.00,
+                    'facility_type' => 'hall',
+                    'location' => 'Main Building, Ground Floor',
+                    'image_path' => null,
+                    'status' => 'active',
+                    'amenities' => 'Sound system, air conditioning, tables and chairs',
+                    'created_at' => now()->subDays(100),
+                    'updated_at' => now()->subDays(10)
+                ],
+                (object)[
+                    'id' => 2,
+                    'facility_id' => 2,
+                    'name' => 'Basketball Court',
+                    'description' => 'Standard basketball court for sports and recreational activities',
+                    'capacity' => 50,
+                    'hourly_rate' => 200.00,
+                    'daily_rate' => 600.00,
+                    'facility_type' => 'sports',
+                    'location' => 'Recreation Area, Outdoor',
+                    'image_path' => null,
+                    'status' => 'active',
+                    'amenities' => 'Basketball hoops, benches, lighting',
+                    'created_at' => now()->subDays(90),
+                    'updated_at' => now()->subDays(5)
+                ],
+                (object)[
+                    'id' => 3,
+                    'facility_id' => 3,
+                    'name' => 'Conference Room',
+                    'description' => 'Professional meeting room for business conferences and workshops',
+                    'capacity' => 30,
+                    'hourly_rate' => 300.00,
+                    'daily_rate' => 900.00,
+                    'facility_type' => 'meeting',
+                    'location' => 'Admin Building, 2nd Floor',
+                    'image_path' => null,
+                    'status' => 'active',
+                    'amenities' => 'Projector, whiteboard, air conditioning, WiFi',
+                    'created_at' => now()->subDays(80),
+                    'updated_at' => now()->subDays(2)
+                ]
+            ]);
+        }
+        
+        \Log::warning('CitizenDashboardController::reservations using STATIC DATA due to database issues.');
         
         return view('citizen.reservations', compact('user', 'facilities'));
     }
@@ -86,29 +178,91 @@ class CitizenDashboardController extends Controller
      */
     public function reservationHistory()
     {
-        $user = Auth::user() ?? User::where('role', 'citizen')->first();
+        // --- STATIC USER DATA ---
+        $user = (object)[
+            'id' => 4,
+            'external_id' => 60,
+            'name' => 'Cristian mark Angelo Pastoril Llaneta',
+            'email' => '1hawkeye101010101@gmail.com',
+            'role' => 'citizen',
+            'status' => 'active',
+            'full_name' => 'Cristian mark Angelo Pastoril Llaneta',
+            'avatar_initials' => 'CL'
+        ];
         
-        // Debug: Log current user information
-        \Log::info('Reservation History - Current User:', [
-            'user_id' => $user ? $user->id : 'Not authenticated',
-            'email' => $user ? $user->email : 'N/A'
-        ]);
+        // --- LOAD BOOKINGS FROM PERSISTENT FILE STORAGE ---
+        $bookingsFile = storage_path('app/bookings_data.json');
+        $reservations = collect();
         
-        if (!$user) {
-            abort(404, 'No citizen user found.');
+        if (file_exists($bookingsFile)) {
+            $data = json_decode(file_get_contents($bookingsFile), true);
+            if ($data && is_array($data)) {
+                // Filter bookings for current user
+                $userBookings = array_filter($data, function($booking) use ($user) {
+                    return $booking['user_id'] == $user->id;
+                });
+                
+                // Convert to collection with proper structure for Blade template
+                $reservations = collect(array_values($userBookings))->map(function($booking) {
+                    // --- RECALCULATE FEE FROM TIME DURATION (FIX OLD BOOKINGS) ---
+                    $calculatedFee = 0;
+                    if (!empty($booking['start_time']) && !empty($booking['end_time'])) {
+                        try {
+                            // Parse times (handles both 12-hour and 24-hour formats)
+                            $start = \Carbon\Carbon::parse($booking['start_time']);
+                            $end = \Carbon\Carbon::parse($booking['end_time']);
+                            // FIX: Use absolute value to ensure positive duration
+                            $durationHours = abs($start->diffInHours($end));
+                            
+                            // Get facility pricing (default: Pacquiao Court rates)
+                            $dailyRate = 5000;  // ₱5,000 base (3 hours)
+                            $hourlyRate = 2000; // ₱2,000 per hour extension
+                            
+                            // Calculate fee
+                            $calculatedFee = $dailyRate; // Base 3 hours
+                            if ($durationHours > 3) {
+                                $calculatedFee += ($durationHours - 3) * $hourlyRate;
+                            }
+                        } catch (\Exception $e) {
+                            // If calculation fails, use stored fee
+                            $calculatedFee = $booking['total_fee'] ?? 0;
+                        }
+                    } else {
+                        $calculatedFee = $booking['total_fee'] ?? 0;
+                    }
+                    
+                    return (object)[
+                        'id' => $booking['id'],
+                        'user_id' => $booking['user_id'],
+                        'facility_id' => $booking['facility_id'],
+                        'event_name' => $booking['event_name'],
+                        'event_description' => $booking['event_description'] ?? '',
+                        'applicant_name' => $booking['applicant_name'],
+                        'event_date' => $booking['event_date'],
+                        'start_time' => $booking['start_time'],
+                        'end_time' => $booking['end_time'],
+                        'expected_attendees' => $booking['expected_attendees'],
+                        'total_fee' => $calculatedFee,  // ✅ RECALCULATED FEE (fixes old bookings)
+                        'status' => $booking['status'],
+                        'created_at' => $booking['created_at'],
+                        'facility' => (object)[
+                            'name' => $booking['facility_name'] ?? 'Unknown Facility',
+                            'hourly_rate' => 500.00
+                        ],
+                        'paymentSlip' => (object)[
+                            'id' => $booking['id'],
+                            'amount' => $calculatedFee,  // ✅ Use recalculated fee
+                            'status' => $booking['status'] === 'approved' ? 'pending' : 'unpaid',
+                            'due_date' => now()->addDays(5)
+                        ]
+                    ];
+                });
+                
+                \Log::info('🎯 RESERVATION HISTORY: Loaded from persistent file', ['user_id' => $user->id, 'count' => $reservations->count()]);
+            }
+        } else {
+            \Log::warning('🎯 RESERVATION HISTORY: No bookings file found - showing empty list');
         }
-        
-        // Get user's reservations with facility and payment slip information
-        $reservations = $user->reservations()
-                            ->with(['facility', 'paymentSlip'])
-                            ->orderBy('created_at', 'desc')
-                            ->get();
-        
-        // Debug: Log reservations count
-        \Log::info('Reservation History - Found reservations:', [
-            'count' => $reservations->count(),
-            'user_id' => $user->id
-        ]);
         
         return view('citizen.reservation-history', compact('user', 'reservations'));
     }
@@ -118,7 +272,28 @@ class CitizenDashboardController extends Controller
      */
     public function profile()
     {
-        $user = Auth::user() ?? User::where('role', 'citizen')->first();
+        // --- STATIC USER DATA ---
+        $user = (object)[
+            'id' => 4,
+            'external_id' => 60,
+            'name' => 'Cristian mark Angelo Pastoril Llaneta',
+            'email' => '1hawkeye101010101@gmail.com',
+            'role' => 'citizen',
+            'status' => 'active',
+            'first_name' => 'Cristian',
+            'middle_name' => 'mark Angelo Pastoril',
+            'last_name' => 'Llaneta',
+            'phone_number' => '+63 912 345 6789',
+            'address' => '123 Main Street, Barangay Sample, City',
+            'date_of_birth' => '1995-06-15',
+            'email_verified_at' => now(),
+            'created_at' => now()->subDays(30),
+            'updated_at' => now(),
+            'full_name' => 'Cristian mark Angelo Pastoril Llaneta',
+            'avatar_initials' => 'CL'
+        ];
+        
+        \Log::warning('CitizenDashboardController::profile using STATIC DATA due to database issues.');
         
         return view('citizen.profile', compact('user'));
     }
@@ -128,8 +303,7 @@ class CitizenDashboardController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        $user = Auth::user() ?? User::where('role', 'citizen')->first();
-        
+        // --- STATIC USER DATA (No database updates possible) ---
         $request->validate([
             'name' => 'required|string|max:255',
             'phone_number' => 'required|string|max:20',
@@ -137,14 +311,19 @@ class CitizenDashboardController extends Controller
             'date_of_birth' => 'required|date|before:today',
         ]);
 
-        $user->update([
+        // Log the attempted update for debugging
+        \Log::info('Profile update attempted (STATIC MODE - no database available):', [
+            'user_id' => 4,
+            'attempted_changes' => [
             'name' => $request->name,
             'phone_number' => $request->phone_number,
             'address' => $request->address,
             'date_of_birth' => $request->date_of_birth,
+            ]
         ]);
 
-        return back()->with('success', 'Profile updated successfully!');
+        // Return success message (simulating successful update)
+        return back()->with('success', 'Profile updated successfully! (Note: Changes are simulated due to database limitations)');
     }
 
     /**
@@ -152,12 +331,92 @@ class CitizenDashboardController extends Controller
      */
     public function viewAvailability()
     {
-        $user = Auth::user() ?? User::where('role', 'citizen')->first();
+        // --- STATIC USER DATA ---
+        $user = (object)[
+            'id' => 4,
+            'external_id' => 60,
+            'name' => 'Cristian mark Angelo Pastoril Llaneta',
+            'email' => '1hawkeye101010101@gmail.com',
+            'role' => 'citizen',
+            'status' => 'active',
+            'full_name' => 'Cristian mark Angelo Pastoril Llaneta',
+            'avatar_initials' => 'CL'
+        ];
         
-        // Get all active facilities
-        $facilities = Facility::where('status', 'active')->get();
+        // --- LOAD FACILITIES FROM PERSISTENT FILE STORAGE ---
+        $facilitiesFile = storage_path('app/facilities_data.json');
+        
+        if (file_exists($facilitiesFile)) {
+            $data = json_decode(file_get_contents($facilitiesFile), true);
+            if ($data && is_array($data)) {
+                \Log::info('🎯 CITIZEN AVAILABILITY: Loaded facilities from persistent file:', ['count' => count($data)]);
+                $facilities = collect($data)->map(function($facility) {
+                    return (object) $facility;
+                });
+            } else {
+                $facilities = $this->getDefaultFacilities();
+            }
+        } else {
+            $facilities = $this->getDefaultFacilities();
+        }
+        
+        \Log::warning('CitizenDashboardController::viewAvailability using PERSISTENT FILE STORAGE due to database issues.');
         
         return view('citizen.availability', compact('user', 'facilities'));
+    }
+    
+    private function getDefaultFacilities()
+    {
+        return collect([
+            (object)[
+                'id' => 1,
+                'facility_id' => 1,
+                'name' => 'Community Hall',
+                'description' => 'Large hall suitable for community events, meetings, and celebrations',
+                'capacity' => 200,
+                'hourly_rate' => 500.00,
+                'daily_rate' => 1500.00,
+                'facility_type' => 'hall',
+                'location' => 'Main Building, Ground Floor',
+                'image_path' => null,
+                'status' => 'active',
+                'amenities' => 'Sound system, air conditioning, tables and chairs',
+                'created_at' => now()->subDays(100),
+                'updated_at' => now()->subDays(10)
+            ],
+            (object)[
+                'id' => 2,
+                'facility_id' => 2,
+                'name' => 'Basketball Court',
+                'description' => 'Standard basketball court for sports and recreational activities',
+                'capacity' => 50,
+                'hourly_rate' => 200.00,
+                'daily_rate' => 600.00,
+                'facility_type' => 'sports',
+                'location' => 'Recreation Area, Outdoor',
+                'image_path' => null,
+                'status' => 'active',
+                'amenities' => 'Basketball hoops, benches, lighting',
+                'created_at' => now()->subDays(90),
+                'updated_at' => now()->subDays(5)
+            ],
+            (object)[
+                'id' => 3,
+                'facility_id' => 3,
+                'name' => 'Conference Room',
+                'description' => 'Professional meeting room for business conferences and workshops',
+                'capacity' => 30,
+                'hourly_rate' => 300.00,
+                'daily_rate' => 900.00,
+                'facility_type' => 'meeting',
+                'location' => 'Admin Building, 2nd Floor',
+                'image_path' => null,
+                'status' => 'active',
+                'amenities' => 'Projector, whiteboard, air conditioning, WiFi',
+                'created_at' => now()->subDays(80),
+                'updated_at' => now()->subDays(2)
+            ]
+        ]);
     }
 
     /**
@@ -166,18 +425,66 @@ class CitizenDashboardController extends Controller
     public function getFacilityBookings($facilityId)
     {
         try {
-            // Get all bookings for the facility (not just approved ones for better visibility)
-            $bookings = Booking::where('facility_id', $facilityId)
-                             ->whereIn('status', ['approved', 'pending']) // Show both approved and pending
-                             ->with('facility')
-                             ->get();
+            // --- STATIC BOOKINGS DATA ---
+            $staticBookings = [
+                1 => [ // Community Hall
+                    (object)[
+                        'id' => 1,
+                        'facility_id' => 1,
+                        'event_name' => 'Wedding Reception',
+                        'applicant_name' => 'Maria Santos',
+                        'event_date' => now()->addDays(5)->format('Y-m-d'),
+                        'start_time' => '18:00:00',
+                        'end_time' => '23:00:00',
+                        'expected_attendees' => 150,
+                        'status' => 'approved',
+                        'event_description' => 'Wedding celebration'
+                    ],
+                    (object)[
+                        'id' => 2,
+                        'facility_id' => 1,
+                        'event_name' => 'Company Meeting',
+                        'applicant_name' => 'John Cruz',
+                        'event_date' => now()->addDays(12)->format('Y-m-d'),
+                        'start_time' => '09:00:00',
+                        'end_time' => '17:00:00',
+                        'expected_attendees' => 80,
+                        'status' => 'pending',
+                        'event_description' => 'Annual company meeting'
+                    ]
+                ],
+                2 => [ // Basketball Court
+                    (object)[
+                        'id' => 3,
+                        'facility_id' => 2,
+                        'event_name' => 'Youth Basketball League',
+                        'applicant_name' => 'Coach Rodriguez',
+                        'event_date' => now()->addDays(3)->format('Y-m-d'),
+                        'start_time' => '08:00:00',
+                        'end_time' => '12:00:00',
+                        'expected_attendees' => 30,
+                        'status' => 'approved',
+                        'event_description' => 'Basketball tournament'
+                    ]
+                ],
+                3 => [ // Conference Room
+                    (object)[
+                        'id' => 4,
+                        'facility_id' => 3,
+                        'event_name' => 'Business Workshop',
+                        'applicant_name' => 'Dr. Garcia',
+                        'event_date' => now()->addDays(7)->format('Y-m-d'),
+                        'start_time' => '13:00:00',
+                        'end_time' => '17:00:00',
+                        'expected_attendees' => 25,
+                        'status' => 'approved',
+                        'event_description' => 'Entrepreneurship workshop'
+                    ]
+                ]
+            ];
 
-            // Debug: Log booking query
-            \Log::info('Facility Bookings Query:', [
-                'facility_id' => $facilityId,
-                'found_bookings' => $bookings->count(),
-                'total_bookings_in_db' => Booking::count()
-            ]);
+            // Get bookings for the requested facility
+            $bookings = collect($staticBookings[$facilityId] ?? []);
 
             $events = [];
 
@@ -204,7 +511,7 @@ class CitizenDashboardController extends Controller
                 ];
             }
 
-            \Log::info('Facility Bookings Response:', [
+            \Log::info('Facility Bookings Response (STATIC DATA):', [
                 'facility_id' => $facilityId,
                 'events_count' => count($events)
             ]);

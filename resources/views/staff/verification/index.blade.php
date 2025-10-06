@@ -11,7 +11,7 @@
             </div>
             <div class="text-right">
                 <div class="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3">
-                    <p class="text-2xl font-bold text-lgu-highlight">{{ $bookings->total() }}</p>
+                    <p class="text-2xl font-bold text-lgu-highlight">{{ $bookings->count() }}</p>
                     <p class="text-sm text-gray-200">Total Pending</p>
                 </div>
             </div>
@@ -116,7 +116,7 @@
                                     
                                     <div class="flex-shrink-0 ml-6">
                                         <div class="flex space-x-2">
-                                            <a href="{{ route('staff.verification.show', $booking) }}" 
+                                            <a href="{{ route('staff.verification.show', $booking->id) }}" 
                                                class="inline-flex items-center px-4 py-2 bg-lgu-highlight text-lgu-button-text text-sm font-medium rounded-lg hover:bg-lgu-button transition-colors">
                                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -139,9 +139,11 @@
             </div>
             
             <!-- Pagination -->
-            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
-                {{ $bookings->links() }}
-            </div>
+            @if($bookings->count() > 15)
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
+                    <p class="text-sm text-gray-600 text-center">Showing {{ $bookings->count() }} bookings</p>
+                </div>
+            @endif
         @else
             <div class="p-12 text-center">
                 <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

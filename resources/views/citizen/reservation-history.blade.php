@@ -67,7 +67,13 @@
                         <!-- Date & Time -->
                         <div>
                             <p class="font-medium text-gray-900">{{ $reservation->event_date ? \Carbon\Carbon::parse($reservation->event_date)->format('M j, Y') : 'N/A' }}</p>
-                            <p class="text-sm text-gray-600">{{ $reservation->start_time ?? 'N/A' }} - {{ $reservation->end_time ?? 'N/A' }}</p>
+                            <p class="text-sm text-gray-600">
+                                @if($reservation->start_time && $reservation->end_time)
+                                    {{ \Carbon\Carbon::parse($reservation->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($reservation->end_time)->format('h:i A') }}
+                                @else
+                                    N/A
+                                @endif
+                            </p>
                         </div>
                         
                         <!-- Status -->

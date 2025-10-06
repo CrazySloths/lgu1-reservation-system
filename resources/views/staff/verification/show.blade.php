@@ -43,7 +43,7 @@
                                     <svg class="w-4 h-4 text-gray-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
                                     </svg>
-                                    <span class="text-gray-600">{{ \Carbon\Carbon::parse($booking->event_date)->format('F j, Y') }}</span>
+                                    <span class="text-gray-600">{{ $booking->event_date->format('F j, Y') }}</span>
                                 </div>
                                 <div class="flex items-center">
                                     <svg class="w-4 h-4 text-gray-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -103,14 +103,156 @@
                     <h3 class="text-lg font-semibold text-gray-900">Documents & Requirements</h3>
                 </div>
                 <div class="p-6">
-                    <!-- Placeholder for documents -->
-                    <div class="text-center py-8">
-                        <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        <p class="text-gray-600">Document management system integration coming soon</p>
-                        <p class="text-sm text-gray-500">For now, verify requirements based on booking details</p>
-                    </div>
+                    @php
+                        $hasDocuments = $booking->valid_id_path || $booking->id_back_path || $booking->id_selfie_path || 
+                                       $booking->authorization_letter_path || $booking->event_proposal_path || $booking->digital_signature;
+                    @endphp
+                    
+                    @if($hasDocuments)
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Valid ID (Front) -->
+                            @if($booking->valid_id_path)
+                                <div class="border border-gray-200 rounded-lg p-4 hover:border-lgu-highlight transition-colors">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="font-medium text-gray-900">Valid ID (Front)</h4>
+                                        <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{{ $booking->id_type ?? 'ID' }}</span>
+                                    </div>
+                                    <a href="{{ asset('storage/' . $booking->valid_id_path) }}" target="_blank" class="block">
+                                        <img src="{{ asset('storage/' . $booking->valid_id_path) }}" 
+                                             alt="Valid ID Front" 
+                                             class="w-full h-48 object-contain rounded border border-gray-200 hover:opacity-90 transition-opacity bg-gray-50"
+                                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'bg-gray-100 rounded border border-gray-200 flex items-center justify-center\' style=\'height: 192px;\'><div class=\'text-center p-4\'><svg class=\'w-12 h-12 text-gray-400 mx-auto mb-2\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z\'/></svg><p class=\'text-xs font-medium text-gray-700\'>Image Preview Unavailable</p><p class=\'text-xs text-gray-500 mt-1\'>{{ basename($booking->valid_id_path) }}</p></div></div>';">
+                                    </a>
+                                    <p class="text-xs text-gray-500 mt-2">Click image to view full size</p>
+                                </div>
+                            @endif
+
+                            <!-- Valid ID (Back) -->
+                            @if($booking->id_back_path)
+                                <div class="border border-gray-200 rounded-lg p-4 hover:border-lgu-highlight transition-colors">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="font-medium text-gray-900">Valid ID (Back)</h4>
+                                        <span class="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">✓ Uploaded</span>
+                                    </div>
+                                    <a href="{{ asset('storage/' . $booking->id_back_path) }}" target="_blank" class="block">
+                                        <img src="{{ asset('storage/' . $booking->id_back_path) }}" 
+                                             alt="Valid ID Back" 
+                                             class="w-full h-48 object-contain rounded border border-gray-200 hover:opacity-90 transition-opacity bg-gray-50"
+                                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'bg-gray-100 rounded border border-gray-200 flex items-center justify-center\' style=\'height: 192px;\'><div class=\'text-center p-4\'><svg class=\'w-12 h-12 text-gray-400 mx-auto mb-2\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z\'/></svg><p class=\'text-xs font-medium text-gray-700\'>Image Preview Unavailable</p><p class=\'text-xs text-gray-500 mt-1\'>{{ basename($booking->id_back_path) }}</p></div></div>';">
+                                    </a>
+                                    <p class="text-xs text-gray-500 mt-2">Click image to view full size</p>
+                                </div>
+                            @endif
+
+                            <!-- ID Selfie -->
+                            @if($booking->id_selfie_path)
+                                <div class="border border-gray-200 rounded-lg p-4 hover:border-lgu-highlight transition-colors">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="font-medium text-gray-900">ID Selfie</h4>
+                                        <span class="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">✓ Uploaded</span>
+                                    </div>
+                                    <a href="{{ asset('storage/' . $booking->id_selfie_path) }}" target="_blank" class="block">
+                                        <img src="{{ asset('storage/' . $booking->id_selfie_path) }}" 
+                                             alt="ID Selfie" 
+                                             class="w-full h-48 object-contain rounded border border-gray-200 hover:opacity-90 transition-opacity bg-gray-50"
+                                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'bg-gray-100 rounded border border-gray-200 flex items-center justify-center\' style=\'height: 192px;\'><div class=\'text-center p-4\'><svg class=\'w-12 h-12 text-gray-400 mx-auto mb-2\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z\'/></svg><p class=\'text-xs font-medium text-gray-700\'>Image Preview Unavailable</p><p class=\'text-xs text-gray-500 mt-1\'>{{ basename($booking->id_selfie_path) }}</p></div></div>';">
+                                    </a>
+                                    <p class="text-xs text-gray-500 mt-2">Click image to view full size</p>
+                                </div>
+                            @endif
+
+                            <!-- Authorization Letter (Optional) -->
+                            @if($booking->authorization_letter_path)
+                                <div class="border border-gray-200 rounded-lg p-4 hover:border-lgu-highlight transition-colors">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="font-medium text-gray-900">Authorization Letter</h4>
+                                        <span class="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">Optional</span>
+                                    </div>
+                                    <a href="{{ asset('storage/' . $booking->authorization_letter_path) }}" target="_blank" class="block">
+                                        <img src="{{ asset('storage/' . $booking->authorization_letter_path) }}" 
+                                             alt="Authorization Letter" 
+                                             class="w-full h-48 object-contain rounded border border-gray-200 hover:opacity-90 transition-opacity bg-gray-50"
+                                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'bg-gray-100 rounded border border-gray-200 flex items-center justify-center\' style=\'height: 192px;\'><div class=\'text-center p-4\'><svg class=\'w-12 h-12 text-gray-400 mx-auto mb-2\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\'/></svg><p class=\'text-xs font-medium text-gray-700\'>Document Uploaded</p><p class=\'text-xs text-gray-500 mt-1\'>{{ basename($booking->authorization_letter_path) }}</p></div></div>';">
+                                    </a>
+                                    <p class="text-xs text-gray-500 mt-2">Click image to view full size</p>
+                                </div>
+                            @endif
+
+                            <!-- Event Proposal (Optional) -->
+                            @if($booking->event_proposal_path)
+                                <div class="border border-gray-200 rounded-lg p-4 hover:border-lgu-highlight transition-colors">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="font-medium text-gray-900">Event Proposal</h4>
+                                        <span class="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">Optional</span>
+                                    </div>
+                                    <a href="{{ asset('storage/' . $booking->event_proposal_path) }}" target="_blank" class="block">
+                                        <img src="{{ asset('storage/' . $booking->event_proposal_path) }}" 
+                                             alt="Event Proposal" 
+                                             class="w-full h-48 object-contain rounded border border-gray-200 hover:opacity-90 transition-opacity bg-gray-50"
+                                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'bg-gray-100 rounded border border-gray-200 flex items-center justify-center\' style=\'height: 192px;\'><div class=\'text-center p-4\'><svg class=\'w-12 h-12 text-gray-400 mx-auto mb-2\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\'/></svg><p class=\'text-xs font-medium text-gray-700\'>Document Uploaded</p><p class=\'text-xs text-gray-500 mt-1\'>{{ basename($booking->event_proposal_path) }}</p></div></div>';">
+                                    </a>
+                                    <p class="text-xs text-gray-500 mt-2">Click image to view full size</p>
+                                </div>
+                            @endif
+
+                            <!-- Digital Signature -->
+                            @if($booking->digital_signature)
+                                <div class="border border-gray-200 rounded-lg p-4 hover:border-lgu-highlight transition-colors">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="font-medium text-gray-900">Digital Signature</h4>
+                                        <span class="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">✓ Signed</span>
+                                    </div>
+                                    <div class="bg-white rounded border border-gray-300 p-6 flex items-center justify-center" style="min-height: 150px;">
+                                        @php
+                                            $sigLength = strlen($booking->digital_signature);
+                                            $isValidSignature = strpos($booking->digital_signature, 'data:image') === 0 && $sigLength > 100;
+                                        @endphp
+                                        
+                                        @if($isValidSignature)
+                                            <img src="{{ $booking->digital_signature }}" alt="Digital Signature" class="max-h-32 max-w-full" style="image-rendering: crisp-edges;">
+                                        @else
+                                            <div class="text-center p-4">
+                                                <svg class="w-16 h-16 text-orange-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                                </svg>
+                                                <p class="text-sm text-orange-600 font-medium">Signature Preview Unavailable</p>
+                                                <p class="text-xs text-gray-500 mt-1">Signature data was corrupted or incomplete</p>
+                                                <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
+                                                    <p class="text-xs text-blue-800"><strong>Verification Note:</strong></p>
+                                                    <p class="text-xs text-blue-700 mt-1">• Compare signature on uploaded ID documents</p>
+                                                    <p class="text-xs text-blue-700">• If unclear, request applicant to re-submit via email</p>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2">Applicant's digital signature</p>
+                                </div>
+                            @endif
+                        </div>
+                        
+                        <div class="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                            <div class="flex items-start">
+                                <svg class="w-5 h-5 text-green-600 mt-0.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <div>
+                                    <p class="text-sm font-medium text-green-900">All Required Documents Submitted</p>
+                                    <p class="text-xs text-green-700 mt-1">Documents confirmed: {{ $booking->id_type ?? 'Valid ID' }} (front & back), ID Selfie{{ $booking->digital_signature ? ', and Digital Signature' : '' }}.</p>
+                                    @if($booking->digital_signature && strlen($booking->digital_signature) < 100)
+                                        <p class="text-xs text-orange-600 mt-1"><em>Note: Digital signature preview unavailable. Please verify signature on the uploaded ID documents.</em></p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="text-center py-8">
+                            <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <p class="text-gray-600">No documents uploaded</p>
+                            <p class="text-sm text-gray-500">The applicant hasn't submitted any verification documents yet.</p>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -123,18 +265,18 @@
                     <h3 class="text-lg font-semibold text-gray-900">Verification Action</h3>
                 </div>
                 <div class="p-6">
-                    <form action="{{ route('staff.verification.process', $booking) }}" method="POST" id="verificationForm">
+                    <form action="{{ route('staff.verification.approve', $booking->id) }}" method="POST" id="verificationForm">
                         @csrf
                         
                         <div class="mb-6">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Verification Decision</label>
                             <div class="space-y-2">
                                 <label class="flex items-center">
-                                    <input type="radio" name="action" value="approve" class="focus:ring-lgu-highlight h-4 w-4 text-lgu-highlight border-gray-300" required>
+                                    <input type="radio" name="action" value="approve" class="action-radio focus:ring-lgu-highlight h-4 w-4 text-lgu-highlight border-gray-300" data-route="{{ route('staff.verification.approve', $booking->id) }}" required>
                                     <span class="ml-3 text-sm text-gray-900">Approve - Requirements are complete</span>
                                 </label>
                                 <label class="flex items-center">
-                                    <input type="radio" name="action" value="reject" class="focus:ring-red-500 h-4 w-4 text-red-600 border-gray-300" required>
+                                    <input type="radio" name="action" value="reject" class="action-radio focus:ring-red-500 h-4 w-4 text-red-600 border-gray-300" data-route="{{ route('staff.verification.reject', $booking->id) }}" required>
                                     <span class="ml-3 text-sm text-gray-900">Reject - Requirements incomplete/invalid</span>
                                 </label>
                             </div>
@@ -195,37 +337,6 @@
                 </div>
             </div>
 
-            <!-- Verification Checklist -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-900">Verification Checklist</h3>
-                </div>
-                <div class="p-6">
-                    <div class="space-y-3">
-                        <label class="flex items-center">
-                            <input type="checkbox" class="focus:ring-lgu-highlight h-4 w-4 text-lgu-highlight border-gray-300 rounded">
-                            <span class="ml-3 text-sm text-gray-900">Complete booking information</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" class="focus:ring-lgu-highlight h-4 w-4 text-lgu-highlight border-gray-300 rounded">
-                            <span class="ml-3 text-sm text-gray-900">Valid contact information</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" class="focus:ring-lgu-highlight h-4 w-4 text-lgu-highlight border-gray-300 rounded">
-                            <span class="ml-3 text-sm text-gray-900">Appropriate event type</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" class="focus:ring-lgu-highlight h-4 w-4 text-lgu-highlight border-gray-300 rounded">
-                            <span class="ml-3 text-sm text-gray-900">Facility availability confirmed</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" class="focus:ring-lgu-highlight h-4 w-4 text-lgu-highlight border-gray-300 rounded">
-                            <span class="ml-3 text-gray-900">Required documents submitted</span>
-                        </label>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-4">Check each item before making your verification decision</p>
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -234,6 +345,15 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('verificationForm');
+    
+    // Change form action based on selected radio button
+    const radioButtons = document.querySelectorAll('.action-radio');
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', function() {
+            const route = this.getAttribute('data-route');
+            form.action = route;
+        });
+    });
     
     form.addEventListener('submit', function(e) {
         e.preventDefault();
