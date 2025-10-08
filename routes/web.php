@@ -12,6 +12,7 @@ use App\Http\Controllers\SsoController;
 use App\Http\Controllers\Staff\StaffDashboardController;
 use App\Http\Controllers\Staff\RequirementVerificationController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\AnalyticsController;
 
 // ============================================
 // AUTHENTICATION DISABLED FOR LOCAL DEVELOPMENT
@@ -56,6 +57,7 @@ Route::get('/facilities/{facility_id}/events', [FacilityController::class, 'getE
 
     // Reports and Analytics
     Route::get('/ai-forecast', [FacilityController::class, 'forecast'])->name('forecast');
+    Route::get('/api/usage-data', [AnalyticsController::class, 'getUsageData'])->name('admin.api.usage_data');
     Route::get('/reservation-status', [FacilityController::class, 'showUserBookings'])->name('reservation.status');
 
     // AI System Management
@@ -195,3 +197,5 @@ Route::prefix('citizen')->group(function () {
 Route::get('/', function () {
     return redirect()->route('admin.dashboard');
 })->name('home');
+
+
