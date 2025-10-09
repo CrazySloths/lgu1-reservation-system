@@ -587,8 +587,10 @@ class FacilityController extends Controller
                     return [
                         'id' => $booking->id,
                         'facility_id' => $booking->facility_id,
-                        'start_time' => $booking->start_time->format('Y-m-d H:i:s'),
-                        'end_time' => $booking->end_time->format('Y-m-d H:i:s'),
+                        'event_date' => $booking->event_date->format('Y-m-d'),
+                        'start_time' => $booking->start_time,
+                        'end_time' => $booking->end_time,
+                        'expected_attendees' => $booking->expected_attendees,
                         'user_name' => $booking->user_name,
                         'status' => $booking->status,
                         'created_at' => $booking->created_at->format('Y-m-d H:i:s'),

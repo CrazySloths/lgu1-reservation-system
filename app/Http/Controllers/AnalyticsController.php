@@ -10,32 +10,39 @@ class AnalyticsController extends Controller
 {
     public function getUsageData()
     {
-        // get all approved bookings
-        // Note: Assumed 'start_time' and 'end_time' are the correct column names based on earlier SQL error.
+        // Get all approved bookings ordered by event date
         $bookings = Booking::where('status', 'approved')
-                            ->orderBy('start_time') // FIXED column name (replace with your actual column if needed)
+                            ->orderBy('event_date')
                             ->get();
 
         $monthlyUsage = [];
 
         foreach ($bookings as $booking) {
-            $start = Carbon::parse($booking->start_time); // FIXED column name
-            $end = Carbon::parse($booking->end_time);     // FIXED column name
-
-            // calculate the duration in hours
-            $durationHours = $end->diffInMinutes($start) / 60;
+            // Parse the event_date
+            $eventDate = Carbon::parse($booking->event_date);
+            $dateStr = $eventDate->format('Y-m-d');
             
-            // CRITICAL FIX: Aggregate by MONTH (YYYY-MM)
-            $month = $start->format('Y-m'); 
+            // Parse times on the same day for proper calculation
+            $start = Carbon::parse($dateStr . ' ' . $booking->start_time);
+            $end = Carbon::parse($dateStr . ' ' . $booking->end_time);
 
-            // increment the usage for that MONTH
+            // Calculate the duration in hours
+            $durationHours = $start->diffInHours($end);
+            
+            // Aggregate by MONTH (YYYY-MM)
+            $month = $eventDate->format('Y-m'); 
+
+            // Increment the usage for that MONTH
             if (!isset($monthlyUsage[$month])) {
                 $monthlyUsage[$month] = 0;
             }
             $monthlyUsage[$month] += $durationHours;
         }
 
-        // CRITICAL FIX: Return only the usage values as a simple array for the AI model
+        // Sort by month to ensure chronological order
+        ksort($monthlyUsage);
+
+        // Return only the usage values as a simple array for the AI model
         $usageValues = [];
         foreach ($monthlyUsage as $usage) {
             $usageValues[] = round($usage, 2); 
