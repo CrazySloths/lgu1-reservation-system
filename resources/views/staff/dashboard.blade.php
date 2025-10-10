@@ -136,17 +136,18 @@
                         @foreach($recentPendingBookings as $booking)
                             <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                                 <div class="flex-1">
-                                    <p class="font-medium text-gray-900">{{ $booking->event_name }}</p>
-                                    <p class="text-sm text-gray-600">{{ $booking->user->name }}</p>
+                                    <p class="font-medium text-gray-900">{{ $booking->event_name ?? 'N/A' }}</p>
+                                    <p class="text-sm text-gray-600">{{ $booking->user->name ?? 'N/A' }}</p>
                                     <p class="text-sm text-gray-500">{{ $booking->facility->name ?? 'N/A' }}</p>
-                                    <p class="text-xs text-gray-400">Submitted: {{ $booking->created_at->format('M j, Y g:i A') }}</p>
+                                    <p class="text-xs text-gray-400">Submitted: {{ $booking->created_at ? $booking->created_at->format('M j, Y g:i A') : 'N/A' }}</p>
                                 </div>
                                 <div class="flex-shrink-0">
-                                    <a href="{{ route('staff.verification.show', ['booking' => $booking->id]) }}" 
+                                    <a href="{{ route('staff.verification.show', ['booking' => $booking->id ?? 0]) }}" 
                                        class="inline-flex items-center px-4 py-2 bg-lgu-highlight text-lgu-button-text text-sm font-medium rounded-lg hover:bg-lgu-button transition-colors">
                                         Review
                                     </a>
-                                </div>                            </div>
+                                </div>
+                            </div>
                         @endforeach
                     </div>
                 @else
@@ -177,17 +178,17 @@
                         @foreach($myRecentVerifications as $booking)
                             <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                                 <div class="flex-1">
-                                    <p class="font-medium text-gray-900">{{ $booking->event_name }}</p>
-                                    <p class="text-sm text-gray-600">{{ $booking->user->name }}</p>
+                                    <p class="font-medium text-gray-900">{{ $booking->event_name ?? 'N/A' }}</p>
+                                    <p class="text-sm text-gray-600">{{ $booking->user->name ?? 'N/A' }}</p>
                                     <p class="text-sm text-gray-500">{{ $booking->facility->name ?? 'N/A' }}</p>
-                                    <p class="text-xs text-gray-400">Verified: {{ $booking->staff_verified_at->format('M j, Y g:i A') }}</p>
+                                    <p class="text-xs text-gray-400">Verified: {{ $booking->staff_verified_at ? $booking->staff_verified_at->format('M j, Y g:i A') : 'N/A' }}</p>
                                 </div>
                                 <div class="flex-shrink-0">
-                                    @if($booking->status === 'approved')
+                                    @if(isset($booking->status) && $booking->status === 'approved')
                                         <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
                                             Approved
                                         </span>
-                                    @elseif($booking->status === 'rejected')
+                                    @elseif(isset($booking->status) && $booking->status === 'rejected')
                                         <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
                                             Rejected
                                         </span>

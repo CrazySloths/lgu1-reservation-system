@@ -516,8 +516,22 @@ class SsoController extends Controller
                     $myVerificationsToday = \App\Models\Booking::where('staff_verified_by', $user->id)->whereDate('staff_verified_at', today())->count();
                     $myTotalVerifications = \App\Models\Booking::where('staff_verified_by', $user->id)->count();
                     $totalPendingAdmin = \App\Models\Booking::where('status', 'pending')->whereNotNull('staff_verified_by')->count();
-                    $recentPendingBookings = \App\Models\Booking::with(['user', 'facility'])->where('status', 'pending')->whereNull('staff_verified_by')->orderBy('created_at', 'desc')->take(5)->get();
-                    $myRecentVerifications = \App\Models\Booking::with(['user', 'facility'])->where('staff_verified_by', $user->id)->orderBy('staff_verified_at', 'desc')->take(5)->get();
+                    
+                    // Get recent pending bookings with eager loading
+                    $recentPendingBookings = \App\Models\Booking::with(['user', 'facility'])
+                        ->where('status', 'pending')
+                        ->whereNull('staff_verified_by')
+                        ->orderBy('created_at', 'desc')
+                        ->take(5)
+                        ->get();
+                    
+                    // Get staff's recent verifications with eager loading
+                    $myRecentVerifications = \App\Models\Booking::with(['user', 'facility'])
+                        ->where('staff_verified_by', $user->id)
+                        ->whereNotNull('staff_verified_at')
+                        ->orderBy('staff_verified_at', 'desc')
+                        ->take(5)
+                        ->get();
                 }
                 
                 return view('staff.dashboard', compact(
@@ -529,6 +543,12 @@ class SsoController extends Controller
                     'myRecentVerifications'
                 ));
             } catch (\Exception $e) {
+                // Log the error for debugging
+                Log::error('Staff Dashboard Error', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                
                 // If there's any error, show a simple success message
                 return view('staff.dashboard', [
                     'pendingVerifications' => 0,
