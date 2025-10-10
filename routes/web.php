@@ -150,8 +150,7 @@ Route::get('/calendar', function() {
 
 
 // Logout Route (for both admin and citizen)
-// AUTHENTICATION DISABLED - Logout commented out for local development
-// Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('logout');
+Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('logout');
 
 // Citizen Authentication Routes (No middleware - auth handled by SsoController)
 Route::prefix('citizen')->group(function () {
@@ -167,7 +166,7 @@ Route::prefix('citizen')->group(function () {
     Route::get('/payment-slips/{id}/download', [PaymentSlipController::class, 'citizenDownloadPdf'])->name('citizen.payment-slips.download');
     Route::get('/profile', [CitizenDashboardController::class, 'profile'])->name('citizen.profile');
     Route::put('/profile', [CitizenDashboardController::class, 'updateProfile'])->name('citizen.profile.update');
-    // Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('citizen.logout'); // COMMENTED FOR LOCAL DEV
+    Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('citizen.logout');
     
     // Two-Factor Authentication Routes (for authenticated users)
     Route::get('/security/setup-2fa', [CitizenAuthController::class, 'showTwoFactorSetup'])->name('citizen.security.setup-2fa');
