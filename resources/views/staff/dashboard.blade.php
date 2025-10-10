@@ -142,12 +142,11 @@
                                     <p class="text-xs text-gray-400">Submitted: {{ $booking->created_at->format('M j, Y g:i A') }}</p>
                                 </div>
                                 <div class="flex-shrink-0">
-                                    <a href="{{ route('staff.verification.show', $booking) }}" 
+                                    <a href="{{ route('staff.verification.show', ['booking' => $booking->id]) }}" 
                                        class="inline-flex items-center px-4 py-2 bg-lgu-highlight text-lgu-button-text text-sm font-medium rounded-lg hover:bg-lgu-button transition-colors">
                                         Review
                                     </a>
-                                </div>
-                            </div>
+                                </div>                            </div>
                         @endforeach
                     </div>
                 @else
