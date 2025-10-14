@@ -87,6 +87,16 @@ Route::get('/facilities/{facility_id}/events', [FacilityController::class, 'getE
     // Schedule Conflict Management
     Route::get('/schedule-conflicts', [ScheduleConflictController::class, 'index'])->name('admin.schedule.conflicts');
 
+    // Maintenance Log Management
+    Route::get('/maintenance-logs', [\App\Http\Controllers\Admin\MaintenanceLogController::class, 'index'])->name('admin.maintenance-logs.index');
+    Route::get('/maintenance-logs/create', [\App\Http\Controllers\Admin\MaintenanceLogController::class, 'create'])->name('admin.maintenance-logs.create');
+    Route::post('/maintenance-logs', [\App\Http\Controllers\Admin\MaintenanceLogController::class, 'store'])->name('admin.maintenance-logs.store');
+    Route::get('/maintenance-logs/{id}', [\App\Http\Controllers\Admin\MaintenanceLogController::class, 'show'])->name('admin.maintenance-logs.show');
+    Route::get('/maintenance-logs/{id}/edit', [\App\Http\Controllers\Admin\MaintenanceLogController::class, 'edit'])->name('admin.maintenance-logs.edit');
+    Route::put('/maintenance-logs/{id}', [\App\Http\Controllers\Admin\MaintenanceLogController::class, 'update'])->name('admin.maintenance-logs.update');
+    Route::delete('/maintenance-logs/{id}', [\App\Http\Controllers\Admin\MaintenanceLogController::class, 'destroy'])->name('admin.maintenance-logs.destroy');
+    Route::post('/maintenance-logs/{id}/update-status', [\App\Http\Controllers\Admin\MaintenanceLogController::class, 'updateStatus'])->name('admin.maintenance-logs.update-status');
+
     // City Event Management (Mayor Authorized)
     Route::get('/city-events', [\App\Http\Controllers\Admin\CityEventController::class, 'index'])->name('admin.city-events.index');
     Route::get('/city-events/create', [\App\Http\Controllers\Admin\CityEventController::class, 'create'])->name('admin.city-events.create');
