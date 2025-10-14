@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\Reservation;
+use App\Models\Booking;
 
 class ScheduleConflictController extends Controller
 {
@@ -16,7 +16,7 @@ class ScheduleConflictController extends Controller
      */
     public function index() 
     {
-        // Retrieve the conflicts and the reservations involved
+        // Retrieve the conflicts and the bookings involved
         $conflicts = $this->findConflicts();
 
         // Return the view with the conflict data
@@ -24,21 +24,22 @@ class ScheduleConflictController extends Controller
     }
 
     /**
-     * Logic to find overlapping reservations.
+     * Logic to find overlapping bookings.
      *
      * @return \Illuminate\Support\Collection
      */
     private function findConflicts()
     {
-        // Step 1: Get the IDs of reservations that have an overlap.
+        // Step 1: Get the IDs of bookings that have an overlap on the same date
         $conflictingIds = DB::table('bookings as a') 
             ->select('a.id')
             ->join('bookings as b', function ($join) {
-                $join->on('a.facility_id', '=', 'b.facility_id') 
+                $join->on('a.facility_id', '=', 'b.facility_id')
+                     ->on('a.event_date', '=', 'b.event_date')
                      ->whereRaw('a.id != b.id')
                      ->whereRaw('(a.start_time < b.end_time AND a.end_time > b.start_time)')
-                     ->whereIn('a.status', ['Approved', 'Pending'])
-                     ->whereIn('b.status', ['Approved', 'Pending']);
+                     ->whereIn('a.status', ['approved', 'pending'])
+                     ->whereIn('b.status', ['approved', 'pending']);
             })
             // Prevent duplicates
             ->distinct()
@@ -49,16 +50,17 @@ class ScheduleConflictController extends Controller
             return collect(); // Return an empty collection if no conflicts
         }
 
-        // Step 2: Retrieve the full reservation details for the conflicting IDs
-        $conflictingReservations = Reservation::whereIn('id', $conflictingIds)
+        // Step 2: Retrieve the full booking details for the conflicting IDs
+        $conflictingBookings = Booking::whereIn('id', $conflictingIds)
             ->with(['facility', 'user']) 
             ->orderBy('facility_id')
+            ->orderBy('event_date')
             ->orderBy('start_time')
             ->get();
             
-        // Step 3: Group the reservations to be easily displayed in the view.
-        $conflictGroups = $conflictingReservations->groupBy(function ($item) {
-             return $item->facility_id . '-' . \Carbon\Carbon::parse($item->start_time)->toDateString();
+        // Step 3: Group the bookings to be easily displayed in the view.
+        $conflictGroups = $conflictingBookings->groupBy(function ($item) {
+             return $item->facility_id . '-' . $item->event_date->toDateString();
         });
 
         return $conflictGroups;
