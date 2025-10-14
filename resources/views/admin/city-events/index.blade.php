@@ -8,13 +8,22 @@
             <h1 class="text-3xl font-bold text-gray-900">Official City Events</h1>
             <p class="text-gray-600 mt-1">Manage city government events authorized by the Mayor's Office</p>
         </div>
-        <a href="{{ route('admin.city-events.create') }}" 
-           class="inline-flex items-center px-6 py-3 bg-lgu-highlight text-lgu-button-text font-semibold rounded-lg hover:bg-lgu-button transition-colors shadow-lg">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            Create City Event
-        </a>
+        <div class="flex items-center space-x-3">
+            <a href="{{ route('admin.city-events.calendar') }}" 
+               class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Calendar View
+            </a>
+            <a href="{{ route('admin.city-events.create') }}" 
+               class="inline-flex items-center px-6 py-3 bg-lgu-highlight text-lgu-button-text font-semibold rounded-lg hover:bg-lgu-button transition-colors shadow-lg">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Create City Event
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
