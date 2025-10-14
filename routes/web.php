@@ -97,6 +97,10 @@ Route::get('/facilities/{facility_id}/events', [FacilityController::class, 'getE
     Route::delete('/maintenance-logs/{id}', [\App\Http\Controllers\Admin\MaintenanceLogController::class, 'destroy'])->name('admin.maintenance-logs.destroy');
     Route::post('/maintenance-logs/{id}/update-status', [\App\Http\Controllers\Admin\MaintenanceLogController::class, 'updateStatus'])->name('admin.maintenance-logs.update-status');
 
+    // Monthly Reports
+    Route::get('/monthly-reports', [\App\Http\Controllers\Admin\MonthlyReportController::class, 'index'])->name('admin.monthly-reports.index');
+    Route::get('/monthly-reports/export', [\App\Http\Controllers\Admin\MonthlyReportController::class, 'export'])->name('admin.monthly-reports.export');
+
     // City Event Management (Mayor Authorized)
     Route::get('/city-events', [\App\Http\Controllers\Admin\CityEventController::class, 'index'])->name('admin.city-events.index');
     Route::get('/city-events/create', [\App\Http\Controllers\Admin\CityEventController::class, 'create'])->name('admin.city-events.create');
