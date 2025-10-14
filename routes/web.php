@@ -13,6 +13,7 @@ use App\Http\Controllers\Staff\StaffDashboardController;
 use App\Http\Controllers\Staff\RequirementVerificationController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\Admin\ScheduleConflictController;
 
 // ============================================
 // AUTHENTICATION DISABLED FOR LOCAL DEVELOPMENT
@@ -82,7 +83,10 @@ Route::get('/facilities/{facility_id}/events', [FacilityController::class, 'getE
     Route::post('/reservations/{id}/reject', [ReservationReviewController::class, 'reject'])->name('admin.reservations.reject');
     Route::get('/reservations/{id}/document/{type}/download', [ReservationReviewController::class, 'downloadDocument'])->name('admin.reservations.download');
     Route::get('/reservations/{id}/document/{type}/preview', [ReservationReviewController::class, 'previewDocument'])->name('admin.reservations.preview');
-    
+
+    // Schedule Conflict Management
+    Route::get('/schedule-conflicts', [ScheduleConflictController::class, 'index'])->name('admin.schedule.conflicts');
+
     // Payment Slip Management
     Route::get('/payment-slips', [PaymentSlipController::class, 'adminIndex'])->name('admin.payment-slips.index');
     Route::post('/payment-slips/{id}/mark-paid', [PaymentSlipController::class, 'markAsPaid'])->name('admin.payment-slips.mark-paid');
