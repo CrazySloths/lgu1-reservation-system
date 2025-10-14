@@ -13,6 +13,7 @@ class CityEventController extends Controller
 {
     /**
      * Display a listing of city events.
+     * Note: City events are also visible in the main facility calendar.
      */
     public function index()
     {
@@ -23,23 +24,6 @@ class CityEventController extends Controller
             ->paginate(15);
 
         return view('admin.city-events.index', compact('cityEvents'));
-    }
-
-    /**
-     * Display calendar view of city events.
-     */
-    public function calendar()
-    {
-        $cityEvents = Booking::with('facility')
-            ->where(function($query) {
-                $query->where('user_name', 'City Government')
-                      ->orWhere('event_name', 'LIKE', '%CITY EVENT%')
-                      ->orWhere('applicant_name', 'City Mayor Office');
-            })
-            ->orderBy('event_date', 'asc')
-            ->get();
-
-        return view('admin.city-events.calendar', compact('cityEvents'));
     }
 
     /**

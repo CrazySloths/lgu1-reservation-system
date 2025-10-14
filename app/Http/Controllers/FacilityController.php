@@ -456,7 +456,7 @@ class FacilityController extends Controller
     }
 
     /**
-     * Get events for a specific facility.
+     * Get events for a specific facility (includes regular bookings and city events).
      *
      * @param  int  $facility_id
      * @return \Illuminate\Http\JsonResponse
@@ -464,17 +464,52 @@ class FacilityController extends Controller
     public function getEvents($facility_id)
     {
         $bookings = Booking::where('facility_id', $facility_id)
-                             ->where('status', 'approved')
+                             ->whereIn('status', ['approved', 'pending'])
                              ->get();
 
         $events = [];
 
         foreach ($bookings as $booking) {
+            // Determine if this is a city event
+            $isCityEvent = in_array($booking->user_name, ['City Government', 'City Mayor Office']) || 
+                          stripos($booking->event_name, 'City Event') !== false ||
+                          $booking->applicant_name === 'City Mayor Office';
+            
+            // Set color based on type and status
+            if ($isCityEvent) {
+                // City events are purple/violet to distinguish them
+                $backgroundColor = '#9333EA'; // Purple for city events
+                $borderColor = '#7E22CE';
+                $textColor = '#FFFFFF';
+                $title = '🏛️ ' . $booking->event_name; // Add city icon
+            } else {
+                // Regular bookings
+                if ($booking->status === 'approved') {
+                    $backgroundColor = '#10B981'; // Green for approved
+                    $borderColor = '#059669';
+                } else {
+                    $backgroundColor = '#F59E0B'; // Yellow for pending
+                    $borderColor = '#D97706';
+                }
+                $textColor = '#FFFFFF';
+                $title = $booking->event_name ?? $booking->user_name;
+            }
+            
             $events[] = [
-                'title' => $booking->user_name,
-                'start' => $booking->start_time,
-                'end' => $booking->end_time,
-                'backgroundColor' => '#3B82F6'
+                'id' => $booking->id,
+                'title' => $title,
+                'start' => $booking->event_date . 'T' . $booking->start_time,
+                'end' => $booking->event_date . 'T' . $booking->end_time,
+                'backgroundColor' => $backgroundColor,
+                'borderColor' => $borderColor,
+                'textColor' => $textColor,
+                'extendedProps' => [
+                    'applicant' => $booking->applicant_name ?? $booking->user_name,
+                    'attendees' => $booking->expected_attendees,
+                    'status' => $booking->status,
+                    'description' => $booking->event_description,
+                    'isCityEvent' => $isCityEvent
+                ]
             ];
         }
 

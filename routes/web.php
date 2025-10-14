@@ -89,7 +89,6 @@ Route::get('/facilities/{facility_id}/events', [FacilityController::class, 'getE
 
     // City Event Management (Mayor Authorized)
     Route::get('/city-events', [\App\Http\Controllers\Admin\CityEventController::class, 'index'])->name('admin.city-events.index');
-    Route::get('/city-events/calendar', [\App\Http\Controllers\Admin\CityEventController::class, 'calendar'])->name('admin.city-events.calendar');
     Route::get('/city-events/create', [\App\Http\Controllers\Admin\CityEventController::class, 'create'])->name('admin.city-events.create');
     Route::post('/city-events', [\App\Http\Controllers\Admin\CityEventController::class, 'store'])->name('admin.city-events.store');
     Route::get('/city-events/{id}', [\App\Http\Controllers\Admin\CityEventController::class, 'show'])->name('admin.city-events.show');
