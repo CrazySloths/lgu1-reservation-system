@@ -87,6 +87,15 @@ Route::get('/facilities/{facility_id}/events', [FacilityController::class, 'getE
     // Schedule Conflict Management
     Route::get('/schedule-conflicts', [ScheduleConflictController::class, 'index'])->name('admin.schedule.conflicts');
 
+    // City Event Management (Mayor Authorized)
+    Route::get('/city-events', [\App\Http\Controllers\Admin\CityEventController::class, 'index'])->name('admin.city-events.index');
+    Route::get('/city-events/create', [\App\Http\Controllers\Admin\CityEventController::class, 'create'])->name('admin.city-events.create');
+    Route::post('/city-events', [\App\Http\Controllers\Admin\CityEventController::class, 'store'])->name('admin.city-events.store');
+    Route::get('/city-events/{id}', [\App\Http\Controllers\Admin\CityEventController::class, 'show'])->name('admin.city-events.show');
+    Route::get('/city-events/{id}/edit', [\App\Http\Controllers\Admin\CityEventController::class, 'edit'])->name('admin.city-events.edit');
+    Route::put('/city-events/{id}', [\App\Http\Controllers\Admin\CityEventController::class, 'update'])->name('admin.city-events.update');
+    Route::delete('/city-events/{id}', [\App\Http\Controllers\Admin\CityEventController::class, 'destroy'])->name('admin.city-events.destroy');
+
     // Payment Slip Management
     Route::get('/payment-slips', [PaymentSlipController::class, 'adminIndex'])->name('admin.payment-slips.index');
     Route::post('/payment-slips/{id}/mark-paid', [PaymentSlipController::class, 'markAsPaid'])->name('admin.payment-slips.mark-paid');
