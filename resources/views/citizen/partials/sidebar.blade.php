@@ -18,8 +18,6 @@
                 </svg>
             </button>
             <div id="citizen-settings-dropdown" class="hidden absolute right-0 mt-3 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                <a href="{{ route('citizen.profile') }}" class="block px-4 py-2 text-sm text-lgu-paragraph hover:bg-lgu-bg">Profile Settings</a>
-                <div class="border-t border-gray-200 my-1"></div>
                 <form method="POST" action="{{ route('citizen.logout') }}" class="block" id="logoutForm">
                     @csrf
                     <button type="button" onclick="confirmLogout()" class="w-full text-left px-4 py-2 text-sm text-lgu-tertiary hover:bg-lgu-bg">Logout</button>
@@ -213,14 +211,6 @@
                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
                         </svg>
                         Help & FAQ
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('citizen.help-faq') }}#contact" class="citizen-sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
-                        <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
-                        </svg>
-                        Contact Support
                     </a>
                 </li>
             </ul>

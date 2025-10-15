@@ -101,6 +101,13 @@ Route::get('/facilities/{facility_id}/events', [FacilityController::class, 'getE
     Route::get('/monthly-reports', [\App\Http\Controllers\Admin\MonthlyReportController::class, 'index'])->name('admin.monthly-reports.index');
     Route::get('/monthly-reports/export', [\App\Http\Controllers\Admin\MonthlyReportController::class, 'export'])->name('admin.monthly-reports.export');
 
+    // Citizen Feedback Management
+    Route::get('/feedback', [\App\Http\Controllers\Admin\CitizenFeedbackController::class, 'index'])->name('admin.feedback.index');
+    Route::get('/feedback/{id}', [\App\Http\Controllers\Admin\CitizenFeedbackController::class, 'show'])->name('admin.feedback.show');
+    Route::patch('/feedback/{id}/status', [\App\Http\Controllers\Admin\CitizenFeedbackController::class, 'updateStatus'])->name('admin.feedback.update-status');
+    Route::post('/feedback/{id}/respond', [\App\Http\Controllers\Admin\CitizenFeedbackController::class, 'respond'])->name('admin.feedback.respond');
+    Route::delete('/feedback/{id}', [\App\Http\Controllers\Admin\CitizenFeedbackController::class, 'destroy'])->name('admin.feedback.destroy');
+
     // City Event Management (Mayor Authorized)
     Route::get('/city-events', [\App\Http\Controllers\Admin\CityEventController::class, 'index'])->name('admin.city-events.index');
     Route::get('/city-events/create', [\App\Http\Controllers\Admin\CityEventController::class, 'create'])->name('admin.city-events.create');
@@ -200,6 +207,7 @@ Route::prefix('citizen')->group(function () {
     
     // Help & FAQ
     Route::get('/help-faq', [\App\Http\Controllers\Citizen\HelpFaqController::class, 'index'])->name('citizen.help-faq');
+    Route::post('/help-faq/submit', [\App\Http\Controllers\Citizen\HelpFaqController::class, 'submitQuestion'])->name('citizen.help-faq.submit');
     
     Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('citizen.logout');
     

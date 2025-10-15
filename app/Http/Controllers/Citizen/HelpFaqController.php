@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Citizen;
 
 use App\Http\Controllers\Controller;
+use App\Models\CitizenFeedback;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class HelpFaqController extends Controller
 {
@@ -135,5 +138,54 @@ class HelpFaqController extends Controller
         ];
 
         return view('citizen.help-faq', compact('faqs', 'contacts'));
+    }
+
+    /**
+     * Submit a question from a citizen.
+     */
+    public function submitQuestion(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'category' => 'required|string',
+            'question' => 'required|string|max:1000',
+        ]);
+
+        try {
+            // Save feedback to database
+            $feedback = CitizenFeedback::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'category' => $validated['category'],
+                'question' => $validated['question'],
+                'status' => 'pending'
+            ]);
+
+            // Log the submission
+            Log::info('Citizen question submitted', [
+                'id' => $feedback->id,
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'category' => $validated['category']
+            ]);
+
+            // In a real system, you would send email notification to admin staff here
+            // Mail::to('admin@lgu1.com')->send(new NewFeedbackMail($feedback));
+            
+            return redirect()
+                ->route('citizen.help-faq')
+                ->with('success', 'Your question has been submitted successfully! Our staff will respond to your email within 24 hours.');
+        } catch (\Exception $e) {
+            Log::error('Error submitting citizen question', [
+                'error' => $e->getMessage(),
+                'data' => $validated
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'There was an error submitting your question. Please try again or contact us directly.');
+        }
     }
 }
