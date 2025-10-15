@@ -190,29 +190,6 @@
             </ul>
         </div>
 
-        <!-- Verification Tools -->
-        <div class="px-4 mb-6">
-            <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Verification Tools</h4>
-            <ul class="space-y-1">
-                <li>
-                    <a href="#" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
-                        <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm6 6H7v2h6v-2z" clip-rule="evenodd"/>
-                        </svg>
-                        Verification Guidelines
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
-                        <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clip-rule="evenodd"/>
-                        </svg>
-                        Document Templates
-                    </a>
-                </li>
-            </ul>
-        </div>
-
         <!-- System -->
         <div class="px-4 mb-6">
             <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">System</h4>
