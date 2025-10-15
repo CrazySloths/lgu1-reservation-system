@@ -37,12 +37,7 @@
     </div>
 
     <!-- Form -->
-    <div class="bg-white rounded-xl shadow-lg border border-gray-200">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-xl font-semibold text-gray-900">Event Details</h2>
-        </div>
-
-        <form action="{{ route('admin.city-events.update', $cityEvent->id) }}" method="POST" class="p-6 space-y-6">
+    <form action="{{ route('admin.city-events.update', $cityEvent->id) }}" method="POST" class="bg-white rounded-lg shadow-md p-6 space-y-6">
             @csrf
             @method('PUT')
 
@@ -168,8 +163,7 @@
                     Update City Event
                 </button>
             </div>
-        </form>
-    </div>
+    </form>
 </div>
 @endsection
 
