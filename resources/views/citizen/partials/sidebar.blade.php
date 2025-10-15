@@ -19,7 +19,6 @@
             </button>
             <div id="citizen-settings-dropdown" class="hidden absolute right-0 mt-3 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                 <a href="{{ route('citizen.profile') }}" class="block px-4 py-2 text-sm text-lgu-paragraph hover:bg-lgu-bg">Profile Settings</a>
-                <a href="#help" class="block px-4 py-2 text-sm text-lgu-paragraph hover:bg-lgu-bg">Help & Support</a>
                 <div class="border-t border-gray-200 my-1"></div>
                 <form method="POST" action="{{ route('citizen.logout') }}" class="block" id="logoutForm">
                     @csrf
