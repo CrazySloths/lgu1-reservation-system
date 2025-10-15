@@ -2,17 +2,31 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- Header -->
-    <div class="bg-gradient-to-r from-lgu-green to-lgu-highlight text-white rounded-lg shadow-lg p-6">
-        <div class="flex items-center space-x-4">
-            <div class="p-3 bg-white/20 rounded-lg">
-                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                </svg>
-            </div>
-            <div>
-                <h1 class="text-3xl font-bold">Help & Support</h1>
-                <p class="text-gray-100 mt-1">Verification guidelines, FAQs, and technical assistance</p>
+    <!-- Enhanced Header Section -->
+    <div class="bg-lgu-headline rounded-2xl p-8 text-white shadow-lgu-lg overflow-hidden relative">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-10">
+            <svg class="w-full h-full" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                <pattern id="pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <circle cx="10" cy="10" r="1" fill="currentColor"/>
+                </pattern>
+                <rect width="100%" height="100%" fill="url(#pattern)"/>
+            </svg>
+        </div>
+        
+        <div class="relative z-10 flex items-center justify-between">
+            <div class="space-y-3">
+                <div class="flex items-center space-x-3">
+                    <div class="w-16 h-16 bg-lgu-highlight/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/10">
+                        <svg class="w-8 h-8 text-lgu-highlight" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-4xl font-bold mb-1 text-white">Help & Support</h1>
+                        <p class="text-gray-200 text-lg">Verification guidelines, FAQs, and technical assistance</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
