@@ -197,6 +197,10 @@ Route::prefix('citizen')->group(function () {
     Route::get('/payment-slips/{id}/download', [PaymentSlipController::class, 'citizenDownloadPdf'])->name('citizen.payment-slips.download');
     Route::get('/profile', [CitizenDashboardController::class, 'profile'])->name('citizen.profile');
     Route::put('/profile', [CitizenDashboardController::class, 'updateProfile'])->name('citizen.profile.update');
+    
+    // Help & FAQ
+    Route::get('/help-faq', [\App\Http\Controllers\Citizen\HelpFaqController::class, 'index'])->name('citizen.help-faq');
+    
     Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('citizen.logout');
     
     // Two-Factor Authentication Routes (for authenticated users)
