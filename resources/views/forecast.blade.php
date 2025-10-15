@@ -22,7 +22,7 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-4xl font-bold mb-1 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">Facility Usage Forecast</h1>
+                    <h1 class="text-4xl font-bold mb-1 text-white">Facility Usage Forecast</h1>
                     <p class="text-gray-200 text-lg">Predicted facility usage for the next 30 days (via TensorFlow.js)</p>
                 </div>
             </div>

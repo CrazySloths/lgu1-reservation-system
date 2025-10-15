@@ -30,7 +30,7 @@
                         </svg>
                         Back to Reservations
                     </a>
-                    <h1 class="text-3xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">Review Reservation #{{ $reservation->id }}</h1>
+                    <h1 class="text-3xl font-bold text-white">Review Reservation #{{ $reservation->id }}</h1>
                     <p class="text-gray-200">{{ $reservation->event_name }} - {{ $reservation->applicant_name }}</p>
                 </div>
             </div>

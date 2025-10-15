@@ -24,7 +24,7 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-4xl font-bold mb-1 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">My Reservations</h1>
+                    <h1 class="text-4xl font-bold mb-1 text-white">My Reservations</h1>
                     <p class="text-gray-200 text-lg">View the status of your submitted facility booking requests</p>
                 </div>
             </div>

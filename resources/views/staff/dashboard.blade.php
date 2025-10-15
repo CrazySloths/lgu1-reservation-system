@@ -23,7 +23,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-4xl font-bold mb-1 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">Staff Verification Portal</h1>
+                        <h1 class="text-4xl font-bold mb-1 text-white">Staff Verification Portal</h1>
                         <p class="text-gray-200 text-lg">Document & Requirement Verification Center</p>
                     </div>
                 </div>

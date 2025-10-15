@@ -22,7 +22,7 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-3xl font-bold mb-1 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">Edit Maintenance Log #{{ $maintenanceLog->id }}</h1>
+                    <h1 class="text-3xl font-bold mb-1 text-white">Edit Maintenance Log #{{ $maintenanceLog->id }}</h1>
                     <p class="text-gray-200">Update maintenance record details</p>
                 </div>
             </div>

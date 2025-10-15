@@ -24,7 +24,7 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-4xl font-bold mb-1 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">Reservation Review</h1>
+                    <h1 class="text-4xl font-bold mb-1 text-white">Reservation Review</h1>
                     <p class="text-gray-200 text-lg">Review and manage citizen facility reservations</p>
                 </div>
             </div>

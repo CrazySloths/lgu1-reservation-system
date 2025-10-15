@@ -22,7 +22,7 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-3xl font-bold mb-1 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">Add Maintenance Log</h1>
+                    <h1 class="text-3xl font-bold mb-1 text-white">Add Maintenance Log</h1>
                     <p class="text-gray-200">Record a new maintenance, repair, or cleaning activity</p>
                 </div>
             </div>

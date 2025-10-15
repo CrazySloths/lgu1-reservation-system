@@ -22,7 +22,7 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-4xl font-bold mb-1 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">Booking Approval Dashboard</h1>
+                    <h1 class="text-4xl font-bold mb-1 text-white">Booking Approval Dashboard</h1>
                     <p class="text-gray-200 text-lg">Review and manage pending booking requests</p>
                 </div>
             </div>

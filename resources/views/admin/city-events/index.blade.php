@@ -23,7 +23,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-4xl font-bold mb-1 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">Official City Events</h1>
+                        <h1 class="text-4xl font-bold mb-1 text-white">Official City Events</h1>
                         <p class="text-gray-200 text-lg">Manage city government events authorized by the Mayor's Office</p>
                     </div>
                 </div>

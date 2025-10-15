@@ -22,7 +22,7 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-3xl font-bold mb-1 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">Feedback Details</h1>
+                    <h1 class="text-3xl font-bold mb-1 text-white">Feedback Details</h1>
                     <p class="text-gray-200">Citizen question and support inquiry</p>
                 </div>
             </div>
