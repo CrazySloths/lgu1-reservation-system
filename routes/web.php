@@ -138,6 +138,10 @@ Route::prefix('staff')->middleware('web')->group(function () {
     
     // Staff Statistics and Reports
     Route::get('/my-stats', [StaffDashboardController::class, 'myStats'])->name('staff.stats');
+    
+    // Staff Help & Support
+    Route::get('/help-support', [\App\Http\Controllers\Staff\HelpSupportController::class, 'index'])->name('staff.help-support');
+    Route::post('/help-support/submit-issue', [\App\Http\Controllers\Staff\HelpSupportController::class, 'submitIssue'])->name('staff.help-support.submit-issue');
 });
 
 // Alternative admin access routes (redirect to protected admin routes)
