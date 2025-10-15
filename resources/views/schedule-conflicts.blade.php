@@ -35,7 +35,7 @@
         </div>
     </div>
 
-    @if (isset($conflicts) && $conflicts->count() > 0)
+                @if (isset($conflicts) && $conflicts->count() > 0)
         <div class="space-y-6">
             @foreach ($conflicts as $groupKey => $bookingsInGroup)
                 @php
@@ -120,7 +120,7 @@
                             </p>
                         </div>
                     </div>
-                </div>
+            </div>
             @endforeach
         </div>
     @else
@@ -130,7 +130,7 @@
             </svg>
             <h3 class="text-2xl font-semibold text-gray-900 mb-2">No Schedule Conflicts</h3>
             <p class="text-gray-600">All bookings are properly scheduled without any overlapping time slots.</p>
-        </div>
+    </div>
     @endif
 </div>
 @endsection

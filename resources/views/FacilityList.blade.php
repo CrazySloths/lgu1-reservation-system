@@ -2,16 +2,39 @@
 
 @section('content')
 <div class="mb-6">
-    <div class="bg-gradient-to-r rounded-lg p-6 text-white" style="background: linear-gradient(to right, #00473e, #00332c);">
-        <div class="flex items-center justify-between">
-            <div>
-                <h2 class="text-2xl font-bold mb-2">Facility List</h2>
-                <p class="text-gray-200">Manage all LGU facilities here</p>
+    <!-- Enhanced Header Section -->
+    <div class="bg-lgu-headline rounded-2xl p-8 text-white shadow-lgu-lg overflow-hidden relative">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-10">
+            <svg class="w-full h-full" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                <pattern id="pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <circle cx="10" cy="10" r="1" fill="currentColor"/>
+                </pattern>
+                <rect width="100%" height="100%" fill="url(#pattern)"/>
+            </svg>
+        </div>
+        
+        <div class="relative z-10 flex items-center justify-between">
+            <div class="space-y-3">
+                <div class="flex items-center space-x-3">
+                    <div class="w-16 h-16 bg-lgu-highlight/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/10">
+                        <svg class="w-8 h-8 text-lgu-highlight" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm6 6H7v2h6v-2z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-4xl font-bold mb-1 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">Facility List</h1>
+                        <p class="text-gray-200 text-lg">Manage all LGU facilities here</p>
+                    </div>
+                </div>
             </div>
-            <div>
+            <div class="text-right space-y-3">
                 <button id="addFacilityBtn"
-                    class="px-4 py-2 font-semibold rounded-lg shadow hover:bg-yellow-400 transition" style="background-color: #faae2b; color: #00473e;">
-                    + Add Facility
+                    class="inline-flex items-center px-6 py-3 bg-lgu-highlight text-lgu-button-text font-semibold rounded-lg hover:opacity-90 transition-all shadow-lg">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Add Facility
                 </button>
             </div>
         </div>
