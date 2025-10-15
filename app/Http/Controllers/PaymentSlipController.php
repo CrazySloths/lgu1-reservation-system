@@ -16,7 +16,16 @@ class PaymentSlipController extends Controller
     public function citizenIndex()
     {
         $user = Auth::user();
-        $paymentSlips = PaymentSlip::where('user_id', $user->id)
+        
+        // Fallback for static authentication
+        if (!$user) {
+            // Use default citizen user ID from static auth
+            $userId = 1; // Default citizen user ID
+        } else {
+            $userId = $user->id;
+        }
+        
+        $paymentSlips = PaymentSlip::where('user_id', $userId)
                                   ->with(['booking.facility', 'generatedBy'])
                                   ->orderBy('created_at', 'desc')
                                   ->get();
@@ -30,7 +39,16 @@ class PaymentSlipController extends Controller
     public function citizenShow($id)
     {
         $user = Auth::user();
-        $paymentSlip = PaymentSlip::where('user_id', $user->id)
+        
+        // Fallback for static authentication
+        if (!$user) {
+            // Use default citizen user ID from static auth
+            $userId = 1; // Default citizen user ID
+        } else {
+            $userId = $user->id;
+        }
+        
+        $paymentSlip = PaymentSlip::where('user_id', $userId)
                                  ->where('id', $id)
                                  ->with(['booking.facility', 'generatedBy'])
                                  ->firstOrFail();
@@ -44,7 +62,16 @@ class PaymentSlipController extends Controller
     public function citizenDownloadPdf($id)
     {
         $user = Auth::user();
-        $paymentSlip = PaymentSlip::where('user_id', $user->id)
+        
+        // Fallback for static authentication
+        if (!$user) {
+            // Use default citizen user ID from static auth
+            $userId = 1; // Default citizen user ID
+        } else {
+            $userId = $user->id;
+        }
+        
+        $paymentSlip = PaymentSlip::where('user_id', $userId)
                                  ->where('id', $id)
                                  ->with(['booking.facility', 'generatedBy'])
                                  ->firstOrFail();
