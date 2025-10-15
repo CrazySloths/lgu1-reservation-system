@@ -3,7 +3,7 @@
 @section('title', 'Payment Slips Management - Admin Portal')
 
 @section('content')
-<div class="mb-6">
+<div class="space-y-6">
     <!-- Enhanced Header Section -->
     <div class="bg-lgu-headline rounded-2xl p-8 text-white shadow-lgu-lg overflow-hidden relative">
         <!-- Background Pattern -->
