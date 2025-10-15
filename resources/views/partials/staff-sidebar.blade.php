@@ -43,7 +43,6 @@
                 </svg>
             </button>
             <div id="settings-dropdown" class="hidden absolute right-0 mt-3 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                <a href="#" class="block px-4 py-2 text-sm text-lgu-paragraph hover:bg-lgu-bg">Help & Support</a>
                 <a href="#" class="block px-4 py-2 text-sm text-lgu-paragraph hover:bg-lgu-bg">Account & Settings</a>
                 {{-- AUTHENTICATION DISABLED FOR LOCAL DEVELOPMENT --}}
                 {{-- <div class="border-t border-gray-200 my-1"></div>
