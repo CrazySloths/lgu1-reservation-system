@@ -2,19 +2,42 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900">Facility Maintenance Logs</h1>
-            <p class="text-gray-600 mt-1">Track repairs, cleaning, inspections, and maintenance activities</p>
-        </div>
-        <a href="{{ route('admin.maintenance-logs.create') }}" 
-           class="inline-flex items-center px-6 py-3 bg-lgu-highlight text-lgu-button-text font-semibold rounded-lg hover:bg-lgu-button transition-colors shadow-lg">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+    <!-- Enhanced Header Section -->
+    <div class="bg-lgu-headline rounded-2xl p-8 text-white shadow-lgu-lg overflow-hidden relative">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-10">
+            <svg class="w-full h-full" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                <pattern id="pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <circle cx="10" cy="10" r="1" fill="currentColor"/>
+                </pattern>
+                <rect width="100%" height="100%" fill="url(#pattern)"/>
             </svg>
-            Add Maintenance Log
-        </a>
+        </div>
+        
+        <div class="relative z-10 flex items-center justify-between">
+            <div class="space-y-3">
+                <div class="flex items-center space-x-3">
+                    <div class="w-16 h-16 bg-lgu-highlight/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/10">
+                        <svg class="w-8 h-8 text-lgu-highlight" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-4xl font-bold mb-1 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">Facility Maintenance Logs</h1>
+                        <p class="text-gray-200 text-lg">Track repairs, cleaning, inspections, and maintenance activities</p>
+                    </div>
+                </div>
+            </div>
+            <div class="text-right space-y-3">
+                <a href="{{ route('admin.maintenance-logs.create') }}" 
+                   class="inline-flex items-center px-6 py-3 bg-lgu-highlight text-lgu-button-text font-semibold rounded-lg hover:opacity-90 transition-all shadow-lg">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Add Maintenance Log
+                </a>
+            </div>
+        </div>
     </div>
 
     @if(session('success'))

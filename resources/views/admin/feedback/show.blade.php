@@ -1,22 +1,47 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="space-y-6">
-    <!-- Header -->
-    <div class="flex justify-between items-center">
-        <div>
-            <a href="{{ route('admin.feedback.index') }}" class="text-blue-600 hover:text-blue-800 mb-2 inline-block">
-                ← Back to Feedback List
-            </a>
-            <h1 class="text-3xl font-bold text-gray-900">Feedback Details</h1>
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Enhanced Header Section -->
+    <div class="bg-lgu-headline rounded-2xl p-6 text-white shadow-lgu-lg overflow-hidden relative">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-10">
+            <svg class="w-full h-full" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                <pattern id="pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <circle cx="10" cy="10" r="1" fill="currentColor"/>
+                </pattern>
+                <rect width="100%" height="100%" fill="url(#pattern)"/>
+            </svg>
         </div>
-        <form method="POST" action="{{ route('admin.feedback.destroy', $feedback->id) }}" onsubmit="return confirm('Are you sure you want to delete this feedback?');">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-                Delete Feedback
-            </button>
-        </form>
+        
+        <div class="relative z-10 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-lgu-highlight/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10">
+                    <svg class="w-6 h-6 text-lgu-highlight" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold mb-1 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">Feedback Details</h1>
+                    <p class="text-gray-200">Citizen question and support inquiry</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <a href="{{ route('admin.feedback.index') }}" class="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-medium rounded-lg hover:bg-white/20 transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to List
+                </a>
+                <form method="POST" action="{{ route('admin.feedback.destroy', $feedback->id) }}" onsubmit="return confirm('Are you sure you want to delete this feedback?');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                        Delete
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 
     @if(session('success'))

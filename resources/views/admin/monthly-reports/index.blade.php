@@ -2,26 +2,41 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900">Monthly Reports</h1>
-            <p class="text-gray-600 mt-1">View booking statistics, revenue, and facility usage by month</p>
+    <!-- Enhanced Header Section -->
+    <div class="bg-lgu-headline rounded-2xl p-8 text-white shadow-lgu-lg overflow-hidden relative">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-10">
+            <svg class="w-full h-full" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                <pattern id="pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <circle cx="10" cy="10" r="1" fill="currentColor"/>
+                </pattern>
+                <rect width="100%" height="100%" fill="url(#pattern)"/>
+            </svg>
         </div>
-        <div class="flex items-center space-x-3">
-            <form method="GET" action="{{ route('admin.monthly-reports.index') }}" class="flex items-center space-x-2">
-                <label class="text-sm font-medium text-gray-700">Select Month:</label>
-                <input type="month" name="month" value="{{ $selectedMonth }}" 
-                    class="border-gray-300 rounded-lg focus:ring-lgu-highlight focus:border-lgu-highlight"
-                    onchange="this.form.submit()">
-            </form>
+        
+        <div class="relative z-10 flex items-center justify-between">
+            <div class="space-y-3">
+                <div class="flex items-center space-x-3">
+                    <div class="w-16 h-16 bg-lgu-highlight/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/10">
+                        <svg class="w-8 h-8 text-lgu-highlight" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-4xl font-bold mb-1 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">Monthly Reports</h1>
+                        <p class="text-gray-200 text-lg">View booking statistics, revenue, and facility usage - {{ $monthCarbon->format('F Y') }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="text-right space-y-3">
+                <form method="GET" action="{{ route('admin.monthly-reports.index') }}" class="flex items-center space-x-2">
+                    <label class="text-sm font-medium text-white">Select Month:</label>
+                    <input type="month" name="month" value="{{ $selectedMonth }}" 
+                        class="border-white/20 bg-white/10 backdrop-blur-sm text-white rounded-lg focus:ring-lgu-highlight focus:border-lgu-highlight"
+                        onchange="this.form.submit()">
+                </form>
+            </div>
         </div>
-    </div>
-
-    <!-- Month Display -->
-    <div class="bg-gradient-to-r from-lgu-green to-lgu-highlight text-white rounded-lg shadow-lg p-6">
-        <h2 class="text-2xl font-bold">{{ $monthCarbon->format('F Y') }}</h2>
-        <p class="text-gray-100 mt-1">Comprehensive report for {{ $monthCarbon->format('F Y') }}</p>
     </div>
 
     <!-- Key Statistics -->
