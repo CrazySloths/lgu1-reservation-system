@@ -3,7 +3,7 @@
 @section('title', 'Review Reservation - Admin Portal')
 
 @section('content')
-<div class="max-w-4xl mx-auto space-y-6">
+<div class="space-y-6">
     <!-- Enhanced Header Section -->
     <div class="bg-lgu-headline rounded-2xl p-6 text-white shadow-lgu-lg overflow-hidden relative">
         <!-- Background Pattern -->
