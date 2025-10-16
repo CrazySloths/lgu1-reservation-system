@@ -112,14 +112,14 @@
             </div>
             <div class="p-4">
                 <ul id="facility-list" class="space-y-2">
-                    @foreach($facilities as $facility)
+            @foreach($facilities as $facility)
                         <li class="bg-gray-50 hover:bg-gray-100 p-3 rounded-lg cursor-pointer transition-all border border-gray-200 hover:border-purple-300"
-                            data-id="{{ $facility->facility_id }}"
-                            data-name="{{ $facility->name }}">
+                    data-id="{{ $facility->facility_id }}"
+                    data-name="{{ $facility->name }}">
                             <span class="font-medium text-gray-900">{{ $facility->name }}</span>
-                        </li>
-                    @endforeach
-                </ul>
+                </li>
+            @endforeach
+        </ul>
             </div>
         </div>
     </div>
@@ -341,15 +341,15 @@
                         facilityListItems.forEach(li => li.classList.remove('bg-purple-100', 'border-purple-400'));
                         this.classList.add('bg-purple-100', 'border-purple-400');
                         
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Facility Selected',
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Facility Selected',
                             text: `Now viewing ${facilityName}`,
                             timer: 2000,
-                            showConfirmButton: false
-                        });
-                    });
+                    showConfirmButton: false
+                });
             });
+        });
         });
         
         // Initial load

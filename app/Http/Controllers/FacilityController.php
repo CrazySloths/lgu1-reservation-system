@@ -564,11 +564,21 @@ class FacilityController extends Controller
                     $title = '⏳ ' . $title;
                 }
                 
+                // Format event_date properly (handle both string dates and Carbon objects)
+                $eventDate = $bookingArray['event_date'] ?? date('Y-m-d');
+                if (is_object($eventDate)) {
+                    // It's a Carbon/DateTime object
+                    $eventDate = $eventDate->format('Y-m-d');
+                } elseif (strpos($eventDate, 'T') !== false) {
+                    // It's already a datetime string, extract just the date part
+                    $eventDate = substr($eventDate, 0, 10);
+                }
+                
                 $events[] = [
                     'id' => $bookingArray['id'] ?? 0,
                     'title' => $title,
-                    'start' => ($bookingArray['event_date'] ?? date('Y-m-d')) . 'T' . ($bookingArray['start_time'] ?? '09:00'),
-                    'end' => ($bookingArray['event_date'] ?? date('Y-m-d')) . 'T' . ($bookingArray['end_time'] ?? '17:00'),
+                    'start' => $eventDate . 'T' . ($bookingArray['start_time'] ?? '09:00'),
+                    'end' => $eventDate . 'T' . ($bookingArray['end_time'] ?? '17:00'),
                     'backgroundColor' => $backgroundColor,
                     'borderColor' => $backgroundColor,
                     'textColor' => '#FFFFFF',
