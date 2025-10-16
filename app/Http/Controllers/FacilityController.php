@@ -466,90 +466,148 @@ class FacilityController extends Controller
      */
     public function getAllEvents()
     {
-        $facilities = Facility::all();
-        
-        // Define color palette for facilities
-        $facilityColors = [
-            '#3B82F6', // Blue
-            '#10B981', // Green
-            '#F59E0B', // Amber
-            '#EF4444', // Red
-            '#8B5CF6', // Violet
-            '#EC4899', // Pink
-            '#14B8A6', // Teal
-            '#F97316', // Orange
-            '#6366F1', // Indigo
-            '#06B6D4', // Cyan
-        ];
-        
-        // Assign colors to facilities
-        $facilityColorMap = [];
-        $index = 0;
-        foreach ($facilities as $facility) {
-            $facilityColorMap[$facility->facility_id] = $facilityColors[$index % count($facilityColors)];
-            $index++;
-        }
-        
-        // Get all bookings
-        $bookings = Booking::with('facility')
-                            ->whereIn('status', ['approved', 'pending'])
-                            ->get();
-
-        $events = [];
-
-        foreach ($bookings as $booking) {
-            if (!$booking->facility) {
-                continue;
+        try {
+            // Try to get facilities from database, fallback to file storage
+            $facilities = Facility::all();
+            
+            // If no facilities from database, try file storage
+            if ($facilities->isEmpty()) {
+                $facilitiesFile = storage_path('app/facilities_data.json');
+                if (file_exists($facilitiesFile)) {
+                    $facilitiesData = json_decode(file_get_contents($facilitiesFile), true);
+                    $facilities = collect($facilitiesData)->map(function($f) {
+                        return (object) $f;
+                    });
+                    \Log::info('getAllEvents: Loaded facilities from file storage', ['count' => $facilities->count()]);
+                }
             }
             
-            // Get facility color
-            $backgroundColor = $facilityColorMap[$booking->facility_id] ?? '#6B7280';
-            
-            // Determine if this is a city event
-            $isCityEvent = in_array($booking->user_name, ['City Government', 'City Mayor Office']) || 
-                          stripos($booking->event_name, 'City Event') !== false ||
-                          $booking->applicant_name === 'City Mayor Office';
-            
-            // Add indicator for city events and pending status
-            $title = $booking->event_name ?? $booking->user_name;
-            if ($isCityEvent) {
-                $title = '🏛️ ' . $title;
-            }
-            if ($booking->status === 'pending') {
-                $title = '⏳ ' . $title;
-            }
-            
-            $events[] = [
-                'id' => $booking->id,
-                'title' => $title,
-                'start' => $booking->event_date . 'T' . $booking->start_time,
-                'end' => $booking->event_date . 'T' . $booking->end_time,
-                'backgroundColor' => $backgroundColor,
-                'borderColor' => $backgroundColor,
-                'textColor' => '#FFFFFF',
-                'extendedProps' => [
-                    'facility_id' => $booking->facility_id,
-                    'facility_name' => $booking->facility->name,
-                    'applicant' => $booking->applicant_name ?? $booking->user_name,
-                    'attendees' => $booking->expected_attendees,
-                    'status' => $booking->status,
-                    'description' => $booking->event_description,
-                    'isCityEvent' => $isCityEvent
-                ]
+            // Define color palette for facilities
+            $facilityColors = [
+                '#3B82F6', // Blue
+                '#10B981', // Green
+                '#F59E0B', // Amber
+                '#EF4444', // Red
+                '#8B5CF6', // Violet
+                '#EC4899', // Pink
+                '#14B8A6', // Teal
+                '#F97316', // Orange
+                '#6366F1', // Indigo
+                '#06B6D4', // Cyan
             ];
-        }
+            
+            // Assign colors to facilities
+            $facilityColorMap = [];
+            $index = 0;
+            foreach ($facilities as $facility) {
+                $facilityId = is_object($facility) ? ($facility->facility_id ?? $facility->id) : $facility['facility_id'];
+                $facilityColorMap[$facilityId] = $facilityColors[$index % count($facilityColors)];
+                $index++;
+            }
+            
+            // Try to get bookings from database first
+            $bookings = collect();
+            try {
+                $bookings = Booking::with('facility')
+                                ->whereIn('status', ['approved', 'pending'])
+                                ->get();
+            } catch (\Exception $e) {
+                \Log::warning('getAllEvents: Database query failed, trying file storage', ['error' => $e->getMessage()]);
+                
+                // Fallback to file storage for bookings
+                $bookingsFile = storage_path('app/bookings_data.json');
+                if (file_exists($bookingsFile)) {
+                    $bookingsData = json_decode(file_get_contents($bookingsFile), true);
+                    $bookings = collect($bookingsData);
+                }
+            }
 
-        return response()->json([
-            'events' => $events,
-            'facilityColors' => $facilityColorMap,
-            'facilities' => $facilities->map(function($f) use ($facilityColorMap) {
-                return [
-                    'id' => $f->facility_id,
-                    'name' => $f->name,
-                    'color' => $facilityColorMap[$f->facility_id] ?? '#6B7280'
+            $events = [];
+
+            foreach ($bookings as $booking) {
+                // Handle both Eloquent models and arrays
+                $bookingArray = is_array($booking) ? $booking : $booking->toArray();
+                $facilityId = $bookingArray['facility_id'] ?? null;
+                
+                if (!$facilityId) {
+                    continue;
+                }
+                
+                // Find facility name
+                $facilityName = 'Unknown Facility';
+                foreach ($facilities as $facility) {
+                    $fId = is_object($facility) ? ($facility->facility_id ?? $facility->id) : $facility['facility_id'];
+                    if ($fId == $facilityId) {
+                        $facilityName = is_object($facility) ? $facility->name : $facility['name'];
+                        break;
+                    }
+                }
+                
+                // Get facility color
+                $backgroundColor = $facilityColorMap[$facilityId] ?? '#6B7280';
+                
+                // Determine if this is a city event
+                $userName = $bookingArray['user_name'] ?? '';
+                $eventName = $bookingArray['event_name'] ?? '';
+                $applicantName = $bookingArray['applicant_name'] ?? '';
+                
+                $isCityEvent = in_array($userName, ['City Government', 'City Mayor Office']) || 
+                              stripos($eventName, 'City Event') !== false ||
+                              $applicantName === 'City Mayor Office';
+                
+                // Add indicator for city events and pending status
+                $title = $eventName ?: $userName;
+                if ($isCityEvent) {
+                    $title = '🏛️ ' . $title;
+                }
+                if (($bookingArray['status'] ?? '') === 'pending') {
+                    $title = '⏳ ' . $title;
+                }
+                
+                $events[] = [
+                    'id' => $bookingArray['id'] ?? 0,
+                    'title' => $title,
+                    'start' => ($bookingArray['event_date'] ?? date('Y-m-d')) . 'T' . ($bookingArray['start_time'] ?? '09:00'),
+                    'end' => ($bookingArray['event_date'] ?? date('Y-m-d')) . 'T' . ($bookingArray['end_time'] ?? '17:00'),
+                    'backgroundColor' => $backgroundColor,
+                    'borderColor' => $backgroundColor,
+                    'textColor' => '#FFFFFF',
+                    'extendedProps' => [
+                        'facility_id' => $facilityId,
+                        'facility_name' => $facilityName,
+                        'applicant' => $applicantName ?: $userName,
+                        'attendees' => $bookingArray['expected_attendees'] ?? 0,
+                        'status' => $bookingArray['status'] ?? 'pending',
+                        'description' => $bookingArray['event_description'] ?? '',
+                        'isCityEvent' => $isCityEvent
+                    ]
                 ];
-            })
-        ]);
+            }
+
+            return response()->json([
+                'events' => $events,
+                'facilityColors' => $facilityColorMap,
+                'facilities' => $facilities->map(function($f) use ($facilityColorMap) {
+                    $id = is_object($f) ? ($f->facility_id ?? $f->id) : $f['facility_id'];
+                    $name = is_object($f) ? $f->name : $f['name'];
+                    return [
+                        'id' => $id,
+                        'name' => $name,
+                        'color' => $facilityColorMap[$id] ?? '#6B7280'
+                    ];
+                })
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('getAllEvents: Fatal error', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            
+            // Return empty but valid response
+            return response()->json([
+                'events' => [],
+                'facilityColors' => [],
+                'facilities' => []
+            ]);
+        }
     }
     
     public function getEvents($facility_id)
