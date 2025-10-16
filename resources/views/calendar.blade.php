@@ -62,21 +62,6 @@
             </div>
         </div>
 
-        <!-- Event Indicators -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h4 class="text-sm font-semibold text-gray-900 mb-3">Event Indicators</h4>
-            <div class="space-y-2 text-sm">
-                <div class="flex items-center gap-2">
-                    <span class="text-lg">🏛️</span>
-                    <span class="text-gray-700">Official City Event</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-lg">⏳</span>
-                    <span class="text-gray-700">Pending Approval</span>
-                </div>
-            </div>
-        </div>
-
         <!-- Statistics -->
         <div class="bg-gradient-to-br from-green-50 to-blue-50 rounded-lg shadow-sm border border-gray-200 p-4">
             <h4 class="text-sm font-semibold text-gray-900 mb-3">Quick Stats</h4>

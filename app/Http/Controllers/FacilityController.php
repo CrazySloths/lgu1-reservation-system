@@ -529,7 +529,8 @@ class FacilityController extends Controller
                 $bookingArray = is_array($booking) ? $booking : $booking->toArray();
                 $facilityId = $bookingArray['facility_id'] ?? null;
                 
-                if (!$facilityId) {
+                // Skip if no facility_id or if booking is not approved
+                if (!$facilityId || ($bookingArray['status'] ?? '') !== 'approved') {
                     continue;
                 }
                 
@@ -555,13 +556,10 @@ class FacilityController extends Controller
                               stripos($eventName, 'City Event') !== false ||
                               $applicantName === 'City Mayor Office';
                 
-                // Add indicator for city events and pending status
+                // Add indicator for city events
                 $title = $eventName ?: $userName;
                 if ($isCityEvent) {
                     $title = '🏛️ ' . $title;
-                }
-                if (($bookingArray['status'] ?? '') === 'pending') {
-                    $title = '⏳ ' . $title;
                 }
                 
                 // Format event_date properly (handle both string dates and Carbon objects)
