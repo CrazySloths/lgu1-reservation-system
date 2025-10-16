@@ -189,7 +189,7 @@
         
         // Load all events
         function loadAllEvents() {
-            fetch('/calendar/all-events')
+            fetch('/admin/calendar/all-events')
                 .then(response => response.json())
                 .then(data => {
                     allEvents = data.events;
