@@ -59,14 +59,6 @@
                 <div id="facility-legend" class="space-y-2">
                     <!-- Facilities will be loaded here dynamically -->
                 </div>
-                <div class="mt-4 pt-4 border-t border-gray-200">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium text-gray-700">Filter Options</span>
-                        <button id="toggle-all" class="text-xs text-blue-600 hover:text-blue-700 font-medium">
-                            Show All
-                        </button>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -218,37 +210,22 @@
                 });
         }
         
-        // Render facility legend with color badges and checkboxes
+        // Render facility legend with color badges
         function renderFacilityLegend() {
             const legendContainer = document.getElementById('facility-legend');
             legendContainer.innerHTML = '';
             
             allFacilities.forEach(facility => {
                 const div = document.createElement('div');
-                div.className = 'flex items-center justify-between p-2 rounded hover:bg-gray-50 transition-colors';
+                div.className = 'flex items-center justify-between p-2 rounded';
                 div.innerHTML = `
-                    <label class="flex items-center gap-2 cursor-pointer flex-1">
-                        <input type="checkbox" 
-                               class="facility-checkbox w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
-                               data-facility-id="${facility.id}" 
-                               ${visibleFacilities.has(facility.id) ? 'checked' : ''}>
+                    <div class="flex items-center gap-2 flex-1">
                         <div class="w-4 h-4 rounded" style="background-color: ${facility.color}"></div>
                         <span class="text-sm font-medium text-gray-700 flex-1">${facility.name}</span>
-                    </label>
+                    </div>
                     <span class="text-xs text-gray-500 ml-2" data-count-facility="${facility.id}">0</span>
                 `;
                 legendContainer.appendChild(div);
-                
-                // Add checkbox event listener
-                const checkbox = div.querySelector('.facility-checkbox');
-                checkbox.addEventListener('change', function() {
-                    if (this.checked) {
-                        visibleFacilities.add(facility.id);
-                    } else {
-                        visibleFacilities.delete(facility.id);
-                    }
-                    displayFilteredEvents();
-                });
             });
             
             // Update booking counts per facility
@@ -274,28 +251,6 @@
             document.getElementById('total-bookings').textContent = allEvents.length;
             document.getElementById('active-facilities').textContent = allFacilities.length;
         }
-        
-        // Toggle all facilities
-        document.getElementById('toggle-all').addEventListener('click', function() {
-            const allChecked = visibleFacilities.size === allFacilities.length;
-            
-            if (allChecked) {
-                // Uncheck all
-                visibleFacilities.clear();
-                this.textContent = 'Show All';
-            } else {
-                // Check all
-                allFacilities.forEach(f => visibleFacilities.add(f.id));
-                this.textContent = 'Hide All';
-            }
-            
-            // Update checkboxes
-            document.querySelectorAll('.facility-checkbox').forEach(checkbox => {
-                checkbox.checked = !allChecked;
-            });
-            
-            displayFilteredEvents();
-        });
         
         // View switcher
         document.getElementById('view-all').addEventListener('click', function() {
