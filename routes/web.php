@@ -54,6 +54,7 @@ Route::get('/bookings/approval', [FacilityController::class, 'approvalDashboard'
     
     // Calendar and Events
 Route::get('/calendar', [FacilityController::class, 'calendar'])->name('calendar');
+Route::get('/calendar/all-events', [FacilityController::class, 'getAllEvents'])->name('calendar.all-events');
 Route::get('/facilities/{facility_id}/events', [FacilityController::class, 'getEvents'])->name('facilities.events');
 
     // Reports and Analytics

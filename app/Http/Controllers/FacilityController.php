@@ -461,6 +461,97 @@ class FacilityController extends Controller
      * @param  int  $facility_id
      * @return \Illuminate\Http\JsonResponse
      */
+    /**
+     * Get all events for all facilities with facility-specific color coding
+     */
+    public function getAllEvents()
+    {
+        $facilities = Facility::all();
+        
+        // Define color palette for facilities
+        $facilityColors = [
+            '#3B82F6', // Blue
+            '#10B981', // Green
+            '#F59E0B', // Amber
+            '#EF4444', // Red
+            '#8B5CF6', // Violet
+            '#EC4899', // Pink
+            '#14B8A6', // Teal
+            '#F97316', // Orange
+            '#6366F1', // Indigo
+            '#06B6D4', // Cyan
+        ];
+        
+        // Assign colors to facilities
+        $facilityColorMap = [];
+        $index = 0;
+        foreach ($facilities as $facility) {
+            $facilityColorMap[$facility->facility_id] = $facilityColors[$index % count($facilityColors)];
+            $index++;
+        }
+        
+        // Get all bookings
+        $bookings = Booking::with('facility')
+                            ->whereIn('status', ['approved', 'pending'])
+                            ->get();
+
+        $events = [];
+
+        foreach ($bookings as $booking) {
+            if (!$booking->facility) {
+                continue;
+            }
+            
+            // Get facility color
+            $backgroundColor = $facilityColorMap[$booking->facility_id] ?? '#6B7280';
+            
+            // Determine if this is a city event
+            $isCityEvent = in_array($booking->user_name, ['City Government', 'City Mayor Office']) || 
+                          stripos($booking->event_name, 'City Event') !== false ||
+                          $booking->applicant_name === 'City Mayor Office';
+            
+            // Add indicator for city events and pending status
+            $title = $booking->event_name ?? $booking->user_name;
+            if ($isCityEvent) {
+                $title = '🏛️ ' . $title;
+            }
+            if ($booking->status === 'pending') {
+                $title = '⏳ ' . $title;
+            }
+            
+            $events[] = [
+                'id' => $booking->id,
+                'title' => $title,
+                'start' => $booking->event_date . 'T' . $booking->start_time,
+                'end' => $booking->event_date . 'T' . $booking->end_time,
+                'backgroundColor' => $backgroundColor,
+                'borderColor' => $backgroundColor,
+                'textColor' => '#FFFFFF',
+                'extendedProps' => [
+                    'facility_id' => $booking->facility_id,
+                    'facility_name' => $booking->facility->name,
+                    'applicant' => $booking->applicant_name ?? $booking->user_name,
+                    'attendees' => $booking->expected_attendees,
+                    'status' => $booking->status,
+                    'description' => $booking->event_description,
+                    'isCityEvent' => $isCityEvent
+                ]
+            ];
+        }
+
+        return response()->json([
+            'events' => $events,
+            'facilityColors' => $facilityColorMap,
+            'facilities' => $facilities->map(function($f) use ($facilityColorMap) {
+                return [
+                    'id' => $f->facility_id,
+                    'name' => $f->name,
+                    'color' => $facilityColorMap[$f->facility_id] ?? '#6B7280'
+                ];
+            })
+        ]);
+    }
+    
     public function getEvents($facility_id)
     {
         $bookings = Booking::where('facility_id', $facility_id)
