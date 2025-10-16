@@ -136,4 +136,66 @@ class Booking extends Model
     {
         return $this->status === 'rejected';
     }
+
+    /**
+     * Check if extending this booking would cause conflicts with other bookings
+     * 
+     * @param string $newEndTime The proposed new end time
+     * @return array Array with 'hasConflict' boolean and 'conflicts' collection
+     */
+    public function checkExtensionConflict($newEndTime): array
+    {
+        // Validate that the new end time is actually an extension
+        if ($newEndTime <= $this->end_time) {
+            return [
+                'hasConflict' => false,
+                'conflicts' => collect(),
+                'message' => 'New end time must be later than current end time'
+            ];
+        }
+
+        // Find conflicting bookings on the same facility and date
+        $conflicts = self::where('facility_id', $this->facility_id)
+            ->where('event_date', $this->event_date)
+            ->where('id', '!=', $this->id) // Exclude current booking
+            ->whereIn('status', ['approved', 'pending']) // Only check approved/pending bookings
+            ->where(function($query) use ($newEndTime) {
+                // Check if the EXTENDED time (current start to new end) overlaps with other bookings
+                // Overlap occurs when: this.start < other.end AND this.newEnd > other.start
+                $query->where(function($q) use ($newEndTime) {
+                    $q->where('start_time', '<', $newEndTime)
+                      ->where('end_time', '>', $this->start_time);
+                });
+            })
+            ->with(['facility', 'user'])
+            ->get();
+
+        return [
+            'hasConflict' => $conflicts->isNotEmpty(),
+            'conflicts' => $conflicts,
+            'message' => $conflicts->isNotEmpty() 
+                ? 'Extension would conflict with ' . $conflicts->count() . ' existing booking(s)'
+                : 'No conflicts detected'
+        ];
+    }
+
+    /**
+     * Extend the booking end time
+     * 
+     * @param string $newEndTime
+     * @return bool
+     */
+    public function extendBooking($newEndTime): bool
+    {
+        // Check for conflicts first
+        $conflictCheck = $this->checkExtensionConflict($newEndTime);
+        
+        if ($conflictCheck['hasConflict']) {
+            return false;
+        }
+
+        // Update the end time
+        $this->end_time = $newEndTime;
+        return $this->save();
+    }
 }

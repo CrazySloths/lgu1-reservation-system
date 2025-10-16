@@ -22,6 +22,22 @@
         </div>
     @endif
 
+    <!-- Error Message -->
+    @if(session('error'))
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-circle text-red-400"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-red-800">
+                        {{ session('error') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Quick Actions -->
     <div class="flex justify-end">
         <a href="{{ route('citizen.reservations') }}" 
@@ -144,7 +160,19 @@
                                         Download PDF
                                     </a>
                                 </div>
-                            @else
+                            @endif
+                            
+                            @if(in_array($reservation->status, ['approved', 'pending']))
+                                <div>
+                                    <button onclick="openExtensionModal({{ $reservation->id }}, '{{ $reservation->end_time }}', '{{ $reservation->event_name }}', '{{ $reservation->facility->name ?? 'N/A' }}', '{{ \Carbon\Carbon::parse($reservation->event_date)->format('M j, Y') }}')" 
+                                       class="text-purple-600 hover:text-purple-800 text-sm font-medium inline-flex items-center">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        Extend Time
+                                    </button>
+                                </div>
+                            @endif
+                            
+                            @if($reservation->status === 'pending' || $reservation->status === 'rejected')
                                 <button class="text-blue-600 hover:text-blue-800 text-sm font-medium">
                                     View Details
                                 </button>
@@ -253,9 +281,133 @@
                         <li>All reservations require approval from our staff</li>
                         <li>Make sure to provide complete and accurate information</li>
                         <li>Contact our office for urgent or special requests</li>
+                        <li><strong>You can now extend your booking time!</strong> Click "Extend Time" to add more hours (conflict detection enabled)</li>
                     </ul>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Extension Modal -->
+<div id="extensionModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-4 border-b">
+            <h3 class="text-xl font-semibold text-gray-900">
+                <i class="fas fa-clock text-purple-600 mr-2"></i>
+                Extend Booking Time
+            </h3>
+            <button onclick="closeExtensionModal()" class="text-gray-400 hover:text-gray-500">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6">
+            <!-- Booking Details -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                <h4 class="font-semibold text-gray-900 mb-2">Current Booking</h4>
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <span class="text-gray-600">Facility:</span>
+                        <span class="font-medium ml-2" id="modal-facility">—</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Event:</span>
+                        <span class="font-medium ml-2" id="modal-event">—</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Date:</span>
+                        <span class="font-medium ml-2" id="modal-date">—</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Current End Time:</span>
+                        <span class="font-medium ml-2" id="modal-current-end">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Extension Form -->
+            <form id="extensionForm" method="POST">
+                @csrf
+                <input type="hidden" id="booking-id" name="booking_id">
+                
+                <div class="space-y-4">
+                    <!-- New End Time -->
+                    <div>
+                        <label for="new_end_time" class="block text-sm font-medium text-gray-700 mb-2">
+                            New End Time <span class="text-red-500">*</span>
+                        </label>
+                        <input type="time" 
+                               id="new_end_time" 
+                               name="new_end_time" 
+                               required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <p class="text-xs text-gray-500 mt-1">Select a time later than your current end time</p>
+                    </div>
+
+                    <!-- Extension Reason -->
+                    <div>
+                        <label for="extension_reason" class="block text-sm font-medium text-gray-700 mb-2">
+                            Reason for Extension (Optional)
+                        </label>
+                        <textarea id="extension_reason" 
+                                  name="extension_reason" 
+                                  rows="3"
+                                  maxlength="500"
+                                  placeholder="e.g., Need extra time for event setup/teardown"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                        <p class="text-xs text-gray-500 mt-1">Maximum 500 characters</p>
+                    </div>
+
+                    <!-- Conflict Warning -->
+                    <div id="conflict-warning" class="hidden bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-triangle text-red-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <h4 class="text-sm font-medium text-red-800">Schedule Conflict Detected!</h4>
+                                <p class="text-sm text-red-700 mt-1" id="conflict-message"></p>
+                                <div id="conflict-details" class="mt-2 text-xs text-red-600"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- No Conflict Message -->
+                    <div id="no-conflict-message" class="hidden bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-check-circle text-green-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-green-800">No conflicts detected! You can proceed with the extension.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="flex items-center justify-end gap-3 p-4 border-t">
+            <button onclick="closeExtensionModal()" 
+                    class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">
+                Cancel
+            </button>
+            <button onclick="checkConflict()" 
+                    class="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+                <i class="fas fa-search mr-2"></i>
+                Check Availability
+            </button>
+            <button id="submit-extension" 
+                    onclick="submitExtension()" 
+                    disabled
+                    class="px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed">
+                <i class="fas fa-clock mr-2"></i>
+                Confirm Extension
+            </button>
         </div>
     </div>
 </div>
@@ -271,6 +423,207 @@ function showVerificationAlert() {
         confirmButtonColor: '#3B82F6'
     });
 }
+
+// Extension Modal Functions
+let currentBookingId = null;
+let currentEndTime = null;
+
+function openExtensionModal(bookingId, endTime, eventName, facilityName, eventDate) {
+    currentBookingId = bookingId;
+    currentEndTime = endTime;
+    
+    // Populate modal with booking details
+    document.getElementById('booking-id').value = bookingId;
+    document.getElementById('modal-facility').textContent = facilityName;
+    document.getElementById('modal-event').textContent = eventName;
+    document.getElementById('modal-date').textContent = eventDate;
+    
+    // Format and display current end time
+    const formattedEndTime = formatTime(endTime);
+    document.getElementById('modal-current-end').textContent = formattedEndTime;
+    
+    // Reset form and messages
+    document.getElementById('new_end_time').value = '';
+    document.getElementById('extension_reason').value = '';
+    document.getElementById('conflict-warning').classList.add('hidden');
+    document.getElementById('no-conflict-message').classList.add('hidden');
+    document.getElementById('submit-extension').disabled = true;
+    
+    // Show modal
+    document.getElementById('extensionModal').classList.remove('hidden');
+}
+
+function closeExtensionModal() {
+    document.getElementById('extensionModal').classList.add('hidden');
+    currentBookingId = null;
+    currentEndTime = null;
+}
+
+function formatTime(timeString) {
+    // Convert 24h format to 12h format with AM/PM
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+}
+
+function checkConflict() {
+    const newEndTime = document.getElementById('new_end_time').value;
+    
+    if (!newEndTime) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Missing Information',
+            text: 'Please select a new end time first.',
+            confirmButtonColor: '#3B82F6'
+        });
+        return;
+    }
+    
+    // Validate that new end time is later than current end time
+    if (newEndTime <= currentEndTime) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Invalid Time',
+            text: 'The new end time must be later than the current end time (' + formatTime(currentEndTime) + ')',
+            confirmButtonColor: '#EF4444'
+        });
+        return;
+    }
+    
+    // Show loading
+    Swal.fire({
+        title: 'Checking Availability...',
+        text: 'Please wait while we check for schedule conflicts',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        willOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    // Make AJAX request to check for conflicts
+    fetch(`/citizen/bookings/${currentBookingId}/check-extension-conflict`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({
+            new_end_time: newEndTime
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        Swal.close();
+        
+        if (data.hasConflict) {
+            // Show conflict warning
+            document.getElementById('conflict-warning').classList.remove('hidden');
+            document.getElementById('no-conflict-message').classList.add('hidden');
+            document.getElementById('conflict-message').textContent = data.message;
+            
+            // Display conflict details
+            if (data.conflicts && data.conflicts.length > 0) {
+                let conflictHtml = '<ul class="list-disc list-inside mt-2">';
+                data.conflicts.forEach(conflict => {
+                    conflictHtml += `<li>${conflict.event_name} by ${conflict.user_name} (${conflict.start_time} - ${conflict.end_time})</li>`;
+                });
+                conflictHtml += '</ul>';
+                document.getElementById('conflict-details').innerHTML = conflictHtml;
+            }
+            
+            // Disable submit button
+            document.getElementById('submit-extension').disabled = true;
+        } else {
+            // No conflict - show success message
+            document.getElementById('conflict-warning').classList.add('hidden');
+            document.getElementById('no-conflict-message').classList.remove('hidden');
+            
+            // Enable submit button
+            document.getElementById('submit-extension').disabled = false;
+        }
+    })
+    .catch(error => {
+        Swal.close();
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while checking for conflicts. Please try again.',
+            confirmButtonColor: '#EF4444'
+        });
+    });
+}
+
+function submitExtension() {
+    const newEndTime = document.getElementById('new_end_time').value;
+    const extensionReason = document.getElementById('extension_reason').value;
+    
+    if (!newEndTime) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Missing Information',
+            text: 'Please select a new end time.',
+            confirmButtonColor: '#3B82F6'
+        });
+        return;
+    }
+    
+    // Confirm extension
+    Swal.fire({
+        title: 'Confirm Extension',
+        text: `Extend booking until ${formatTime(newEndTime)}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#9333EA',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: 'Yes, Extend',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Submit the form
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/citizen/bookings/${currentBookingId}/extend`;
+            
+            // Add CSRF token
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = document.querySelector('meta[name="csrf-token"]').content;
+            form.appendChild(csrfInput);
+            
+            // Add new end time
+            const endTimeInput = document.createElement('input');
+            endTimeInput.type = 'hidden';
+            endTimeInput.name = 'new_end_time';
+            endTimeInput.value = newEndTime;
+            form.appendChild(endTimeInput);
+            
+            // Add extension reason
+            if (extensionReason) {
+                const reasonInput = document.createElement('input');
+                reasonInput.type = 'hidden';
+                reasonInput.name = 'extension_reason';
+                reasonInput.value = extensionReason;
+                form.appendChild(reasonInput);
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+
+// Close modal when clicking outside
+document.getElementById('extensionModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeExtensionModal();
+    }
+});
 </script>
 @endpush
 @endsection

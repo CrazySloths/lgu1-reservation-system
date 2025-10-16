@@ -218,6 +218,10 @@ Route::prefix('citizen')->group(function () {
     // AI-Enhanced reservation store route
     Route::post('/reservations/store', [FacilityController::class, 'storeReservationWithAI'])->name('citizen.reservations.store');
     
+    // Booking Extension Routes
+    Route::post('/bookings/{booking}/check-extension-conflict', [\App\Http\Controllers\Citizen\BookingExtensionController::class, 'checkConflict'])->name('citizen.bookings.check-extension');
+    Route::post('/bookings/{booking}/extend', [\App\Http\Controllers\Citizen\BookingExtensionController::class, 'extend'])->name('citizen.bookings.extend');
+    
     // API endpoint for AI recommendations
     Route::post('/api/recommendations', [FacilityController::class, 'getAIRecommendations'])->name('citizen.api.recommendations');
     
