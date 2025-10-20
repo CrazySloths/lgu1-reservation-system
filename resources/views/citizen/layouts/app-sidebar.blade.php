@@ -4,29 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'LGU1 Citizen Portal')</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'lgu-bg': '#f2f7f5',
-                        'lgu-headline': '#00473e',
-                        'lgu-paragraph': '#475d5b',
-                        'lgu-button': '#faae2b',
-                        'lgu-button-text': '#00473e',
-                        'lgu-stroke': '#00332c',
-                        'lgu-main': '#f2f7f5',
-                        'lgu-highlight': '#faae2b',
-                        'lgu-secondary': '#ffa8ba',
-                        'lgu-tertiary': '#fa5246'
+    
+    <!-- Vite Assets with CDN Fallback -->
+    @php($hasVite = file_exists(public_path('build/manifest.json')))
+    @if ($hasVite)
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @else
+        <!-- Fallback to CDN if Vite assets not built -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            'lgu-bg': '#f2f7f5',
+                            'lgu-headline': '#00473e',
+                            'lgu-paragraph': '#475d5b',
+                            'lgu-button': '#faae2b',
+                            'lgu-button-text': '#00473e',
+                            'lgu-stroke': '#00332c',
+                            'lgu-main': '#f2f7f5',
+                            'lgu-highlight': '#faae2b',
+                            'lgu-secondary': '#ffa8ba',
+                            'lgu-tertiary': '#fa5246'
+                        }
                     }
                 }
             }
-        }
-    </script>
+        </script>
+    @endif
 </head>
 <body class="bg-lgu-bg">
     
