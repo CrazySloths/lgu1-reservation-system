@@ -16,26 +16,24 @@ use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\Admin\ScheduleConflictController;
 
 // ============================================
-// AUTHENTICATION DISABLED FOR LOCAL DEVELOPMENT
+// SSO AUTHENTICATION ROUTES
 // ============================================
-// TODO: Re-enable these routes when deploying to production
 
-// Route::middleware(['web'])->group(function () {
-//     Route::get('/sso/login', [SsoController::class, 'login'])->name('sso.login');
-// });
+Route::middleware(['web'])->group(function () {
+    Route::get('/sso/login', [SsoController::class, 'login'])->name('sso.login');
+});
 
-// // Helpful redirect for users who access the system directly
-// Route::get('/login', function() {
-//     return redirect()->away('https://local-government-unit-1-ph.com/public/login.php');
-// })->name('login');
+// Helpful redirect for users who access the system directly
+Route::get('/login', function() {
+    return redirect()->away('https://local-government-unit-1-ph.com/public/login.php');
+})->name('login');
 
 // ============================================
 // ADMIN PORTAL ROUTES (Protected)
 // ============================================
 
 // Group all admin routes with admin authentication
-// AUTHENTICATION DISABLED FOR LOCAL DEVELOPMENT - Middleware commented out
-Route::prefix('admin')/* ->middleware('admin.auth') */->group(function () {
+Route::prefix('admin')->middleware('admin.auth')->group(function () {
      // Admin Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/dashboard/quick-stats', [AdminDashboardController::class, 'getQuickStats'])->name('admin.dashboard.quick-stats');
@@ -238,11 +236,10 @@ Route::prefix('citizen')->group(function () {
 // ============================================
 
 // ============================================
-// ROOT REDIRECT FOR LOCAL DEVELOPMENT
+// HOME ROUTE
 // ============================================
-// Redirects to admin dashboard by default - adjust URL as needed
 Route::get('/', function () {
-    return redirect()->route('admin.dashboard');
+    return redirect()->route('citizen.dashboard');
 })->name('home');
 
 
