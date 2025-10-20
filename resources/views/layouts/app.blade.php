@@ -7,10 +7,35 @@
     <title>Admin Dashboard - LGU</title>
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Tailwind CSS - CDN Fallback -->
     @php($hasVite = file_exists(public_path('build/manifest.json')))
     @if ($hasVite)
         @vite('resources/css/app.css')
+    @else
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            'lgu-bg': '#f2f7f5',
+                            'lgu-headline': '#00473e',
+                            'lgu-paragraph': '#475d5b',
+                            'lgu-button': '#faae2b',
+                            'lgu-button-text': '#00473e',
+                            'lgu-stroke': '#00332c',
+                            'lgu-main': '#f2f7f5',
+                            'lgu-highlight': '#faae2b',
+                            'lgu-secondary': '#ffa8ba',
+                            'lgu-tertiary': '#fa5246'
+                        }
+                    }
+                }
+            }
+        </script>
     @endif
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
 </head>
 <body>
