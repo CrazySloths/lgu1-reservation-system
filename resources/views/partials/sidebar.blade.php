@@ -70,46 +70,23 @@
         <div class="p-6 border-b border-lgu-stroke">
             <div class="text-center">
                 @php
-                    // Static Admin Authentication (Bypass database issues)
+                    // Simple Admin Authentication - Always show for admin routes
                     $admin = null;
                     
-                    // Try Laravel Auth first (if working)
-                    try {
-                        if (class_exists('Illuminate\Support\Facades\Auth')) {
-                            $admin = Auth::user();
-                        }
-                    } catch (Exception $e) {
-                        // Laravel Auth failed, continue to static auth
-                    }
-                    
-                    // If Laravel Auth fails, use static authentication from session
-                    if (!$admin) {
-                        // Check session for static admin (set by AdminAuthMiddleware)
-                        if (isset($_SESSION['static_admin_user'])) {
-                            $adminData = $_SESSION['static_admin_user'];
-                            $admin = (object) $adminData;
-                        }
-                        // Fallback: Create admin from URL parameters
-                        elseif (request()->has('user_id') || request()->has('username')) {
-                            $userId = request()->get('user_id', 1);
-                            $username = request()->get('username', 'Administrator');
-                            
-                            // Extract clean username (remove extra chars)
-                            $cleanUsername = str_replace(['Admin-facilities123', '-facilities123'], '', $username);
-                            $cleanUsername = ucfirst(trim($cleanUsername, '-'));
-                            if (empty($cleanUsername)) {
-                                $cleanUsername = 'Administrator';
+                    // Check if we're on an admin route
+                    if (str_contains(request()->url(), '/admin/')) {
+                        // Try to get admin from Laravel Auth first
+                        try {
+                            $authUser = Auth::user();
+                            if ($authUser && ($authUser->role === 'admin' || $authUser->role === 'staff')) {
+                                $admin = $authUser;
                             }
-                            
-                            $admin = (object) [
-                                'id' => $userId,
-                                'name' => $cleanUsername,
-                                'email' => 'admin@lgu1.com',
-                                'role' => 'admin'
-                            ];
+                        } catch (Exception $e) {
+                            // Laravel Auth failed, continue
                         }
-                        // Final fallback: Default admin for admin routes
-                        elseif (str_contains(request()->url(), '/admin/')) {
+                        
+                        // If no auth user found, create default admin for admin routes
+                        if (!$admin) {
                             $admin = (object) [
                                 'id' => 1,
                                 'name' => 'Administrator',
@@ -120,7 +97,7 @@
                     }
                 @endphp
                 
-                @if($admin && $admin->role === 'admin')
+                @if($admin && ($admin->role === 'admin' || $admin->role === 'staff'))
                     @php
                         // Generate admin initials
                         $nameParts = explode(' ', $admin->name);
@@ -149,7 +126,7 @@
                     </svg>
                                 <span class="text-blue-400 text-xs font-medium">{{ ucfirst($admin->role) }} Administrator</span>
                             </div>
-                </div>
+                        </div>
                     </div>
                 @endif
             </div>
