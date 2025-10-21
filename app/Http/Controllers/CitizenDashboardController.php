@@ -494,49 +494,16 @@ class CitizenDashboardController extends Controller
     public function getFacilityBookings($facilityId)
     {
         try {
-            // --- LOAD BOOKINGS FROM PERSISTENT FILE STORAGE ---
-            $bookingsFile = storage_path('app/bookings_data.json');
-            $bookings = [];
-            
-            try {
-                // Try to get ONLY approved bookings for this facility from database first
-                $bookings = Booking::with('facility')
-                                ->where('facility_id', $facilityId)
-                                ->where('status', 'approved') // Citizens only see approved bookings
-                                ->get();
-                                
-                \Log::info('CITIZEN API: Loaded bookings from database:', [
-                    'facility_id' => $facilityId,
-                    'total_bookings' => $bookings->count()
-                ]);
-            } catch (\Exception $e) {
-                \Log::warning('CITIZEN API: Database query failed, trying file storage', ['error' => $e->getMessage()]);
-                
-                // Fallback to file storage for bookings
-                $bookingsFile = storage_path('app/bookings_data.json');
-                if (file_exists($bookingsFile)) {
-                    $allBookings = json_decode(file_get_contents($bookingsFile), true);
-                    if ($allBookings && is_array($allBookings)) {
-                        // Filter bookings for this facility - ONLY approved bookings
-                        $fileBookings = [];
-                        foreach ($allBookings as $booking) {
-                            if (isset($booking['facility_id']) && $booking['facility_id'] == $facilityId 
-                                && isset($booking['status']) && $booking['status'] === 'approved') {
-                                $fileBookings[] = (object) $booking;
-                            }
-                        }
-                        $bookings = collect($fileBookings);
-                        
-                        \Log::info('CITIZEN API: Loaded bookings from persistent file:', [
-                            'facility_id' => $facilityId,
-                            'total_bookings' => count($allBookings),
-                            'facility_bookings' => count($fileBookings)
-                        ]);
-                    }
-                } else {
-                    \Log::warning('CITIZEN API: bookings_data.json not found, using empty array');
-                }
-            }
+            // Load ONLY approved bookings for this facility from database
+            $bookings = Booking::with('facility')
+                            ->where('facility_id', $facilityId)
+                            ->where('status', 'approved') // Citizens only see approved bookings
+                            ->get();
+                            
+            \Log::info('CITIZEN API: Loaded bookings from database:', [
+                'facility_id' => $facilityId,
+                'total_bookings' => $bookings->count()
+            ]);
             
             $bookings = collect($bookings);
 
@@ -602,45 +569,14 @@ class CitizenDashboardController extends Controller
     public function getAllFacilityBookings()
     {
         try {
-            // --- LOAD ALL BOOKINGS FROM PERSISTENT FILE STORAGE ---
-            $bookingsFile = storage_path('app/bookings_data.json');
-            $bookings = [];
-            
-            try {
-                // Try to get ONLY approved bookings from database first
-                $bookings = Booking::with('facility')
-                                ->where('status', 'approved') // Citizens only see approved bookings
-                                ->get();
-                                
-                \Log::info('CITIZEN API: Loaded ALL bookings from database:', [
-                    'total_bookings' => $bookings->count()
-                ]);
-            } catch (\Exception $e) {
-                \Log::warning('CITIZEN API: Database query failed, trying file storage', ['error' => $e->getMessage()]);
-                
-                // Fallback to file storage for bookings
-                $bookingsFile = storage_path('app/bookings_data.json');
-                if (file_exists($bookingsFile)) {
-                    $allBookings = json_decode(file_get_contents($bookingsFile), true);
-                    if ($allBookings && is_array($allBookings)) {
-                        // Convert to objects and filter ONLY approved bookings
-                        $fileBookings = [];
-                        foreach ($allBookings as $booking) {
-                            // Only show approved bookings to citizens
-                            if (isset($booking['status']) && $booking['status'] === 'approved') {
-                                $fileBookings[] = (object) $booking;
-                            }
-                        }
-                        $bookings = collect($fileBookings);
-                        
-                        \Log::info('CITIZEN API: Loaded ALL bookings from persistent file:', [
-                            'total_bookings' => count($fileBookings)
-                        ]);
-                    }
-                } else {
-                    \Log::warning('CITIZEN API: bookings_data.json not found');
-                }
-            }
+            // Load ONLY approved bookings from database
+            $bookings = Booking::with('facility')
+                            ->where('status', 'approved') // Citizens only see approved bookings
+                            ->get();
+                            
+            \Log::info('CITIZEN API: Loaded ALL bookings from database:', [
+                'total_bookings' => $bookings->count()
+            ]);
             
             $bookings = collect($bookings);
 
