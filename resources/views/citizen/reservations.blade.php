@@ -586,22 +586,22 @@
 </div>
 
 <!-- Date Picker Modal -->
-<div id="datePickerModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+<div id="datePickerModal" class="fixed inset-0 bg-gray-900 bg-opacity-30 backdrop-blur-sm z-50 hidden">
     <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Select Date</h3>
-                <button type="button" onclick="closeDatePicker()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900">Select Date</h3>
+                <button type="button" onclick="closeDatePicker()" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
+                    <i class="fas fa-times text-gray-600"></i>
                 </button>
             </div>
             
             <!-- Calendar will be rendered here by JavaScript -->
             <div id="calendarContainer"></div>
             
-            <div class="mt-4 flex justify-between">
-                <button type="button" onclick="goToToday()" class="text-blue-600 hover:text-blue-800 font-medium">Today</button>
-                <button type="button" onclick="closeDatePicker()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+            <div class="mt-6 flex justify-between">
+                <button type="button" onclick="goToToday()" class="text-green-600 hover:text-green-800 font-semibold">Today</button>
+                <button type="button" onclick="closeDatePicker()" class="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium">
                     Cancel
                 </button>
             </div>
