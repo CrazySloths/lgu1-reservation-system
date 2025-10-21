@@ -22,10 +22,14 @@ class SsoAuthMiddleware
     {
         // 1. If user is already authenticated in Laravel, just continue.
         if (Auth::check()) {
+
+            // Check if the session is still active/valid for the route's purpose
+
             return $next($request);
         }
 
         // 2. Check for the SSO token and user_id in the request query.
+        // We require both user_id and token to proceed to API call.
         if (!$request->has('user_id') || !$request->has('token')) {
             // If no token, redirect to the central login (This is correct).
             return redirect()->away('https://local-government-unit-1-ph.com/public/login.php');
@@ -35,9 +39,12 @@ class SsoAuthMiddleware
         $ssoToken = $request->input('token');
 
         // *******************************************************************
+
         // 3. API CALL: Use a more reliable API endpoint/method for SSO.
         //    Since we don't have a specific validation endpoint, we'll use the current 
         //    endpoint but ensure it works. IF you have a validation endpoint (e.g., /api/validate-token), REPLACE THIS!
+        // 3. API CALL: Fetch all user data for filtering.
+      
         // *******************************************************************
         $api_url = 'https://local-government-unit-1-ph.com/api/route.php?path=facilities-users';
         
@@ -52,6 +59,8 @@ class SsoAuthMiddleware
                     'body' => $response->body() // Add body for debugging
                 ]);
                 // Redirect back to login to retry, but with an error code
+                    'body' => $response->body()
+                ]);
                 return redirect()->away('https://local-government-unit-1-ph.com/public/login.php?error=api_request_failed');
             }
 
@@ -87,7 +96,7 @@ class SsoAuthMiddleware
             // 5. HANDLING: If the user is found, log them in.
             // *******************************************************************
             if ($ssoUser) {
-                // 5. We found the user. Let's map the role and create/update them locally.
+                // 5. Map the role and check for required data.
                 $role = 'citizen'; // Default role
                 $ssoRole = $ssoUser['subsystem_role_name'] ?? 'Citizen';
 
@@ -95,7 +104,15 @@ class SsoAuthMiddleware
                 if (stripos($ssoRole, 'admin') !== false) {
                     $role = 'admin';
                 } elseif (stripos($ssoRole, 'staff') !== false) {
-                    $role = 'staff'; // Assuming you have a 'staff' role
+                    $role = 'staff';
+                }
+
+                // CHECK FOR EMAIL (Crucial for updateOrCreate)
+                $email = $ssoUser['email'] ?? null;
+                
+                if (empty($email)) {
+                    Log::error('SSO API user data is missing email (required for local mapping).', ['sso_user' => $ssoUser]);
+                    return redirect()->away('https://local-government-unit-1-ph.com/public/login.php?error=missing_email');
                 }
 
                 // Ensure the 'email' key exists before using it
@@ -118,10 +135,10 @@ class SsoAuthMiddleware
                     ]
                 );
 
-                // 6. Log the user into the Laravel application.
+                // 7. Log the user into the Laravel application. (This sets the local session)
                 Auth::login($localUser);
 
-                // 7. Redirect to the appropriate dashboard based on role.
+                // 8. Redirect to the appropriate dashboard based on role.
                 $request->session()->regenerate();
                 
                 // Use intended redirect to go back to the page they wanted (e.g., dashboard)
