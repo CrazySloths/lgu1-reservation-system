@@ -21,14 +21,67 @@ class CitizenDashboardController extends Controller
     }
 
     /**
+     * Get authenticated user from Laravel Auth, SSO session, or URL parameters
+     */
+    private function getAuthenticatedUser(Request $request)
+    {
+        // Check Laravel Auth first
+        $user = Auth::user();
+        if ($user) {
+            return $user;
+        }
+        
+        // Check SSO session data
+        if ($request->session()->has('sso_user')) {
+            $ssoData = $request->session()->get('sso_user');
+            
+            // Try to find the user in database using SSO data
+            $user = User::where('external_id', $ssoData['id'])
+                       ->orWhere('email', $ssoData['email'])
+                       ->orWhere('name', $ssoData['username'])
+                       ->first();
+                       
+            // If user found, log them into Laravel auth for consistency
+            if ($user) {
+                Auth::login($user);
+                return $user;
+            }
+        }
+        
+        // Check URL parameters (direct SSO redirect)
+        if ($request->has('user_id') || $request->has('username')) {
+            $userId = $request->input('user_id');
+            $username = $request->input('username');
+            $email = $request->input('email');
+            
+            // Try to find user by external_id, email, or username
+            $user = User::where('external_id', $userId)
+                       ->orWhere('email', $email)
+                       ->orWhere('name', $username)
+                       ->first();
+                       
+            if ($user) {
+                Auth::login($user);
+                return $user;
+            }
+        }
+        
+        return null;
+    }
+
+    /**
      * Show citizen dashboard
      */
     public function index(Request $request)
     {
-           
-        $user = Auth::user();
-        if(!$user)
-        {
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
+            \Log::warning('CITIZEN DASHBOARD: No user found - redirecting to login', [
+                'has_laravel_auth' => Auth::check(),
+                'has_sso_session' => $request->session()->has('sso_user'),
+                'url_params' => $request->all()
+            ]);
+            
             return redirect('/login')->with('error', 'Please log in to access the dashboard.');
         }
         
@@ -305,11 +358,11 @@ class CitizenDashboardController extends Controller
     {
         // validation corresponding to fields in the profile form
         $request->validate([
-        'name' => 'required|string|max:255',
-        'phone_number' => 'required|string|max:20',
-        'address' => 'required|string|max:500',
-        'date_of_birth' => 'required|date|before:today',
-    ]);
+            'name' => 'required|string|max:255',
+            'phone_number' => 'required|string|max:20',
+            'address' => 'required|string|max:500',
+            'date_of_birth' => 'required|date|before:today',
+        ]);
     $user = Auth::user();
         if(!$user)
         {
@@ -318,10 +371,10 @@ class CitizenDashboardController extends Controller
         try
         {
             $user->update([
-                'name' => $request->name,
-                'phone_number' => $request->phone_number,
-                'address' => $request->address,
-                'date_of_birth' => $request->date_of_birth,
+            'name' => $request->name,
+            'phone_number' => $request->phone_number,
+            'address' => $request->address,
+            'date_of_birth' => $request->date_of_birth,
             ]);
             \Log::info('Profile updated successfully (REAL UPDATE):', [
                 'user_id' => $user->id,
