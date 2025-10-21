@@ -610,9 +610,9 @@
 </div>
 
 <!-- Time Picker Modal -->
-<div id="timePickerModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+<div id="timePickerModal" class="fixed inset-0 bg-gray-900 bg-opacity-30 backdrop-blur-sm z-50 hidden">
     <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 transform transition-all duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all duration-300">
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h3 class="text-xl font-bold text-gray-900">Select Time</h3>
@@ -626,73 +626,67 @@
             <!-- Time Picker Content -->
             <div class="space-y-6">
                 <!-- Hour and Minute Selectors -->
-                <div class="flex items-center justify-center space-x-6">
-                    <!-- Hour Selector -->
+                <div class="flex items-center justify-center space-x-4">
+                    <!-- Hour Input -->
                     <div class="text-center">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Hour</label>
-                        <div class="relative">
-                            <select id="hourSelect" class="w-16 h-12 text-center text-xl font-bold border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                                <!-- Hours will be populated by JavaScript -->
-                            </select>
-                        </div>
+                        <input type="number" id="hourSelect" min="1" max="12" 
+                               class="w-20 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all"
+                               oninput="validateHourInput(this); updateTimePreview()">
                     </div>
                     
                     <!-- Separator -->
-                    <div class="text-3xl font-bold text-gray-400 mt-6">:</div>
+                    <div class="text-4xl font-bold text-gray-400 mt-6">:</div>
                     
-                    <!-- Minute Selector -->
+                    <!-- Minute Input -->
                     <div class="text-center">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Minute</label>
-                        <div class="relative">
-                            <select id="minuteSelect" class="w-16 h-12 text-center text-xl font-bold border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                                <option value="00">00</option>
-                                <option value="15">15</option>
-                                <option value="30">30</option>
-                                <option value="45">45</option>
-                            </select>
-                        </div>
+                        <input type="number" id="minuteSelect" min="0" max="59" 
+                               class="w-20 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all"
+                               oninput="validateMinuteInput(this); updateTimePreview()">
                     </div>
                     
                     <!-- AM/PM Selector -->
                     <div class="text-center">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Period</label>
-                        <div class="relative">
-                            <select id="periodSelect" class="w-16 h-12 text-center text-lg font-bold border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                                <option value="AM">AM</option>
-                                <option value="PM">PM</option>
-                            </select>
-                        </div>
+                        <select id="periodSelect" class="w-20 h-14 text-center text-xl font-bold border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all bg-white"
+                                onchange="updateTimePreview()">
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                        </select>
                     </div>
                 </div>
 
                 <!-- Quick Time Buttons -->
                 <div class="border-t border-gray-200 pt-4">
                     <p class="text-sm font-medium text-gray-700 mb-3">Quick Select:</p>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button type="button" onclick="setQuickTime('08:00', 'AM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-blue-100 hover:text-blue-700 rounded-lg transition-colors">8:00 AM</button>
-                        <button type="button" onclick="setQuickTime('12:00', 'PM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-blue-100 hover:text-blue-700 rounded-lg transition-colors">12:00 PM</button>
-                        <button type="button" onclick="setQuickTime('02:00', 'PM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-blue-100 hover:text-blue-700 rounded-lg transition-colors">2:00 PM</button>
-                        <button type="button" onclick="setQuickTime('05:00', 'PM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-blue-100 hover:text-blue-700 rounded-lg transition-colors">5:00 PM</button>
-                        <button type="button" onclick="setQuickTime('07:00', 'PM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-blue-100 hover:text-blue-700 rounded-lg transition-colors">7:00 PM</button>
-                        <button type="button" onclick="setQuickTime('09:00', 'PM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-blue-100 hover:text-blue-700 rounded-lg transition-colors">9:00 PM</button>
+                    <div class="grid grid-cols-4 gap-2">
+                        <button type="button" onclick="setQuickTime('08', '00', 'AM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">8:00 AM</button>
+                        <button type="button" onclick="setQuickTime('12', '00', 'PM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">12:00 PM</button>
+                        <button type="button" onclick="setQuickTime('02', '00', 'PM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">2:00 PM</button>
+                        <button type="button" onclick="setQuickTime('05', '00', 'PM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">5:00 PM</button>
+                        <button type="button" onclick="setQuickTime('07', '00', 'PM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">7:00 PM</button>
+                        <button type="button" onclick="setQuickTime('09', '00', 'PM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">9:00 PM</button>
+                        <button type="button" onclick="setQuickTime('09', '30', 'AM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">9:30 AM</button>
+                        <button type="button" onclick="setQuickTime('03', '30', 'PM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">3:30 PM</button>
                     </div>
                 </div>
 
                 <!-- Selected Time Display -->
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div class="bg-green-50 border border-green-200 rounded-xl p-4">
                     <div class="text-center">
-                        <p class="text-sm text-blue-700">Selected Time</p>
-                        <p id="selectedTimePreview" class="text-lg font-bold text-blue-900">--:-- --</p>
+                        <p class="text-sm text-green-700 font-medium">Selected Time</p>
+                        <p id="selectedTimePreview" class="text-2xl font-bold text-green-900 mt-1">--:-- --</p>
                     </div>
                 </div>
             </div>
             
             <!-- Action Buttons -->
             <div class="flex space-x-3 mt-6">
-                <button type="button" onclick="closeTimePicker()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                <button type="button" onclick="closeTimePicker()" class="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium">
                     Cancel
                 </button>
-                <button type="button" onclick="confirmTimeSelection()" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <button type="button" onclick="confirmTimeSelection()" class="flex-1 px-4 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium shadow-lg shadow-green-200">
                     Confirm
                 </button>
             </div>
@@ -871,7 +865,7 @@ function openTimePicker(type) {
     const subtitle = type === 'start' ? 'Choose your event start time' : 'Choose your event end time';
     document.getElementById('timePickerSubtitle').textContent = subtitle;
     
-    // Set default time
+    // Set default time with proper formatting
     if (type === 'start') {
         document.getElementById('hourSelect').value = '09';
         document.getElementById('minuteSelect').value = '00';
@@ -883,8 +877,8 @@ function openTimePicker(type) {
             const endTime = addHours(startTime, 3);
             const formatted = formatTime(endTime);
             
-            document.getElementById('hourSelect').value = formatted.hour;
-            document.getElementById('minuteSelect').value = formatted.minute;
+            document.getElementById('hourSelect').value = formatted.hour.toString().padStart(2, '0');
+            document.getElementById('minuteSelect').value = formatted.minute.toString().padStart(2, '0');
             document.getElementById('periodSelect').value = formatted.period;
         } else {
             document.getElementById('hourSelect').value = '12';
@@ -897,18 +891,31 @@ function openTimePicker(type) {
     document.getElementById('timePickerModal').classList.remove('hidden');
 }
 
-function populateHourOptions() {
-    const hourSelect = document.getElementById('hourSelect');
-    hourSelect.innerHTML = '';
-    
-    for (let i = 1; i <= 12; i++) {
-        const hour = i.toString().padStart(2, '0');
-        hourSelect.innerHTML += `<option value="${hour}">${hour}</option>`;
+// Validate hour input (1-12)
+function validateHourInput(input) {
+    let value = parseInt(input.value);
+    if (isNaN(value) || value < 1) {
+        input.value = '01';
+    } else if (value > 12) {
+        input.value = '12';
+    } else {
+        input.value = value.toString().padStart(2, '0');
     }
 }
 
-function setQuickTime(time, period) {
-    const [hour, minute] = time.split(':');
+// Validate minute input (0-59)
+function validateMinuteInput(input) {
+    let value = parseInt(input.value);
+    if (isNaN(value) || value < 0) {
+        input.value = '00';
+    } else if (value > 59) {
+        input.value = '59';
+    } else {
+        input.value = value.toString().padStart(2, '0');
+    }
+}
+
+function setQuickTime(hour, minute, period) {
     document.getElementById('hourSelect').value = hour;
     document.getElementById('minuteSelect').value = minute;
     document.getElementById('periodSelect').value = period;
