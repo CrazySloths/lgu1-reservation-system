@@ -189,7 +189,7 @@ Route::get('/calendar', function() {
 
 
 // Logout Route (for both admin and citizen)
-Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('logout');
+//Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('logout');
 
 // Citizen Authentication Routes (No middleware - auth handled by SsoController)
 Route::prefix('citizen')->middleware('auth')->group(function () {
