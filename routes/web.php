@@ -196,6 +196,7 @@ Route::prefix('citizen')->group(function () {
     Route::get('/reservation-history', [CitizenDashboardController::class, 'reservationHistory'])->name('citizen.reservation.history');
     Route::get('/availability', [CitizenDashboardController::class, 'viewAvailability'])->name('citizen.availability');
     Route::get('/api/facility/{facility_id}/bookings', [CitizenDashboardController::class, 'getFacilityBookings'])->name('citizen.api.facility.bookings');
+    Route::get('/api/all-facility-bookings', [CitizenDashboardController::class, 'getAllFacilityBookings'])->name('citizen.api.all.facility.bookings');
     Route::get('/bulletin-board', [AnnouncementController::class, 'citizenIndex'])->name('citizen.bulletin.board');
     
     // Payment Slips

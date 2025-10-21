@@ -503,4 +503,83 @@ class CitizenDashboardController extends Controller
             return response()->json([], 500);
         }
     }
+    
+    /**
+     * API endpoint to get bookings for ALL facilities
+     */
+    public function getAllFacilityBookings()
+    {
+        try {
+            // --- LOAD ALL BOOKINGS FROM PERSISTENT FILE STORAGE ---
+            $bookingsFile = storage_path('app/bookings_data.json');
+            $bookings = [];
+            
+            if (file_exists($bookingsFile)) {
+                $allBookings = json_decode(file_get_contents($bookingsFile), true);
+                if ($allBookings && is_array($allBookings)) {
+                    // Convert to objects
+                    foreach ($allBookings as $booking) {
+                        $bookings[] = (object) $booking;
+                    }
+                    
+                    \Log::info('🎯 CITIZEN API: Loaded ALL bookings from persistent file:', [
+                        'total_bookings' => count($bookings)
+                    ]);
+                }
+            } else {
+                \Log::warning('🎯 CITIZEN API: bookings_data.json not found');
+            }
+            
+            $bookings = collect($bookings);
+
+            $events = [];
+
+            foreach ($bookings as $booking) {
+                // Set different colors for different statuses
+                $backgroundColor = $booking->status === 'approved' ? '#ef4444' : '#f59e0b'; // Red for approved, Yellow for pending
+                $borderColor = $booking->status === 'approved' ? '#dc2626' : '#d97706';
+                
+                // Format events for FullCalendar
+                $startTime = $booking->start_time;
+                $endTime = $booking->end_time;
+                
+                // Ensure time has seconds (HH:MM:SS format)
+                if (substr_count($startTime, ':') === 1) {
+                    $startTime .= ':00';
+                }
+                if (substr_count($endTime, ':') === 1) {
+                    $endTime .= ':00';
+                }
+                
+                $events[] = [
+                    'id' => $booking->id,
+                    'title' => $booking->event_name . ' - ' . $booking->applicant_name,
+                    'start' => $booking->event_date . 'T' . $startTime,
+                    'end' => $booking->event_date . 'T' . $endTime,
+                    'backgroundColor' => $backgroundColor,
+                    'borderColor' => $borderColor,
+                    'textColor' => '#ffffff',
+                    'extendedProps' => [
+                        'facility_id' => $booking->facility_id,
+                        'applicant' => $booking->applicant_name,
+                        'attendees' => $booking->expected_attendees,
+                        'status' => $booking->status,
+                        'description' => $booking->event_description
+                    ]
+                ];
+            }
+
+            \Log::info('🎯 CITIZEN API: ALL Facility Bookings Response:', [
+                'events_count' => count($events)
+            ]);
+
+            return response()->json($events);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching all facility bookings:', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([], 500);
+        }
+    }
 }

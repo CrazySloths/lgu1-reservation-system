@@ -390,8 +390,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Load all facility bookings on initial load
+    function loadAllFacilityBookings() {
+        fetch('/citizen/api/all-facility-bookings')
+            .then(response => response.json())
+            .then(events => {
+                calendar.removeAllEvents();
+                
+                // Add all bookings from all facilities
+                events.forEach(event => {
+                    calendar.addEvent(event);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading all facility bookings:', error);
+            });
+    }
+
     // Initialize calendar
     initializeCalendar();
+    
+    // Load all bookings on page load
+    loadAllFacilityBookings();
 });
 </script>
 @endpush
