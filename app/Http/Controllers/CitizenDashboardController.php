@@ -30,43 +30,7 @@ class CitizenDashboardController extends Controller
         if ($user) {
             return $user;
         }
-        
-        // Check SSO session data
-        if ($request->session()->has('sso_user')) {
-            $ssoData = $request->session()->get('sso_user');
-            
-            // Try to find the user in database using SSO data
-            $user = User::where('external_id', $ssoData['id'])
-                       ->orWhere('email', $ssoData['email'])
-                       ->orWhere('name', $ssoData['username'])
-                       ->first();
-                       
-            // If user found, log them into Laravel auth for consistency
-            if ($user) {
-                Auth::login($user);
-                return $user;
-            }
-        }
-        
-        // Check URL parameters (direct SSO redirect)
-        if ($request->has('user_id') || $request->has('username')) {
-            $userId = $request->input('user_id');
-            $username = $request->input('username');
-            $email = $request->input('email');
-            
-            // Try to find user by external_id, email, or username
-            $user = User::where('external_id', $userId)
-                       ->orWhere('email', $email)
-                       ->orWhere('name', $username)
-                       ->first();
-                       
-            if ($user) {
-                Auth::login($user);
-                return $user;
-            }
-        }
-        
-        return null;
+        return redirect()->away('https://local-government-unit-1-ph.com/public/login.php');
     }
 
     /**
