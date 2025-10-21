@@ -151,7 +151,7 @@
                             <p><strong>Attendees:</strong> ${props.attendees || 'N/A'}</p>
                             <p><strong>Status:</strong> <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${props.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${props.status ? props.status.toUpperCase() : 'N/A'}</span></p>
                             ${props.description ? `<p><strong>Description:</strong> ${props.description}</p>` : ''}
-                            ${props.isCityEvent ? '<p class="text-purple-600 font-semibold">🏛️ Official City Event</p>' : ''}
+                            ${props.isCityEvent ? '<p class="text-purple-600 font-semibold flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-landmark"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg> Official City Event</p>' : ''}
                         </div>
                     `,
                     confirmButtonColor: event.backgroundColor,
