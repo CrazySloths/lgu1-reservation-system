@@ -21,10 +21,20 @@ class MonthlyReportController extends Controller
         $monthCarbon = Carbon::parse($selectedMonth . '-01');
 
         // Get all available months from bookings
-        $availableMonths = Booking::selectRaw('DATE_FORMAT(event_date, "%Y-%m") as month')
-            ->groupBy('month')
-            ->orderBy('month', 'desc')
-            ->pluck('month');
+        // Use strftime for SQLite, DATE_FORMAT for MySQL
+        $driver = DB::connection()->getDriverName();
+        
+        if ($driver === 'sqlite') {
+            $availableMonths = Booking::selectRaw('strftime("%Y-%m", event_date) as month')
+                ->groupBy('month')
+                ->orderBy('month', 'desc')
+                ->pluck('month');
+        } else {
+            $availableMonths = Booking::selectRaw('DATE_FORMAT(event_date, "%Y-%m") as month')
+                ->groupBy('month')
+                ->orderBy('month', 'desc')
+                ->pluck('month');
+        }
 
         // Get bookings for selected month
         $bookings = Booking::with(['facility', 'user'])
