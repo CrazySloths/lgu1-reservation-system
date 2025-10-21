@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 
+
 class SsoAuthMiddleware
 {
     /**
@@ -21,61 +22,57 @@ class SsoAuthMiddleware
             return $next($request);
         }
 
-        // 2. Check for the essential SSO parameters in the request query.
-        // We require user_id, email (for database lookup), and token (to fulfill the basic protocol).
+        // validate essential SSO parameters
         if (!$request->has('user_id') || !$request->has('email') || !$request->has('token')) {
-            // If parameters are missing, redirect to the central login.
-            return redirect()->away('https://local-government-unit-1-ph.com/public/login.php');
+            Log::error('SSO Validation failed: Missing essential parameters (user_id/email/token).');
+            return redirect()->away('https://local-government-unit-1-ph.com/public/login.php?error=sso_data_missing');
         }
 
-        // Capture all necessary data directly from the URL (which was confirmed to be correct in logs).
         $ssoUserId = $request->input('user_id');
         $ssoEmail = $request->input('email');
         $ssoUsername = $request->input('username');
-        // Use the role name from the external system for mapping.
         $ssoRoleName = $request->input('subsystem_role_name'); 
 
-        Log::info('SSO DIRECT LOGIN: Attempting to login using URL parameters (API call bypassed).', [
-            'sso_id' => $ssoUserId,
-            'email' => $ssoEmail,
-            'role_name' => $ssoRoleName,
-        ]);
+        $cleanedEmail = strtolower(trim($ssoEmail));
 
-        // *******************************************************************
-        // 3. MAPPING: Determine Local Role based on External Role Name
-        // *******************************************************************
-        
-        $role = 'citizen'; // Default local role
-        
-        // Map SSO role names to local roles (case-insensitive check)
+        // final Validation: Prevent 'Column 'email' cannot be null' error (SQLSTATE[23000]: 1048)
+        if (empty($cleanedEmail)) {
+            Log::critical('SSO Validation failed: Cleaned Email parameter is empty or null.', [
+                'sso_id' => $ssoUserId, 
+                'raw_email' => $ssoEmail
+            ]);
+            // redirect back to login, as we cannot proceed without an email
+            return redirect()->away('https://local-government-unit-1-ph.com/public/login.php?error=empty_email_from_sso');
+        }
+
+        // map SSO role to local role
+        $role = 'citizen'; 
         if (stripos($ssoRoleName, 'admin') !== false) {
             $role = 'admin';
         } elseif (stripos($ssoRoleName, 'staff') !== false) {
             $role = 'staff';
         }
         
-        // 4. Update/Create local user record using EMAIL as the unique identifier.
-        // This synchronizes the external user with your local 'users' table.
+        // authenticate or create the local user record
         try {
-            // 👇 CRITICAL FIX: Clean the email data (trim whitespace and convert to lowercase)
-            // to prevent database mismatch errors due to case sensitivity or spaces.
-            $cleanedEmail = strtolower(trim($ssoEmail));
-
+            // find or create the local user record using the cleaned email as the unique identifier.
             $localUser = User::updateOrCreate(
                 ['email' => $cleanedEmail], 
                 [
                     'name' => $ssoUsername ?? 'User',
-                    'password' => '', // Not needed for SSO, as authentication is external
+                    'password' => '', 
                     'role' => $role,
-                    'sso_user_id' => $ssoUserId, // Store the external ID for future reference
+                    'external_id' => $ssoUserId, 
                 ]
             );
 
-            // 5. Log the user into the Laravel application. (This successfully sets the local session!)
+            // log the user into the Laravel application. (sets the local session!)
             Auth::login($localUser);
 
-            // 6. Regenerate session ID for security and redirect to the appropriate dashboard.
+            // regenerate session ID for security
             $request->session()->regenerate();
+            
+            // redirect to intended page or dashboard based on role
             
             if ($localUser->role === 'admin' || $localUser->role === 'staff') {
                 return redirect()->intended(route('admin.dashboard'));
@@ -84,12 +81,13 @@ class SsoAuthMiddleware
             }
 
         } catch (\Exception $e) {
-            Log::critical('SSO Authentication failed during Update/Create or Auth::login.', [
+            // log the database failure that prevented Auth::login()
+            Log::critical('SSO Authentication failed during Update/Create or Auth::login (DB Error).', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            // Critical fail: Redirect back to login with a system error flag
-            return redirect()->away('https://local-government-unit-1-ph.com/public/login.php?error=system_exception');
+            // redirect back to login with a generic error message
+            return redirect()->away('https://local-government-unit-1-ph.com/public/login.php?error=system_db_exception');
         }
     }
 }
