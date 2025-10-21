@@ -556,11 +556,8 @@ class FacilityController extends Controller
                               stripos($eventName, 'City Event') !== false ||
                               $applicantName === 'City Mayor Office';
                 
-                // Add indicator for city events
+                // Set title (no emoji - icon shown in modal)
                 $title = $eventName ?: $userName;
-                if ($isCityEvent) {
-                    $title = '🏛️ ' . $title;
-                }
                 
                 // Format event_date properly (handle both string dates and Carbon objects)
                 $eventDate = $bookingArray['event_date'] ?? date('Y-m-d');
