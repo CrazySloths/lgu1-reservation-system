@@ -449,29 +449,47 @@ class CitizenDashboardController extends Controller
     public function getFacilityBookings($facilityId)
     {
         try {
-            // --- LOAD BOOKINGS FROM PERSISTENT FILE STORAGE ---
-            $bookingsFile = storage_path('app/bookings_data.json');
-            $bookings = [];
+            // --- LOAD APPROVED BOOKINGS FROM DATABASE ---
+            $bookings = collect();
             
-            if (file_exists($bookingsFile)) {
-                $allBookings = json_decode(file_get_contents($bookingsFile), true);
-                if ($allBookings && is_array($allBookings)) {
-                    // Filter bookings for this facility - ONLY approved bookings
-                    foreach ($allBookings as $booking) {
-                        if (isset($booking['facility_id']) && $booking['facility_id'] == $facilityId 
-                            && isset($booking['status']) && $booking['status'] === 'approved') {
-                            $bookings[] = (object) $booking;
+            try {
+                // Try to get ONLY approved bookings for this facility from database first
+                $bookings = Booking::with('facility')
+                                ->where('facility_id', $facilityId)
+                                ->where('status', 'approved') // Citizens only see approved bookings
+                                ->get();
+                                
+                \Log::info('🎯 CITIZEN API: Loaded bookings from database:', [
+                    'facility_id' => $facilityId,
+                    'total_bookings' => $bookings->count()
+                ]);
+            } catch (\Exception $e) {
+                \Log::warning('🎯 CITIZEN API: Database query failed, trying file storage', ['error' => $e->getMessage()]);
+                
+                // Fallback to file storage for bookings
+                $bookingsFile = storage_path('app/bookings_data.json');
+                if (file_exists($bookingsFile)) {
+                    $allBookings = json_decode(file_get_contents($bookingsFile), true);
+                    if ($allBookings && is_array($allBookings)) {
+                        // Filter bookings for this facility - ONLY approved bookings
+                        $fileBookings = [];
+                        foreach ($allBookings as $booking) {
+                            if (isset($booking['facility_id']) && $booking['facility_id'] == $facilityId 
+                                && isset($booking['status']) && $booking['status'] === 'approved') {
+                                $fileBookings[] = (object) $booking;
+                            }
                         }
+                        $bookings = collect($fileBookings);
+                        
+                        \Log::info('🎯 CITIZEN API: Loaded bookings from persistent file:', [
+                            'facility_id' => $facilityId,
+                            'total_bookings' => count($allBookings),
+                            'facility_bookings' => count($fileBookings)
+                        ]);
                     }
-                    
-                    \Log::info('🎯 CITIZEN API: Loaded bookings from persistent file:', [
-                        'facility_id' => $facilityId,
-                        'total_bookings' => count($allBookings),
-                        'facility_bookings' => count($bookings)
-                    ]);
+                } else {
+                    \Log::warning('🎯 CITIZEN API: bookings_data.json not found, using empty array');
                 }
-            } else {
-                \Log::warning('🎯 CITIZEN API: bookings_data.json not found, using empty array');
             }
             
             $bookings = collect($bookings);
@@ -535,41 +553,59 @@ class CitizenDashboardController extends Controller
     public function getAllFacilityBookings()
     {
         try {
-            // --- LOAD ALL BOOKINGS FROM PERSISTENT FILE STORAGE ---
-            $bookingsFile = storage_path('app/bookings_data.json');
-            $bookings = [];
+            // --- LOAD ALL APPROVED BOOKINGS FROM DATABASE ---
+            $bookings = collect();
             
-            if (file_exists($bookingsFile)) {
-                $allBookings = json_decode(file_get_contents($bookingsFile), true);
-                if ($allBookings && is_array($allBookings)) {
-                    // Convert to objects and filter ONLY approved bookings
-                    foreach ($allBookings as $booking) {
-                        // Only show approved bookings to citizens
-                        if (isset($booking['status']) && $booking['status'] === 'approved') {
-                            $bookings[] = (object) $booking;
+            try {
+                // Try to get ONLY approved bookings from database first
+                $bookings = Booking::with('facility')
+                                ->where('status', 'approved') // Citizens only see approved bookings
+                                ->get();
+                                
+                \Log::info('🎯 CITIZEN API: Loaded ALL bookings from database:', [
+                    'total_bookings' => $bookings->count()
+                ]);
+            } catch (\Exception $e) {
+                \Log::warning('🎯 CITIZEN API: Database query failed, trying file storage', ['error' => $e->getMessage()]);
+                
+                // Fallback to file storage for bookings
+                $bookingsFile = storage_path('app/bookings_data.json');
+                if (file_exists($bookingsFile)) {
+                    $allBookings = json_decode(file_get_contents($bookingsFile), true);
+                    if ($allBookings && is_array($allBookings)) {
+                        // Convert to objects and filter ONLY approved bookings
+                        $fileBookings = [];
+                        foreach ($allBookings as $booking) {
+                            // Only show approved bookings to citizens
+                            if (isset($booking['status']) && $booking['status'] === 'approved') {
+                                $fileBookings[] = (object) $booking;
+                            }
                         }
+                        $bookings = collect($fileBookings);
+                        
+                        \Log::info('🎯 CITIZEN API: Loaded ALL bookings from persistent file:', [
+                            'total_bookings' => count($fileBookings)
+                        ]);
                     }
-                    
-                    \Log::info('🎯 CITIZEN API: Loaded ALL bookings from persistent file:', [
-                        'total_bookings' => count($bookings)
-                    ]);
+                } else {
+                    \Log::warning('🎯 CITIZEN API: bookings_data.json not found');
                 }
-            } else {
-                \Log::warning('🎯 CITIZEN API: bookings_data.json not found');
             }
             
-            $bookings = collect($bookings);
-
             $events = [];
 
             foreach ($bookings as $booking) {
+                // Handle both Eloquent models and arrays (for fallback file data)
+                $bookingArray = is_array($booking) ? $booking : $booking->toArray();
+                $status = $bookingArray['status'] ?? 'pending';
+                
                 // Set different colors for different statuses
-                $backgroundColor = $booking->status === 'approved' ? '#ef4444' : '#f59e0b'; // Red for approved, Yellow for pending
-                $borderColor = $booking->status === 'approved' ? '#dc2626' : '#d97706';
+                $backgroundColor = $status === 'approved' ? '#ef4444' : '#f59e0b'; // Red for approved, Yellow for pending
+                $borderColor = $status === 'approved' ? '#dc2626' : '#d97706';
                 
                 // Format events for FullCalendar
-                $startTime = $booking->start_time;
-                $endTime = $booking->end_time;
+                $startTime = $bookingArray['start_time'] ?? '';
+                $endTime = $bookingArray['end_time'] ?? '';
                 
                 // Ensure time has seconds (HH:MM:SS format)
                 if (substr_count($startTime, ':') === 1) {
@@ -580,19 +616,19 @@ class CitizenDashboardController extends Controller
                 }
                 
                 $events[] = [
-                    'id' => $booking->id,
-                    'title' => $booking->event_name . ' - ' . $booking->applicant_name,
-                    'start' => $booking->event_date . 'T' . $startTime,
-                    'end' => $booking->event_date . 'T' . $endTime,
+                    'id' => $bookingArray['id'] ?? 0,
+                    'title' => ($bookingArray['event_name'] ?? '') . ' - ' . ($bookingArray['applicant_name'] ?? ''),
+                    'start' => ($bookingArray['event_date'] ?? '') . 'T' . $startTime,
+                    'end' => ($bookingArray['event_date'] ?? '') . 'T' . $endTime,
                     'backgroundColor' => $backgroundColor,
                     'borderColor' => $borderColor,
                     'textColor' => '#ffffff',
                     'extendedProps' => [
-                        'facility_id' => $booking->facility_id,
-                        'applicant' => $booking->applicant_name,
-                        'attendees' => $booking->expected_attendees,
-                        'status' => $booking->status,
-                        'description' => $booking->event_description
+                        'facility_id' => $bookingArray['facility_id'] ?? null,
+                        'applicant' => $bookingArray['applicant_name'] ?? '',
+                        'attendees' => $bookingArray['expected_attendees'] ?? 0,
+                        'status' => $status,
+                        'description' => $bookingArray['event_description'] ?? ''
                     ]
                 ];
             }
