@@ -28,7 +28,7 @@ class SsoAuthMiddleware
             return redirect()->away('https://local-government-unit-1-ph.com/public/login.php');
         }
 
-        // Capture all necessary data directly from the URL.
+        // Capture all necessary data directly from the URL (which was confirmed to be correct in logs).
         $ssoUserId = $request->input('user_id');
         $ssoEmail = $request->input('email');
         $ssoUsername = $request->input('username');
@@ -57,11 +57,15 @@ class SsoAuthMiddleware
         // 4. Update/Create local user record using EMAIL as the unique identifier.
         // This synchronizes the external user with your local 'users' table.
         try {
+            // 👇 CRITICAL FIX: Clean the email data (trim whitespace and convert to lowercase)
+            // to prevent database mismatch errors due to case sensitivity or spaces.
+            $cleanedEmail = strtolower(trim($ssoEmail));
+
             $localUser = User::updateOrCreate(
-                ['email' => $ssoEmail], 
+                ['email' => $cleanedEmail], 
                 [
                     'name' => $ssoUsername ?? 'User',
-                    'password' => '', // Not needed for SSO
+                    'password' => '', // Not needed for SSO, as authentication is external
                     'role' => $role,
                     'sso_user_id' => $ssoUserId, // Store the external ID for future reference
                 ]
@@ -70,7 +74,7 @@ class SsoAuthMiddleware
             // 5. Log the user into the Laravel application. (This successfully sets the local session!)
             Auth::login($localUser);
 
-            // 6. Regenerate session and redirect to the appropriate dashboard.
+            // 6. Regenerate session ID for security and redirect to the appropriate dashboard.
             $request->session()->regenerate();
             
             if ($localUser->role === 'admin' || $localUser->role === 'staff') {
