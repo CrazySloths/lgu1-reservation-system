@@ -21,14 +21,67 @@ class CitizenDashboardController extends Controller
     }
 
     /**
+     * Get authenticated user from Laravel Auth, SSO session, or URL parameters
+     */
+    private function getAuthenticatedUser(Request $request)
+    {
+        // Check Laravel Auth first
+        $user = Auth::user();
+        if ($user) {
+            return $user;
+        }
+        
+        // Check SSO session data
+        if ($request->session()->has('sso_user')) {
+            $ssoData = $request->session()->get('sso_user');
+            
+            // Try to find the user in database using SSO data
+            $user = User::where('external_id', $ssoData['id'])
+                       ->orWhere('email', $ssoData['email'])
+                       ->orWhere('name', $ssoData['username'])
+                       ->first();
+                       
+            // If user found, log them into Laravel auth for consistency
+            if ($user) {
+                Auth::login($user);
+                return $user;
+            }
+        }
+        
+        // Check URL parameters (direct SSO redirect)
+        if ($request->has('user_id') || $request->has('username')) {
+            $userId = $request->input('user_id');
+            $username = $request->input('username');
+            $email = $request->input('email');
+            
+            // Try to find user by external_id, email, or username
+            $user = User::where('external_id', $userId)
+                       ->orWhere('email', $email)
+                       ->orWhere('name', $username)
+                       ->first();
+                       
+            if ($user) {
+                Auth::login($user);
+                return $user;
+            }
+        }
+        
+        return null;
+    }
+
+    /**
      * Show citizen dashboard
      */
     public function index(Request $request)
     {
-           
-        $user = Auth::user();
-        if(!$user)
-        {
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
+            \Log::warning('CITIZEN DASHBOARD: No user found - redirecting to login', [
+                'has_laravel_auth' => Auth::check(),
+                'has_sso_session' => $request->session()->has('sso_user'),
+                'url_params' => $request->all()
+            ]);
+            
             return redirect('/login')->with('error', 'Please log in to access the dashboard.');
         }
         
@@ -76,12 +129,10 @@ class CitizenDashboardController extends Controller
     /**
      * Show facility reservation page
      */
-    public function reservations()
+    public function reservations(Request $request)
     {
-        $user = Auth::user();
-        
-        if(!$user)
-        {
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
             return redirect('/login')->with('error', 'Please log in to view reservations.');
 
             try
@@ -107,7 +158,7 @@ class CitizenDashboardController extends Controller
         if (file_exists($facilitiesFile)) {
             $data = json_decode(file_get_contents($facilitiesFile), true);
             if ($data && is_array($data)) {
-                \Log::info('🎯 CITIZEN: Loaded facilities from persistent file:', ['count' => count($data)]);
+                \Log::info('CITIZEN: Loaded facilities from persistent file:', ['count' => count($data)]);
                 $facilities = collect($data)->map(function($facility) {
                     return (object) $facility;
                 });
@@ -179,11 +230,10 @@ class CitizenDashboardController extends Controller
     /**
      * Show user's reservation history
      */
-    public function reservationHistory()
+    public function reservationHistory(Request $request)
     {
-        $user = Auth::user();
-        if(!$user)
-        {
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
             return redirect('/login')->with('error', 'Please log in to view reservation history.');
         }
         try
@@ -193,7 +243,7 @@ class CitizenDashboardController extends Controller
             ->orderBy('event_date', 'desc')
             ->orderBy('start_time', 'desc')
             ->get();
-            \Log::info('🎯 RESERVATION HISTORY: Loaded from database', ['user_id' => $user->id, 'count' => $reservations->count()]);
+            \Log::info('RESERVATION HISTORY: Loaded from database', ['user_id' => $user->id, 'count' => $reservations->count()]);
         }
         catch(Exception $e)
         {
@@ -272,10 +322,10 @@ class CitizenDashboardController extends Controller
                     ];
                 });
                 
-                \Log::info('🎯 RESERVATION HISTORY: Loaded from persistent file', ['user_id' => $user->id, 'count' => $reservations->count()]);
+                \Log::info('RESERVATION HISTORY: Loaded from persistent file', ['user_id' => $user->id, 'count' => $reservations->count()]);
             }
         } else {
-            \Log::warning('🎯 RESERVATION HISTORY: No bookings file found - showing empty list');
+            \Log::warning('RESERVATION HISTORY: No bookings file found - showing empty list');
         }
         
         return view('citizen.reservation-history', compact('user', 'reservations'));
@@ -284,11 +334,10 @@ class CitizenDashboardController extends Controller
     /**
      * Show user profile
      */
-    public function profile()
+    public function profile(Request $request)
     {
-        $user = Auth::user();
-        if(!$user)
-        {
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
             return redirect('/login')->with('error', 'Please log in to view your profile.');
         }
         $user->full_name = $user->name ?? $user->first_name . ' ' . $user->last_name;
@@ -305,23 +354,22 @@ class CitizenDashboardController extends Controller
     {
         // validation corresponding to fields in the profile form
         $request->validate([
-        'name' => 'required|string|max:255',
-        'phone_number' => 'required|string|max:20',
-        'address' => 'required|string|max:500',
-        'date_of_birth' => 'required|date|before:today',
-    ]);
-    $user = Auth::user();
-        if(!$user)
-        {
+            'name' => 'required|string|max:255',
+            'phone_number' => 'required|string|max:20',
+            'address' => 'required|string|max:500',
+            'date_of_birth' => 'required|date|before:today',
+        ]);
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
             return back()->with('error', 'Authentication required. Please log in again.');
         }
         try
         {
             $user->update([
-                'name' => $request->name,
-                'phone_number' => $request->phone_number,
-                'address' => $request->address,
-                'date_of_birth' => $request->date_of_birth,
+            'name' => $request->name,
+            'phone_number' => $request->phone_number,
+            'address' => $request->address,
+            'date_of_birth' => $request->date_of_birth,
             ]);
             \Log::info('Profile updated successfully (REAL UPDATE):', [
                 'user_id' => $user->id,
@@ -343,13 +391,10 @@ class CitizenDashboardController extends Controller
     /**
      * Show facility availability calendar
      */
-    public function viewAvailability()
+    public function viewAvailability(Request $request)
     {
-        
-        $user = Auth::user();
-
-        if(!$user)
-        {
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
             return redirect('/login')->with('error', 'Please log in to view facility availability.');
         }
         $user->full_name = $user->name ?? $user->first_name . ' ' . $user->last_name;
@@ -357,7 +402,7 @@ class CitizenDashboardController extends Controller
         try
         {
             $facilities = \App\Models\Facility::where('status', 'active')->get();
-            \Log::info('🎯 CITIZEN AVAILABILITY: Loaded facilities from database.', ['count' => $facilities->count()]);
+            \Log::info('CITIZEN AVAILABILITY: Loaded facilities from database.', ['count' => $facilities->count()]);
         }
         catch(Exception $e)
         {
@@ -373,7 +418,7 @@ class CitizenDashboardController extends Controller
         if (file_exists($facilitiesFile)) {
             $data = json_decode(file_get_contents($facilitiesFile), true);
             if ($data && is_array($data)) {
-                \Log::info('🎯 CITIZEN AVAILABILITY: Loaded facilities from persistent file:', ['count' => count($data)]);
+                \Log::info('CITIZEN AVAILABILITY: Loaded facilities from persistent file:', ['count' => count($data)]);
                 $facilities = collect($data)->map(function($facility) {
                     return (object) $facility;
                 });
@@ -449,30 +494,16 @@ class CitizenDashboardController extends Controller
     public function getFacilityBookings($facilityId)
     {
         try {
-            // --- LOAD BOOKINGS FROM PERSISTENT FILE STORAGE ---
-            $bookingsFile = storage_path('app/bookings_data.json');
-            $bookings = [];
-            
-            if (file_exists($bookingsFile)) {
-                $allBookings = json_decode(file_get_contents($bookingsFile), true);
-                if ($allBookings && is_array($allBookings)) {
-                    // Filter bookings for this facility - ONLY approved bookings
-                    foreach ($allBookings as $booking) {
-                        if (isset($booking['facility_id']) && $booking['facility_id'] == $facilityId 
-                            && isset($booking['status']) && $booking['status'] === 'approved') {
-                            $bookings[] = (object) $booking;
-                        }
-                    }
-                    
-                    \Log::info('🎯 CITIZEN API: Loaded bookings from persistent file:', [
-                        'facility_id' => $facilityId,
-                        'total_bookings' => count($allBookings),
-                        'facility_bookings' => count($bookings)
-                    ]);
-                }
-            } else {
-                \Log::warning('🎯 CITIZEN API: bookings_data.json not found, using empty array');
-            }
+            // Load ONLY approved bookings for this facility from database
+            $bookings = Booking::with('facility')
+                            ->where('facility_id', $facilityId)
+                            ->where('status', 'approved') // Citizens only see approved bookings
+                            ->get();
+                            
+            \Log::info('CITIZEN API: Loaded bookings from database:', [
+                'facility_id' => $facilityId,
+                'total_bookings' => $bookings->count()
+            ]);
             
             $bookings = collect($bookings);
 
@@ -495,11 +526,14 @@ class CitizenDashboardController extends Controller
                     $endTime .= ':00';
                 }
                 
+                // Fix date formatting - extract just the date part to avoid double "T"
+                $eventDate = date('Y-m-d', strtotime($booking->event_date));
+                
                 $events[] = [
                     'id' => $booking->id,
                     'title' => $booking->event_name . ' - ' . $booking->applicant_name,
-                    'start' => $booking->event_date . 'T' . $startTime,
-                    'end' => $booking->event_date . 'T' . $endTime,
+                    'start' => $eventDate . 'T' . $startTime,
+                    'end' => $eventDate . 'T' . $endTime,
                     'backgroundColor' => $backgroundColor,
                     'borderColor' => $borderColor,
                     'textColor' => '#ffffff',
@@ -512,7 +546,7 @@ class CitizenDashboardController extends Controller
                 ];
             }
 
-            \Log::info('🎯 CITIZEN API: Facility Bookings Response:', [
+            \Log::info('CITIZEN API: Facility Bookings Response:', [
                 'facility_id' => $facilityId,
                 'events_count' => count($events),
                 'events' => $events
@@ -535,28 +569,14 @@ class CitizenDashboardController extends Controller
     public function getAllFacilityBookings()
     {
         try {
-            // --- LOAD ALL BOOKINGS FROM PERSISTENT FILE STORAGE ---
-            $bookingsFile = storage_path('app/bookings_data.json');
-            $bookings = [];
-            
-            if (file_exists($bookingsFile)) {
-                $allBookings = json_decode(file_get_contents($bookingsFile), true);
-                if ($allBookings && is_array($allBookings)) {
-                    // Convert to objects and filter ONLY approved bookings
-                    foreach ($allBookings as $booking) {
-                        // Only show approved bookings to citizens
-                        if (isset($booking['status']) && $booking['status'] === 'approved') {
-                            $bookings[] = (object) $booking;
-                        }
-                    }
-                    
-                    \Log::info('🎯 CITIZEN API: Loaded ALL bookings from persistent file:', [
-                        'total_bookings' => count($bookings)
-                    ]);
-                }
-            } else {
-                \Log::warning('🎯 CITIZEN API: bookings_data.json not found');
-            }
+            // Load ONLY approved bookings from database
+            $bookings = Booking::with('facility')
+                            ->where('status', 'approved') // Citizens only see approved bookings
+                            ->get();
+                            
+            \Log::info('CITIZEN API: Loaded ALL bookings from database:', [
+                'total_bookings' => $bookings->count()
+            ]);
             
             $bookings = collect($bookings);
 
@@ -579,11 +599,14 @@ class CitizenDashboardController extends Controller
                     $endTime .= ':00';
                 }
                 
+                // Fix date formatting - extract just the date part to avoid double "T"
+                $eventDate = date('Y-m-d', strtotime($booking->event_date));
+                
                 $events[] = [
                     'id' => $booking->id,
                     'title' => $booking->event_name . ' - ' . $booking->applicant_name,
-                    'start' => $booking->event_date . 'T' . $startTime,
-                    'end' => $booking->event_date . 'T' . $endTime,
+                    'start' => $eventDate . 'T' . $startTime,
+                    'end' => $eventDate . 'T' . $endTime,
                     'backgroundColor' => $backgroundColor,
                     'borderColor' => $borderColor,
                     'textColor' => '#ffffff',
@@ -597,7 +620,7 @@ class CitizenDashboardController extends Controller
                 ];
             }
 
-            \Log::info('🎯 CITIZEN API: ALL Facility Bookings Response:', [
+            \Log::info('CITIZEN API: ALL Facility Bookings Response:', [
                 'events_count' => count($events)
             ]);
 
