@@ -660,15 +660,15 @@
                 <!-- Quick Time Buttons -->
                 <div class="border-t border-gray-200 pt-4">
                     <p class="text-sm font-medium text-gray-700 mb-3">Quick Select:</p>
-                    <div class="grid grid-cols-4 gap-2">
-                        <button type="button" onclick="setQuickTime('08', '00', 'AM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">8:00 AM</button>
-                        <button type="button" onclick="setQuickTime('12', '00', 'PM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">12:00 PM</button>
-                        <button type="button" onclick="setQuickTime('02', '00', 'PM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">2:00 PM</button>
-                        <button type="button" onclick="setQuickTime('05', '00', 'PM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">5:00 PM</button>
-                        <button type="button" onclick="setQuickTime('07', '00', 'PM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">7:00 PM</button>
-                        <button type="button" onclick="setQuickTime('09', '00', 'PM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">9:00 PM</button>
-                        <button type="button" onclick="setQuickTime('09', '30', 'AM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">9:30 AM</button>
-                        <button type="button" onclick="setQuickTime('03', '30', 'PM')" class="px-3 py-2 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">3:30 PM</button>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="setQuickTime('08', '00', 'AM')" class="px-4 py-2.5 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">8:00 AM</button>
+                        <button type="button" onclick="setQuickTime('12', '00', 'PM')" class="px-4 py-2.5 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">12:00 PM</button>
+                        <button type="button" onclick="setQuickTime('02', '00', 'PM')" class="px-4 py-2.5 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">2:00 PM</button>
+                        <button type="button" onclick="setQuickTime('05', '00', 'PM')" class="px-4 py-2.5 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">5:00 PM</button>
+                        <button type="button" onclick="setQuickTime('07', '00', 'PM')" class="px-4 py-2.5 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">7:00 PM</button>
+                        <button type="button" onclick="setQuickTime('09', '00', 'PM')" class="px-4 py-2.5 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">9:00 PM</button>
+                        <button type="button" onclick="setQuickTime('09', '30', 'AM')" class="px-4 py-2.5 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">9:30 AM</button>
+                        <button type="button" onclick="setQuickTime('03', '30', 'PM')" class="px-4 py-2.5 text-sm bg-gray-100 hover:bg-green-100 hover:text-green-700 rounded-lg transition-colors font-medium">3:30 PM</button>
                     </div>
                 </div>
 
