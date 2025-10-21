@@ -191,46 +191,62 @@ Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('logout')
 
 // Citizen Authentication Routes (No middleware - auth handled by SsoController)
 Route::prefix('citizen')->group(function () {
-    Route::get('/dashboard', [CitizenDashboardController::class, 'index'])->name('citizen.dashboard');
-    Route::get('/reservations', [CitizenDashboardController::class, 'reservations'])->name('citizen.reservations');
-    Route::get('/reservation-history', [CitizenDashboardController::class, 'reservationHistory'])->name('citizen.reservation.history');
-    Route::get('/availability', [CitizenDashboardController::class, 'viewAvailability'])->name('citizen.availability');
-    Route::get('/api/facility/{facility_id}/bookings', [CitizenDashboardController::class, 'getFacilityBookings'])->name('citizen.api.facility.bookings');
-    Route::get('/api/all-facility-bookings', [CitizenDashboardController::class, 'getAllFacilityBookings'])->name('citizen.api.all.facility.bookings');
-    Route::get('/bulletin-board', [AnnouncementController::class, 'citizenIndex'])->name('citizen.bulletin.board');
     
-    // Payment Slips
-    Route::get('/payment-slips', [PaymentSlipController::class, 'citizenIndex'])->name('citizen.payment-slips.index');
-    Route::get('/payment-slips/{id}', [PaymentSlipController::class, 'citizenShow'])->name('citizen.payment-slips.show');
-    Route::get('/payment-slips/{id}/download', [PaymentSlipController::class, 'citizenDownloadPdf'])->name('citizen.payment-slips.download');
-    Route::get('/profile', [CitizenDashboardController::class, 'profile'])->name('citizen.profile');
-    Route::put('/profile', [CitizenDashboardController::class, 'updateProfile'])->name('citizen.profile.update');
+    // 🚀 CRITICAL FIX: DASHBOARD ROUTE
+    // The dashboard is the landing page for SSO. It must run the SSO middleware first,
+    // then apply standard authentication check.
+    Route::get('/dashboard', [CitizenDashboardController::class, 'index'])
+        ->middleware([
+            \App\Http\Middleware\SsoAuthMiddleware::class, 
+            'auth:web'                                     
+        ])
+        ->name('citizen.dashboard');
+
+    Route::middleware('auth:web')->group(function () {
+        
+        // General Citizen Dashboard Routes
+        Route::get('/reservations', [CitizenDashboardController::class, 'reservations'])->name('citizen.reservations');
+        Route::get('/reservation-history', [CitizenDashboardController::class, 'reservationHistory'])->name('citizen.reservation.history');
+        Route::get('/availability', [CitizenDashboardController::class, 'viewAvailability'])->name('citizen.availability');
+        
+        // API Endpoints (Needs auth)
+        Route::get('/api/facility/{facility_id}/bookings', [CitizenDashboardController::class, 'getFacilityBookings'])->name('citizen.api.facility.bookings');
+        Route::get('/api/all-facility-bookings', [CitizenDashboardController::class, 'getAllFacilityBookings'])->name('citizen.api.all.facility.bookings');
+        Route::post('/api/recommendations', [FacilityController::class, 'getAIRecommendations'])->name('citizen.api.recommendations');
+        Route::get('/api/facility/{facilityId}/bookings', [CitizenDashboardController::class, 'getFacilityBookings'])->name('citizen.api.facility.bookings'); // Duplicate, but kept for safety
+        
+        // Bulletin/Announcement
+        Route::get('/bulletin-board', [AnnouncementController::class, 'citizenIndex'])->name('citizen.bulletin.board');
+        Route::get('/announcements/{id}/download', [AnnouncementController::class, 'downloadAttachment'])->name('citizen.announcements.download');
+        
+        // Payment Slips
+        Route::get('/payment-slips', [PaymentSlipController::class, 'citizenIndex'])->name('citizen.payment-slips.index');
+        Route::get('/payment-slips/{id}', [PaymentSlipController::class, 'citizenShow'])->name('citizen.payment-slips.show');
+        Route::get('/payment-slips/{id}/download', [PaymentSlipController::class, 'citizenDownloadPdf'])->name('citizen.payment-slips.download');
+        
+        // Profile
+        Route::get('/profile', [CitizenDashboardController::class, 'profile'])->name('citizen.profile');
+        Route::put('/profile', [CitizenDashboardController::class, 'updateProfile'])->name('citizen.profile.update');
+        
+        // Help & FAQ
+        Route::get('/help-faq', [\App\Http\Controllers\Citizen\HelpFaqController::class, 'index'])->name('citizen.help-faq');
+        Route::post('/help-faq/submit', [\App\Http\Controllers\Citizen\HelpFaqController::class, 'submitQuestion'])->name('citizen.help-faq.submit');
+        
+        // Two-Factor Authentication Routes (for authenticated users)
+        Route::get('/security/setup-2fa', [CitizenAuthController::class, 'showTwoFactorSetup'])->name('citizen.security.setup-2fa');
+        Route::post('/security/enable-2fa', [CitizenAuthController::class, 'enableTwoFactor'])->name('citizen.security.enable-2fa');
+        
+        // AI-Enhanced reservation store route
+        Route::post('/reservations/store', [FacilityController::class, 'storeReservationWithAI'])->name('citizen.reservations.store');
+        
+        // Booking Extension Routes
+        Route::post('/bookings/{booking}/check-extension-conflict', [\App\Http\Controllers\Citizen\BookingExtensionController::class, 'checkConflict'])->name('citizen.bookings.check-extension');
+        Route::post('/bookings/{booking}/extend', [\App\Http\Controllers\Citizen\BookingExtensionController::class, 'extend'])->name('citizen.bookings.extend');
     
-    // Help & FAQ
-    Route::get('/help-faq', [\App\Http\Controllers\Citizen\HelpFaqController::class, 'index'])->name('citizen.help-faq');
-    Route::post('/help-faq/submit', [\App\Http\Controllers\Citizen\HelpFaqController::class, 'submitQuestion'])->name('citizen.help-faq.submit');
+    });
     
+    // Logout does not require prior authentication check
     Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('citizen.logout');
-    
-    // Two-Factor Authentication Routes (for authenticated users)
-    Route::get('/security/setup-2fa', [CitizenAuthController::class, 'showTwoFactorSetup'])->name('citizen.security.setup-2fa');
-    Route::post('/security/enable-2fa', [CitizenAuthController::class, 'enableTwoFactor'])->name('citizen.security.enable-2fa');
-    
-    // AI-Enhanced reservation store route
-    Route::post('/reservations/store', [FacilityController::class, 'storeReservationWithAI'])->name('citizen.reservations.store');
-    
-    // Booking Extension Routes
-    Route::post('/bookings/{booking}/check-extension-conflict', [\App\Http\Controllers\Citizen\BookingExtensionController::class, 'checkConflict'])->name('citizen.bookings.check-extension');
-    Route::post('/bookings/{booking}/extend', [\App\Http\Controllers\Citizen\BookingExtensionController::class, 'extend'])->name('citizen.bookings.extend');
-    
-    // API endpoint for AI recommendations
-    Route::post('/api/recommendations', [FacilityController::class, 'getAIRecommendations'])->name('citizen.api.recommendations');
-    
-    // API endpoint for facility availability data
-    Route::get('/api/facility/{facilityId}/bookings', [CitizenDashboardController::class, 'getFacilityBookings'])->name('citizen.api.facility.bookings');
-    
-    // Announcement attachment download
-    Route::get('/announcements/{id}/download', [AnnouncementController::class, 'downloadAttachment'])->name('citizen.announcements.download');
 });
 
 // ============================================
