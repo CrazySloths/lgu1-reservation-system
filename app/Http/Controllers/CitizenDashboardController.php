@@ -6,6 +6,8 @@ use App\Models\Facility;
 use App\Models\User;
 use App\Models\Booking;
 use Illuminate\Http\Request;
+use App\Models\PaymentSlip;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
 class CitizenDashboardController extends Controller
@@ -23,49 +25,52 @@ class CitizenDashboardController extends Controller
      */
     public function index(Request $request)
     {
-        // --- STATIC USER DATA (Database drivers not available on server) ---
-        // This section provides hardcoded user data to ensure the dashboard displays correctly
-        // when the database is not accessible or drivers are missing.
+           
+        $user = Auth::user();
+        if(!$user)
+        {
+            return redirect('/login')->with('error', 'Please log in to access the dashboard.');
+        }
         
-        $user = (object)[
-            'id' => 4, // Local database ID (if it existed)
-            'external_id' => 60, // External SSO ID
-            'name' => 'Cristian mark Angelo Pastoril Llaneta',
-            'email' => '1hawkeye101010101@gmail.com', // CORRECT EMAIL
-            'role' => 'citizen',
-            'status' => 'active',
-            'first_name' => 'Cristian',
-            'middle_name' => 'mark Angelo Pastoril',
-            'last_name' => 'Llaneta',
-            'phone_number' => null,
-            'address' => null,
-            'date_of_birth' => null,
-            'email_verified_at' => now(),
-            'created_at' => now()->subDays(30),
-            'updated_at' => now()
-        ];
+        try
+        {
+            // available facilities (global static)
+            $availableFacilities = Facility::where('status', 'active')->count();
+            // total reservations (user-specific)
+            $totalReservations = Booking::where('user_id', $user->id)->count();
+            // pending reservations (user-specific)
+            $pendingReservations = Booking::where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'for_approval'])
+            ->count();
+            // recent payment slips (user-specific)
+            $paymentSlips = PaymentSlip::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+            // unpaid payment slips (user-specific)
+            $unpaidPaymentSlips = PaymentSlip::where('user_id', $user->id)
+            ->where('status', 'unpaid')
+            ->count();
+            $recentReservations = $paymentSlips;
+        }
+        catch(Exception $e)
+        {
+            \Log::error('Database Error loading dashboard stats:', ['error' => $e->getMessage()]);
+            $availableFacilities = 0;
+            $totalReservations = 0;
+            $pendingReservations = 0;
+            $paymentSlips = collect();
+            $unpaidPaymentSlips = 0;
+            $recentReservations = collect();
+
+        }
+        
 
         // Add properties for Blade template compatibility
-        $user->full_name = $user->name; // For sidebar display
-        $user->avatar_initials = 'CL'; // Generate initials from "Cristian Llaneta"
+        $user->full_name = $user->name ?? $user->first_name . ' ' . $user->last_name;
+        $user->avatar_initials = strtoupper(substr($user->first_name ?? 'U', 0, 1) . substr($user->last_name ?? 'U', 0, 1));
         
-        // Log this fallback for debugging
-        \Log::warning('CitizenDashboardController using STATIC USER DATA due to database issues.', [
-            'user_id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'url_params' => $request->all()
-        ]);
-        
-        // --- STATIC DASHBOARD DATA ---
-        // Since we are bypassing the database, we'll use dummy data for stats
-        $recentReservations = collect(); // Empty collection
-        $totalReservations = 0;
-        $paymentSlips = collect(); // Empty collection  
-        $unpaidPaymentSlips = 0;
-        $availableFacilities = 5; // Static number
-        
-        return view('citizen.dashboard', compact('user', 'availableFacilities', 'totalReservations', 'recentReservations', 'paymentSlips', 'unpaidPaymentSlips'));
+        return view('citizen.dashboard', compact('user', 'availableFacilities', 'totalReservations', 'recentReservations', 'paymentSlips', 'unpaidPaymentSlips', 'pendingReservations'));
     }
 
     /**
@@ -73,24 +78,23 @@ class CitizenDashboardController extends Controller
      */
     public function reservations()
     {
-        // --- STATIC USER DATA (Database drivers not available on server) ---
-        $user = (object)[
-            'id' => 4,
-            'external_id' => 60,
-            'name' => 'Cristian mark Angelo Pastoril Llaneta',
-            'email' => '1hawkeye101010101@gmail.com',
-            'role' => 'citizen',
-            'status' => 'active',
-            'first_name' => 'Cristian',
-            'middle_name' => 'mark Angelo Pastoril',
-            'last_name' => 'Llaneta',
-            'phone_number' => null,
-            'address' => null,
-            'date_of_birth' => null,
-            'email_verified_at' => now(),
-            'created_at' => now()->subDays(30),
-            'updated_at' => now()
-        ];
+        $user = Auth::user();
+        
+        if(!$user)
+        {
+            return redirect('/login')->with('error', 'Please log in to view reservations.');
+
+            try
+            {
+                $facilities = Facility::where('status', 'active')->get();
+                \Log::info('Citizen: Loaded facilities from database.');
+            }
+            catch(Exception $e)
+            {
+                \Log::error('Database Error loading facilities:', ['error' => $e->getMessage()]);
+                $facilities = collect([]);
+            }
+        }
 
         // Add properties for Blade template compatibility
         $user->full_name = $user->name;
@@ -168,7 +172,6 @@ class CitizenDashboardController extends Controller
             ]);
         }
         
-        \Log::warning('CitizenDashboardController::reservations using STATIC DATA due to database issues.');
         
         return view('citizen.reservations', compact('user', 'facilities'));
     }
@@ -178,17 +181,28 @@ class CitizenDashboardController extends Controller
      */
     public function reservationHistory()
     {
-        // --- STATIC USER DATA ---
-        $user = (object)[
-            'id' => 4,
-            'external_id' => 60,
-            'name' => 'Cristian mark Angelo Pastoril Llaneta',
-            'email' => '1hawkeye101010101@gmail.com',
-            'role' => 'citizen',
-            'status' => 'active',
-            'full_name' => 'Cristian mark Angelo Pastoril Llaneta',
-            'avatar_initials' => 'CL'
-        ];
+        $user = Auth::user();
+        if(!$user)
+        {
+            return redirect('/login')->with('error', 'Please log in to view reservation history.');
+        }
+        try
+        {
+            $reservations = \App\Models\Booking::where('user_id', $user->id)
+            ->with(['facility', 'paymentSlip'])
+            ->orderBy('event_date', 'desc')
+            ->orderBy('start_time', 'desc')
+            ->get();
+            \Log::info('🎯 RESERVATION HISTORY: Loaded from database', ['user_id' => $user->id, 'count' => $reservations->count()]);
+        }
+        catch(Exception $e)
+        {
+            \Log::error('Database Error loading reservation history:', ['error' => $e->getMessage()]);
+            $reservations = collect();
+            return view('citizen.reservation-history', compact('user', 'reservations'))->with('warning', 'Could not load reservation history due to a database error.');
+        }
+        $user->full_name = $user->name ?? $user->first_name . ' ' . $user->last_name;
+        $user->avatar_initials = strtoupper(substr($user->first_name ?? 'U', 0, 1) . substr($user->last_name ?? 'U', 0, 1));
         
         // --- LOAD BOOKINGS FROM PERSISTENT FILE STORAGE ---
         $bookingsFile = storage_path('app/bookings_data.json');
@@ -272,28 +286,14 @@ class CitizenDashboardController extends Controller
      */
     public function profile()
     {
-        // --- STATIC USER DATA ---
-        $user = (object)[
-            'id' => 4,
-            'external_id' => 60,
-            'name' => 'Cristian mark Angelo Pastoril Llaneta',
-            'email' => '1hawkeye101010101@gmail.com',
-            'role' => 'citizen',
-            'status' => 'active',
-            'first_name' => 'Cristian',
-            'middle_name' => 'mark Angelo Pastoril',
-            'last_name' => 'Llaneta',
-            'phone_number' => '+63 912 345 6789',
-            'address' => '123 Main Street, Barangay Sample, City',
-            'date_of_birth' => '1995-06-15',
-            'email_verified_at' => now(),
-            'created_at' => now()->subDays(30),
-            'updated_at' => now(),
-            'full_name' => 'Cristian mark Angelo Pastoril Llaneta',
-            'avatar_initials' => 'CL'
-        ];
-        
-        \Log::warning('CitizenDashboardController::profile using STATIC DATA due to database issues.');
+        $user = Auth::user();
+        if(!$user)
+        {
+            return redirect('/login')->with('error', 'Please log in to view your profile.');
+        }
+        $user->full_name = $user->name ?? $user->first_name . ' ' . $user->last_name;
+        $user->avatar_initials = strtoupper(substr($user->first_name ?? 'U', 0, 1) . substr($user->last_name ?? 'U', 0, 1));
+      
         
         return view('citizen.profile', compact('user'));
     }
@@ -303,27 +303,41 @@ class CitizenDashboardController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        // --- STATIC USER DATA (No database updates possible) ---
+        // validation corresponding to fields in the profile form
         $request->validate([
-            'name' => 'required|string|max:255',
-            'phone_number' => 'required|string|max:20',
-            'address' => 'required|string|max:500',
-            'date_of_birth' => 'required|date|before:today',
-        ]);
-
-        // Log the attempted update for debugging
-        \Log::info('Profile update attempted (STATIC MODE - no database available):', [
-            'user_id' => 4,
-            'attempted_changes' => [
-            'name' => $request->name,
-            'phone_number' => $request->phone_number,
-            'address' => $request->address,
-            'date_of_birth' => $request->date_of_birth,
-            ]
-        ]);
-
-        // Return success message (simulating successful update)
-        return back()->with('success', 'Profile updated successfully! (Note: Changes are simulated due to database limitations)');
+        'name' => 'required|string|max:255',
+        'phone_number' => 'required|string|max:20',
+        'address' => 'required|string|max:500',
+        'date_of_birth' => 'required|date|before:today',
+    ]);
+    $user = Auth::user();
+        if(!$user)
+        {
+            return back()->with('error', 'Authentication required. Please log in again.');
+        }
+        try
+        {
+            $user->update([
+                'name' => $request->name,
+                'phone_number' => $request->phone_number,
+                'address' => $request->address,
+                'date_of_birth' => $request->date_of_birth,
+            ]);
+            \Log::info('Profile updated successfully (REAL UPDATE):', [
+                'user_id' => $user->id,
+                'updated_by_user' => $user->email,
+                'changes' => $request->only(['name', 'phone_number', 'address', 'date_of_birth'])
+            ]);
+            return back()->with('success', 'Profile updated successfully!');
+        }
+        catch(Exception $e)
+        {
+            \Log::error('Database Error during profile update:', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+            return back()->with('error', 'Failed to update profile due to a database error. Please try again.');
+        }
     }
 
     /**
@@ -331,17 +345,27 @@ class CitizenDashboardController extends Controller
      */
     public function viewAvailability()
     {
-        // --- STATIC USER DATA ---
-        $user = (object)[
-            'id' => 4,
-            'external_id' => 60,
-            'name' => 'Cristian mark Angelo Pastoril Llaneta',
-            'email' => '1hawkeye101010101@gmail.com',
-            'role' => 'citizen',
-            'status' => 'active',
-            'full_name' => 'Cristian mark Angelo Pastoril Llaneta',
-            'avatar_initials' => 'CL'
-        ];
+        
+        $user = Auth::user();
+
+        if(!$user)
+        {
+            return redirect('/login')->with('error', 'Please log in to view facility availability.');
+        }
+        $user->full_name = $user->name ?? $user->first_name . ' ' . $user->last_name;
+        $user->avatar_initials = strtoupper(substr($user->first_name ?? 'U', 0, 1) . substr($user->last_name ?? 'U', 0, 1));
+        try
+        {
+            $facilities = \App\Models\Facility::where('status', 'active')->get();
+            \Log::info('🎯 CITIZEN AVAILABILITY: Loaded facilities from database.', ['count' => $facilities->count()]);
+        }
+        catch(Exception $e)
+        {
+            \Log::error('Database Error loading facilities for availability:', ['error' => $e->getMessage()]);
+            $facilities = collect([]);
+            return view('citizen.availability', compact('user', 'facilities'))->with('warning', 'Could not load facilities from the database.');
+        }
+        return view('citizen.availability', compact('user', 'facilities'));
         
         // --- LOAD FACILITIES FROM PERSISTENT FILE STORAGE ---
         $facilitiesFile = storage_path('app/facilities_data.json');
