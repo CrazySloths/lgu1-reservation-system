@@ -425,66 +425,31 @@ class CitizenDashboardController extends Controller
     public function getFacilityBookings($facilityId)
     {
         try {
-            // --- STATIC BOOKINGS DATA ---
-            $staticBookings = [
-                1 => [ // Community Hall
-                    (object)[
-                        'id' => 1,
-                        'facility_id' => 1,
-                        'event_name' => 'Wedding Reception',
-                        'applicant_name' => 'Maria Santos',
-                        'event_date' => now()->addDays(5)->format('Y-m-d'),
-                        'start_time' => '18:00:00',
-                        'end_time' => '23:00:00',
-                        'expected_attendees' => 150,
-                        'status' => 'approved',
-                        'event_description' => 'Wedding celebration'
-                    ],
-                    (object)[
-                        'id' => 2,
-                        'facility_id' => 1,
-                        'event_name' => 'Company Meeting',
-                        'applicant_name' => 'John Cruz',
-                        'event_date' => now()->addDays(12)->format('Y-m-d'),
-                        'start_time' => '09:00:00',
-                        'end_time' => '17:00:00',
-                        'expected_attendees' => 80,
-                        'status' => 'pending',
-                        'event_description' => 'Annual company meeting'
-                    ]
-                ],
-                2 => [ // Basketball Court
-                    (object)[
-                        'id' => 3,
-                        'facility_id' => 2,
-                        'event_name' => 'Youth Basketball League',
-                        'applicant_name' => 'Coach Rodriguez',
-                        'event_date' => now()->addDays(3)->format('Y-m-d'),
-                        'start_time' => '08:00:00',
-                        'end_time' => '12:00:00',
-                        'expected_attendees' => 30,
-                        'status' => 'approved',
-                        'event_description' => 'Basketball tournament'
-                    ]
-                ],
-                3 => [ // Conference Room
-                    (object)[
-                        'id' => 4,
-                        'facility_id' => 3,
-                        'event_name' => 'Business Workshop',
-                        'applicant_name' => 'Dr. Garcia',
-                        'event_date' => now()->addDays(7)->format('Y-m-d'),
-                        'start_time' => '13:00:00',
-                        'end_time' => '17:00:00',
-                        'expected_attendees' => 25,
-                        'status' => 'approved',
-                        'event_description' => 'Entrepreneurship workshop'
-                    ]
-                ]
-            ];
-
-            // Get bookings for the requested facility
-            $bookings = collect($staticBookings[$facilityId] ?? []);
+            // --- LOAD BOOKINGS FROM PERSISTENT FILE STORAGE ---
+            $bookingsFile = storage_path('app/bookings_data.json');
+            $bookings = [];
+            
+            if (file_exists($bookingsFile)) {
+                $allBookings = json_decode(file_get_contents($bookingsFile), true);
+                if ($allBookings && is_array($allBookings)) {
+                    // Filter bookings for this facility  
+                    foreach ($allBookings as $booking) {
+                        if (isset($booking['facility_id']) && $booking['facility_id'] == $facilityId) {
+                            $bookings[] = (object) $booking;
+                        }
+                    }
+                    
+                    \Log::info('🎯 CITIZEN API: Loaded bookings from persistent file:', [
+                        'facility_id' => $facilityId,
+                        'total_bookings' => count($allBookings),
+                        'facility_bookings' => count($bookings)
+                    ]);
+                }
+            } else {
+                \Log::warning('🎯 CITIZEN API: bookings_data.json not found, using empty array');
+            }
+            
+            $bookings = collect($bookings);
 
             $events = [];
 
