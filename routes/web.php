@@ -14,6 +14,7 @@ use App\Http\Controllers\Staff\RequirementVerificationController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\Admin\ScheduleConflictController;
+use Illuminate\Support\Facades\Auth;
 
 // ============================================
 // SSO AUTHENTICATION ROUTES - TEMPORARILY DISABLED
@@ -31,6 +32,7 @@ use App\Http\Controllers\Admin\ScheduleConflictController;
 // ============================================
 // ADMIN PORTAL ROUTES (Protected)
 // ============================================
+Auth::routes();
 
 // Group all admin routes with admin authentication
 Route::prefix('admin')->middleware('admin.auth')->group(function () {
