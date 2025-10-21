@@ -432,9 +432,10 @@ class CitizenDashboardController extends Controller
             if (file_exists($bookingsFile)) {
                 $allBookings = json_decode(file_get_contents($bookingsFile), true);
                 if ($allBookings && is_array($allBookings)) {
-                    // Filter bookings for this facility  
+                    // Filter bookings for this facility - ONLY approved bookings
                     foreach ($allBookings as $booking) {
-                        if (isset($booking['facility_id']) && $booking['facility_id'] == $facilityId) {
+                        if (isset($booking['facility_id']) && $booking['facility_id'] == $facilityId 
+                            && isset($booking['status']) && $booking['status'] === 'approved') {
                             $bookings[] = (object) $booking;
                         }
                     }
@@ -517,9 +518,12 @@ class CitizenDashboardController extends Controller
             if (file_exists($bookingsFile)) {
                 $allBookings = json_decode(file_get_contents($bookingsFile), true);
                 if ($allBookings && is_array($allBookings)) {
-                    // Convert to objects
+                    // Convert to objects and filter ONLY approved bookings
                     foreach ($allBookings as $booking) {
-                        $bookings[] = (object) $booking;
+                        // Only show approved bookings to citizens
+                        if (isset($booking['status']) && $booking['status'] === 'approved') {
+                            $bookings[] = (object) $booking;
+                        }
                     }
                     
                     \Log::info('🎯 CITIZEN API: Loaded ALL bookings from persistent file:', [
