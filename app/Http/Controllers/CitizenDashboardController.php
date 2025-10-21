@@ -559,11 +559,14 @@ class CitizenDashboardController extends Controller
                     $endTime .= ':00';
                 }
                 
+                // Fix date formatting - extract just the date part to avoid double "T"
+                $eventDate = date('Y-m-d', strtotime($booking->event_date));
+                
                 $events[] = [
                     'id' => $booking->id,
                     'title' => $booking->event_name . ' - ' . $booking->applicant_name,
-                    'start' => $booking->event_date . 'T' . $startTime,
-                    'end' => $booking->event_date . 'T' . $endTime,
+                    'start' => $eventDate . 'T' . $startTime,
+                    'end' => $eventDate . 'T' . $endTime,
                     'backgroundColor' => $backgroundColor,
                     'borderColor' => $borderColor,
                     'textColor' => '#ffffff',
@@ -660,11 +663,14 @@ class CitizenDashboardController extends Controller
                     $endTime .= ':00';
                 }
                 
+                // Fix date formatting - extract just the date part to avoid double "T"
+                $eventDate = date('Y-m-d', strtotime($booking->event_date));
+                
                 $events[] = [
                     'id' => $booking->id,
                     'title' => $booking->event_name . ' - ' . $booking->applicant_name,
-                    'start' => $booking->event_date . 'T' . $startTime,
-                    'end' => $booking->event_date . 'T' . $endTime,
+                    'start' => $eventDate . 'T' . $startTime,
+                    'end' => $eventDate . 'T' . $endTime,
                     'backgroundColor' => $backgroundColor,
                     'borderColor' => $borderColor,
                     'textColor' => '#ffffff',
