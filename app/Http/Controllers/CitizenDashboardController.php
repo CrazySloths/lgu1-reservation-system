@@ -129,12 +129,10 @@ class CitizenDashboardController extends Controller
     /**
      * Show facility reservation page
      */
-    public function reservations()
+    public function reservations(Request $request)
     {
-        $user = Auth::user();
-        
-        if(!$user)
-        {
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
             return redirect('/login')->with('error', 'Please log in to view reservations.');
 
             try
@@ -232,11 +230,10 @@ class CitizenDashboardController extends Controller
     /**
      * Show user's reservation history
      */
-    public function reservationHistory()
+    public function reservationHistory(Request $request)
     {
-        $user = Auth::user();
-        if(!$user)
-        {
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
             return redirect('/login')->with('error', 'Please log in to view reservation history.');
         }
         try
@@ -337,11 +334,10 @@ class CitizenDashboardController extends Controller
     /**
      * Show user profile
      */
-    public function profile()
+    public function profile(Request $request)
     {
-        $user = Auth::user();
-        if(!$user)
-        {
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
             return redirect('/login')->with('error', 'Please log in to view your profile.');
         }
         $user->full_name = $user->name ?? $user->first_name . ' ' . $user->last_name;
@@ -363,9 +359,8 @@ class CitizenDashboardController extends Controller
             'address' => 'required|string|max:500',
             'date_of_birth' => 'required|date|before:today',
         ]);
-    $user = Auth::user();
-        if(!$user)
-        {
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
             return back()->with('error', 'Authentication required. Please log in again.');
         }
         try
@@ -396,13 +391,10 @@ class CitizenDashboardController extends Controller
     /**
      * Show facility availability calendar
      */
-    public function viewAvailability()
+    public function viewAvailability(Request $request)
     {
-        
-        $user = Auth::user();
-
-        if(!$user)
-        {
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
             return redirect('/login')->with('error', 'Please log in to view facility availability.');
         }
         $user->full_name = $user->name ?? $user->first_name . ' ' . $user->last_name;
