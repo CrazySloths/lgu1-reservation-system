@@ -74,17 +74,8 @@ class CitizenDashboardController extends Controller
      */
     public function index(Request $request)
     {
-        $user = $this->getAuthenticatedUser($request);
-        if (!$user) {
-            \Log::warning('CITIZEN DASHBOARD: No user found - redirecting to login', [
-                'has_laravel_auth' => Auth::check(),
-                'has_sso_session' => $request->session()->has('sso_user'),
-                'url_params' => $request->all()
-            ]);
-            
-            return redirect('/login')->with('error', 'Please log in to access the dashboard.');
-        }
-        
+        $user = Auth::user();
+
         try
         {
             // available facilities (global static)
@@ -131,21 +122,13 @@ class CitizenDashboardController extends Controller
      */
     public function reservations(Request $request)
     {
-        $user = $this->getAuthenticatedUser($request);
-        if (!$user) {
-            return redirect('/login')->with('error', 'Please log in to view reservations.');
-
-            try
-            {
-                $facilities = Facility::where('status', 'active')->get();
-                \Log::info('Citizen: Loaded facilities from database.');
-            }
-            catch(Exception $e)
-            {
-                \Log::error('Database Error loading facilities:', ['error' => $e->getMessage()]);
-                $facilities = collect([]);
-            }
-        }
+        $user = Auth::user();
+        $reservations = Booking::where('user_id', $user->id)
+                               ->with('facility')
+                               ->orderBy('created_at', 'desc')
+                               ->get();
+        return view('citizen.reservations', compact('reservations'));
+        
 
         // Add properties for Blade template compatibility
         $user->full_name = $user->name;
@@ -232,10 +215,7 @@ class CitizenDashboardController extends Controller
      */
     public function reservationHistory(Request $request)
     {
-        $user = $this->getAuthenticatedUser($request);
-        if (!$user) {
-            return redirect('/login')->with('error', 'Please log in to view reservation history.');
-        }
+        $user = Auth::user();
         try
         {
             $reservations = \App\Models\Booking::where('user_id', $user->id)
@@ -336,10 +316,7 @@ class CitizenDashboardController extends Controller
      */
     public function profile(Request $request)
     {
-        $user = $this->getAuthenticatedUser($request);
-        if (!$user) {
-            return redirect('/login')->with('error', 'Please log in to view your profile.');
-        }
+        $user = Auth::user();
         $user->full_name = $user->name ?? $user->first_name . ' ' . $user->last_name;
         $user->avatar_initials = strtoupper(substr($user->first_name ?? 'U', 0, 1) . substr($user->last_name ?? 'U', 0, 1));
       
@@ -359,10 +336,7 @@ class CitizenDashboardController extends Controller
             'address' => 'required|string|max:500',
             'date_of_birth' => 'required|date|before:today',
         ]);
-        $user = $this->getAuthenticatedUser($request);
-        if (!$user) {
-            return back()->with('error', 'Authentication required. Please log in again.');
-        }
+        $user = Auth::user();
         try
         {
             $user->update([
@@ -393,10 +367,7 @@ class CitizenDashboardController extends Controller
      */
     public function viewAvailability(Request $request)
     {
-        $user = $this->getAuthenticatedUser($request);
-        if (!$user) {
-            return redirect('/login')->with('error', 'Please log in to view facility availability.');
-        }
+        $user = Auth::user();
         $user->full_name = $user->name ?? $user->first_name . ' ' . $user->last_name;
         $user->avatar_initials = strtoupper(substr($user->first_name ?? 'U', 0, 1) . substr($user->last_name ?? 'U', 0, 1));
         try
