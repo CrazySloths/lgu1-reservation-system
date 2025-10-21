@@ -16,17 +16,17 @@ use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\Admin\ScheduleConflictController;
 
 // ============================================
-// SSO AUTHENTICATION ROUTES
+// SSO AUTHENTICATION ROUTES - TEMPORARILY DISABLED
 // ============================================
 
-Route::middleware(['web'])->group(function () {
-    Route::get('/sso/login', [SsoController::class, 'login'])->name('sso.login');
-});
+// Route::middleware(['web'])->group(function () {
+//     Route::get('/sso/login', [SsoController::class, 'login'])->name('sso.login');
+// });
 
-// Helpful redirect for users who access the system directly
-Route::get('/login', function() {
-    return redirect()->away('https://local-government-unit-1-ph.com/public/login.php');
-})->name('login');
+// // Helpful redirect for users who access the system directly
+// Route::get('/login', function() {
+//     return redirect()->away('https://local-government-unit-1-ph.com/public/login.php');
+// })->name('login');
 
 // ============================================
 // ADMIN PORTAL ROUTES (Protected)
@@ -190,7 +190,7 @@ Route::get('/calendar', function() {
 Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('logout');
 
 // Citizen Authentication Routes (No middleware - auth handled by SsoController)
-Route::prefix('citizen')->group(function () {
+Route::prefix('citizen')->middleware('auth')->group(function () {
     
     // 🚀 CRITICAL FIX: DASHBOARD ROUTE
     // The dashboard is the landing page for SSO. It must run the SSO middleware first,
