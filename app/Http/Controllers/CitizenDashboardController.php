@@ -103,7 +103,7 @@ class CitizenDashboardController extends Controller
         if (file_exists($facilitiesFile)) {
             $data = json_decode(file_get_contents($facilitiesFile), true);
             if ($data && is_array($data)) {
-                \Log::info('🎯 CITIZEN: Loaded facilities from persistent file:', ['count' => count($data)]);
+                \Log::info('CITIZEN: Loaded facilities from persistent file:', ['count' => count($data)]);
                 $facilities = collect($data)->map(function($facility) {
                     return (object) $facility;
                 });
@@ -258,10 +258,10 @@ class CitizenDashboardController extends Controller
                     ];
                 });
                 
-                \Log::info('🎯 RESERVATION HISTORY: Loaded from persistent file', ['user_id' => $user->id, 'count' => $reservations->count()]);
+                \Log::info('RESERVATION HISTORY: Loaded from persistent file', ['user_id' => $user->id, 'count' => $reservations->count()]);
             }
         } else {
-            \Log::warning('🎯 RESERVATION HISTORY: No bookings file found - showing empty list');
+            \Log::warning('RESERVATION HISTORY: No bookings file found - showing empty list');
         }
         
         return view('citizen.reservation-history', compact('user', 'reservations'));
@@ -349,7 +349,7 @@ class CitizenDashboardController extends Controller
         if (file_exists($facilitiesFile)) {
             $data = json_decode(file_get_contents($facilitiesFile), true);
             if ($data && is_array($data)) {
-                \Log::info('🎯 CITIZEN AVAILABILITY: Loaded facilities from persistent file:', ['count' => count($data)]);
+                \Log::info('CITIZEN AVAILABILITY: Loaded facilities from persistent file:', ['count' => count($data)]);
                 $facilities = collect($data)->map(function($facility) {
                     return (object) $facility;
                 });
@@ -435,12 +435,12 @@ class CitizenDashboardController extends Controller
                                 ->where('status', 'approved') // Citizens only see approved bookings
                                 ->get();
                                 
-                \Log::info('🎯 CITIZEN API: Loaded bookings from database:', [
+                \Log::info('CITIZEN API: Loaded bookings from database:', [
                     'facility_id' => $facilityId,
                     'total_bookings' => $bookings->count()
                 ]);
             } catch (\Exception $e) {
-                \Log::warning('🎯 CITIZEN API: Database query failed, trying file storage', ['error' => $e->getMessage()]);
+                \Log::warning('CITIZEN API: Database query failed, trying file storage', ['error' => $e->getMessage()]);
                 
                 // Fallback to file storage for bookings
                 $bookingsFile = storage_path('app/bookings_data.json');
@@ -457,14 +457,14 @@ class CitizenDashboardController extends Controller
                         }
                         $bookings = collect($fileBookings);
                         
-                        \Log::info('🎯 CITIZEN API: Loaded bookings from persistent file:', [
+                        \Log::info('CITIZEN API: Loaded bookings from persistent file:', [
                             'facility_id' => $facilityId,
                             'total_bookings' => count($allBookings),
                             'facility_bookings' => count($fileBookings)
                         ]);
                     }
                 } else {
-                    \Log::warning('🎯 CITIZEN API: bookings_data.json not found, using empty array');
+                    \Log::warning('CITIZEN API: bookings_data.json not found, using empty array');
                 }
             }
             
@@ -506,7 +506,7 @@ class CitizenDashboardController extends Controller
                 ];
             }
 
-            \Log::info('🎯 CITIZEN API: Facility Bookings Response:', [
+            \Log::info('CITIZEN API: Facility Bookings Response:', [
                 'facility_id' => $facilityId,
                 'events_count' => count($events),
                 'events' => $events
@@ -538,11 +538,11 @@ class CitizenDashboardController extends Controller
                                 ->where('status', 'approved') // Citizens only see approved bookings
                                 ->get();
                                 
-                \Log::info('🎯 CITIZEN API: Loaded ALL bookings from database:', [
+                \Log::info('CITIZEN API: Loaded ALL bookings from database:', [
                     'total_bookings' => $bookings->count()
                 ]);
             } catch (\Exception $e) {
-                \Log::warning('🎯 CITIZEN API: Database query failed, trying file storage', ['error' => $e->getMessage()]);
+                \Log::warning('CITIZEN API: Database query failed, trying file storage', ['error' => $e->getMessage()]);
                 
                 // Fallback to file storage for bookings
                 $bookingsFile = storage_path('app/bookings_data.json');
@@ -559,12 +559,12 @@ class CitizenDashboardController extends Controller
                         }
                         $bookings = collect($fileBookings);
                         
-                        \Log::info('🎯 CITIZEN API: Loaded ALL bookings from persistent file:', [
+                        \Log::info('CITIZEN API: Loaded ALL bookings from persistent file:', [
                             'total_bookings' => count($fileBookings)
                         ]);
                     }
                 } else {
-                    \Log::warning('🎯 CITIZEN API: bookings_data.json not found');
+                    \Log::warning('CITIZEN API: bookings_data.json not found');
                 }
             }
             
@@ -609,7 +609,7 @@ class CitizenDashboardController extends Controller
                 ];
             }
 
-            \Log::info('🎯 CITIZEN API: ALL Facility Bookings Response:', [
+            \Log::info('CITIZEN API: ALL Facility Bookings Response:', [
                 'events_count' => count($events)
             ]);
 
