@@ -18,22 +18,28 @@ class BookingExtensionController extends Controller
     {
         $booking = Booking::findOrFail($bookingId);
         
-        // Verify ownership
+        // --- SECURITY FIX: ENFORCE AUTHENTICATION AND ACCESS CONTROL (OLAC) ---
         $user = Auth::user();
-        if (!$user && session('citizen_id')) {
-            $userId = session('citizen_id');
-        } elseif ($user) {
-            $userId = $user->id;
-        } else {
-            $userId = 1; // Default fallback
+        
+        // 1. Enforce Authentication: Remove static ID (1) and session fallback.
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Authentication required.'
+            ], 401); // 401 Unauthorized
         }
         
+        $userId = $user->id; 
+        
+        // 2. Object-Level Access Control (OLAC): Verify booking ownership.
+        // This prevents User A from extending User B's booking.
         if ($booking->user_id != $userId) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized access'
-            ], 403);
+                'message' => 'Unauthorized access: This booking is not yours.'
+            ], 403); // 403 Forbidden
         }
+        // --- END SECURITY FIX ---
         
         // Validate the booking can be extended
         if (!in_array($booking->status, ['approved', 'pending'])) {
@@ -87,19 +93,22 @@ class BookingExtensionController extends Controller
         
         $booking = Booking::findOrFail($bookingId);
         
-        // Verify ownership
+        // --- SECURITY FIX: ENFORCE AUTHENTICATION AND ACCESS CONTROL (OLAC) ---
         $user = Auth::user();
-        if (!$user && session('citizen_id')) {
-            $userId = session('citizen_id');
-        } elseif ($user) {
-            $userId = $user->id;
-        } else {
-            $userId = 1; // Default fallback
+
+        // 1. Enforce Authentication: Remove static ID (1) and session fallback.
+        if (!$user) {
+            return redirect()->back()->with('error', 'Authentication required.');
         }
+
+        $userId = $user->id; 
         
+        // 2. Object-Level Access Control (OLAC): Verify booking ownership.
+        // This prevents unauthorized extension requests.
         if ($booking->user_id != $userId) {
-            return redirect()->back()->with('error', 'Unauthorized access');
+            return redirect()->back()->with('error', 'Unauthorized access: This booking is not yours.');
         }
+        // --- END SECURITY FIX ---
         
         // Validate the booking can be extended
         if (!in_array($booking->status, ['approved', 'pending'])) {
@@ -151,4 +160,3 @@ class BookingExtensionController extends Controller
                    Carbon::parse($newEndTime)->format('h:i A'));
     }
 }
-

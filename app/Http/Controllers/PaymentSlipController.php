@@ -6,6 +6,7 @@ use App\Models\PaymentSlip;
 use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 // use Barryvdh\DomPDF\Facade\Pdf;
 
 class PaymentSlipController extends Controller
@@ -17,21 +18,23 @@ class PaymentSlipController extends Controller
     {
         $user = Auth::user();
         
-        // Fallback for static authentication
+        // SECURITY FIX: Remove static fallback ID (ID=1) and enforce proper authentication.
         if (!$user) {
-            // Use default citizen user ID from static auth
-            $userId = 1; // Default citizen user ID
-        } else {
-            $userId = $user->id;
+             // If no user is authenticated, redirect to login to prevent unauthorized access.
+             return redirect('/login')->with('error', 'Authentication required to view payment slips.');
         }
         
-        $paymentSlips = PaymentSlip::where('user_id', $userId)
+        $userId = $user->id; // Use the authenticated user's ID.
+        
+        $paymentSlips = PaymentSlip::where('user_id', $userId) // ENSURE only the user's slips are loaded.
                                   ->with(['booking.facility', 'generatedBy'])
                                   ->orderBy('created_at', 'desc')
                                   ->get();
 
         return view('citizen.payment-slips.index', compact('paymentSlips'));
     }
+
+    //------------------------------------------------------------------------------------------------------------------
 
     /**
      * Display specific payment slip for citizen
@@ -40,21 +43,24 @@ class PaymentSlipController extends Controller
     {
         $user = Auth::user();
         
-        // Fallback for static authentication
+        // SECURITY FIX: Remove static fallback ID and enforce authentication.
         if (!$user) {
-            // Use default citizen user ID from static auth
-            $userId = 1; // Default citizen user ID
-        } else {
-            $userId = $user->id;
+             return redirect('/login')->with('error', 'Authentication required to view payment slips.');
         }
         
-        $paymentSlip = PaymentSlip::where('user_id', $userId)
+        $userId = $user->id;
+        
+        // SECURITY FIX: Use both the ID and user_id in the query to prevent
+        // viewing other users' slips (Object-Level Access Control).
+        $paymentSlip = PaymentSlip::where('user_id', $userId) 
                                  ->where('id', $id)
                                  ->with(['booking.facility', 'generatedBy'])
-                                 ->firstOrFail();
+                                 ->firstOrFail(); // Will throw 404 if slip is not found OR doesn't belong to the user.
 
         return view('citizen.payment-slips.show', compact('paymentSlip'));
     }
+
+    //------------------------------------------------------------------------------------------------------------------
 
     /**
      * Download payment slip as PDF for citizen
@@ -63,18 +69,19 @@ class PaymentSlipController extends Controller
     {
         $user = Auth::user();
         
-        // Fallback for static authentication
+        // SECURITY FIX: Remove static fallback ID and enforce authentication.
         if (!$user) {
-            // Use default citizen user ID from static auth
-            $userId = 1; // Default citizen user ID
-        } else {
-            $userId = $user->id;
+             return redirect('/login')->with('error', 'Authentication required to download payment slips.');
         }
         
-        $paymentSlip = PaymentSlip::where('user_id', $userId)
+        $userId = $user->id;
+        
+        // SECURITY FIX: Use both the ID and user_id in the query to prevent
+        // downloading other users' slips (Object-Level Access Control).
+        $paymentSlip = PaymentSlip::where('user_id', $userId) 
                                  ->where('id', $id)
                                  ->with(['booking.facility', 'generatedBy'])
-                                 ->firstOrFail();
+                                 ->firstOrFail(); 
 
         // For now, return the printable HTML view
         // TODO: Install barryvdh/laravel-dompdf for PDF generation
@@ -85,6 +92,8 @@ class PaymentSlipController extends Controller
         // return $pdf->download("payment-slip-{$paymentSlip->slip_number}.pdf");
     }
 
+    //------------------------------------------------------------------------------------------------------------------
+
     /**
      * Admin view all payment slips
      */
@@ -93,11 +102,11 @@ class PaymentSlipController extends Controller
         $status = $request->get('status', 'all');
         
         $paymentSlips = PaymentSlip::with(['booking.facility', 'user', 'generatedBy', 'paidByCashier'])
-                                  ->when($status !== 'all', function ($query) use ($status) {
-                                      return $query->where('status', $status);
-                                  })
-                                  ->orderBy('created_at', 'desc')
-                                  ->paginate(15);
+                                   ->when($status !== 'all', function ($query) use ($status) {
+                                       return $query->where('status', $status);
+                                   })
+                                   ->orderBy('created_at', 'desc')
+                                   ->paginate(15);
 
         $statusCounts = [
             'unpaid' => PaymentSlip::where('status', 'unpaid')->count(),
@@ -108,6 +117,8 @@ class PaymentSlipController extends Controller
 
         return view('admin.payment-slips.index', compact('paymentSlips', 'statusCounts', 'status'));
     }
+
+    //------------------------------------------------------------------------------------------------------------------
 
     /**
      * Mark payment slip as paid (Admin only)
@@ -136,7 +147,7 @@ class PaymentSlipController extends Controller
             'paid_by_cashier' => Auth::id()
         ]);
 
-        \Log::info('Payment Slip Marked as Paid:', [
+        Log::info('Payment Slip Marked as Paid:', [
             'slip_number' => $paymentSlip->slip_number,
             'paid_by_cashier' => Auth::id(),
             'payment_method' => $request->payment_method
@@ -147,6 +158,8 @@ class PaymentSlipController extends Controller
             'message' => 'Payment recorded successfully!'
         ]);
     }
+
+    //------------------------------------------------------------------------------------------------------------------
 
     /**
      * Mark expired payment slips (Admin/System function)
