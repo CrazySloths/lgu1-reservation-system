@@ -150,6 +150,43 @@
 </div>
 @endsection
 
+@push('styles')
+<style>
+/* Custom FullCalendar styling for better event display */
+.fc-event-title {
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+
+.fc-daygrid-event {
+    margin: 1px 2px !important;
+    padding: 2px 4px !important;
+    border-radius: 3px !important;
+    font-size: 11px !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    min-height: 18px !important;
+}
+
+.fc-daygrid-event-harness {
+    margin-bottom: 1px !important;
+}
+
+/* Ensure events don't get cut off */
+.fc-daygrid-day-events {
+    margin-bottom: 0 !important;
+}
+
+.fc-daygrid-day-frame {
+    min-height: 100px !important;
+}
+</style>
+@endpush
+
 @push('scripts')
 <!-- FullCalendar CDN -->
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
@@ -177,6 +214,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 right: 'dayGridMonth,timeGridWeek,timeGridDay'
             },
             events: [],
+            displayEventTime: false,  // Hide time prefix (10a, 8a)
+            eventDisplay: 'block',    // Show full event titles
+            dayMaxEvents: false,      // Show all events, no truncation
+            moreLinkClick: 'popover', // Show popover for many events
             eventDidMount: function(info) {
                 // Custom styling for events
                 if (info.event.backgroundColor) {
