@@ -459,11 +459,22 @@ class CitizenDashboardController extends Controller
                 $borderColor = $booking->status === 'approved' ? '#dc2626' : '#d97706';
                 
                 // Format events for FullCalendar
+                $startTime = $booking->start_time;
+                $endTime = $booking->end_time;
+                
+                // Ensure time has seconds (HH:MM:SS format)
+                if (substr_count($startTime, ':') === 1) {
+                    $startTime .= ':00';
+                }
+                if (substr_count($endTime, ':') === 1) {
+                    $endTime .= ':00';
+                }
+                
                 $events[] = [
                     'id' => $booking->id,
                     'title' => $booking->event_name . ' - ' . $booking->applicant_name,
-                    'start' => $booking->event_date . 'T' . $booking->start_time,
-                    'end' => $booking->event_date . 'T' . $booking->end_time,
+                    'start' => $booking->event_date . 'T' . $startTime,
+                    'end' => $booking->event_date . 'T' . $endTime,
                     'backgroundColor' => $backgroundColor,
                     'borderColor' => $borderColor,
                     'textColor' => '#ffffff',
@@ -476,9 +487,10 @@ class CitizenDashboardController extends Controller
                 ];
             }
 
-            \Log::info('Facility Bookings Response (STATIC DATA):', [
+            \Log::info('🎯 CITIZEN API: Facility Bookings Response:', [
                 'facility_id' => $facilityId,
-                'events_count' => count($events)
+                'events_count' => count($events),
+                'events' => $events
             ]);
 
             return response()->json($events);
