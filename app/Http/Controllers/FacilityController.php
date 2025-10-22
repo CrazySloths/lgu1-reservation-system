@@ -506,10 +506,14 @@ class FacilityController extends Controller
             }
             
             // Try to get bookings from database first
+            // ONLY show bookings with PAID payment slips
             $bookings = collect();
             try {
-                $bookings = Booking::with('facility')
+                $bookings = Booking::with(['facility', 'paymentSlip'])
                                 ->whereIn('status', ['approved', 'pending'])
+                                ->whereHas('paymentSlip', function($query) {
+                                    $query->where('status', 'paid');
+                                })
                                 ->get();
             } catch (\Exception $e) {
                 \Log::warning('getAllEvents: Database query failed, trying file storage', ['error' => $e->getMessage()]);
@@ -617,8 +621,12 @@ class FacilityController extends Controller
     
     public function getEvents($facility_id)
     {
+        // ONLY show bookings with PAID payment slips
         $bookings = Booking::where('facility_id', $facility_id)
                              ->whereIn('status', ['approved', 'pending'])
+                             ->whereHas('paymentSlip', function($query) {
+                                 $query->where('status', 'paid');
+                             })
                              ->get();
 
         $events = [];
