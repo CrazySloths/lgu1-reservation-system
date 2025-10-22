@@ -52,7 +52,7 @@ class SsoAuthMiddleware
                 $request->session()->regenerate();
                 
                 // Continue to the requested page
-                return $next($request);
+                return redirect()->intended('/citizen');
             } else {
                 Log::warning('SSO Middleware: No user found from SSO parameters', [
                     'user_id' => $userId,
