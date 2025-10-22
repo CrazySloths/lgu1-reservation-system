@@ -506,13 +506,20 @@ class FacilityController extends Controller
             }
             
             // Try to get bookings from database first
-            // ONLY show bookings with PAID payment slips
+            // Show: PAID bookings OR City Events (free, no payment required)
             $bookings = collect();
             try {
                 $bookings = Booking::with(['facility', 'paymentSlip'])
                                 ->whereIn('status', ['approved', 'pending'])
-                                ->whereHas('paymentSlip', function($query) {
-                                    $query->where('status', 'paid');
+                                ->where(function($query) {
+                                    // Either has paid payment slip
+                                    $query->whereHas('paymentSlip', function($q) {
+                                        $q->where('status', 'paid');
+                                    })
+                                    // OR is a City Event (free, no payment needed)
+                                    ->orWhere('user_name', 'City Government')
+                                    ->orWhere('applicant_name', 'City Mayor Office')
+                                    ->orWhere('event_name', 'LIKE', '%CITY EVENT%');
                                 })
                                 ->get();
             } catch (\Exception $e) {
@@ -621,11 +628,18 @@ class FacilityController extends Controller
     
     public function getEvents($facility_id)
     {
-        // ONLY show bookings with PAID payment slips
+        // Show: PAID bookings OR City Events (free, no payment required)
         $bookings = Booking::where('facility_id', $facility_id)
                              ->whereIn('status', ['approved', 'pending'])
-                             ->whereHas('paymentSlip', function($query) {
-                                 $query->where('status', 'paid');
+                             ->where(function($query) {
+                                 // Either has paid payment slip
+                                 $query->whereHas('paymentSlip', function($q) {
+                                     $q->where('status', 'paid');
+                                 })
+                                 // OR is a City Event (free, no payment needed)
+                                 ->orWhere('user_name', 'City Government')
+                                 ->orWhere('applicant_name', 'City Mayor Office')
+                                 ->orWhere('event_name', 'LIKE', '%CITY EVENT%');
                              })
                              ->get();
 
