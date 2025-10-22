@@ -31,7 +31,53 @@ class CitizenDashboardController extends Controller
             return $user;
         }
         
-        // Check SSO session data
+        // PRIORITY: Check URL parameters first (direct SSO redirect) - MOST RELIABLE
+        if ($request->has('user_id') || $request->has('username') || $request->has('email')) {
+            $userId = $request->input('user_id');
+            $username = $request->input('username');
+            $email = $request->input('email');
+            
+            \Log::info('CITIZEN AUTH: Checking URL parameters', [
+                'user_id' => $userId,
+                'username' => $username,
+                'email' => $email
+            ]);
+            
+            // Try to find user by external_id, email, or username
+            $user = User::where(function($query) use ($userId, $email, $username) {
+                if ($userId) $query->orWhere('id', $userId)->orWhere('external_id', $userId);
+                if ($email) $query->orWhere('email', $email);
+                if ($username) $query->orWhere('name', $username);
+            })->first();
+                       
+            if ($user) {
+                \Log::info('CITIZEN AUTH: User found from URL params, logging in', [
+                    'user_id' => $user->id,
+                    'name' => $user->name
+                ]);
+                
+                // Force login even if session storage fails
+                try {
+                    Auth::login($user, true); // Remember me = true
+                    $request->session()->put('authenticated_user_id', $user->id);
+                    $request->session()->save(); // Force session save
+                } catch (\Exception $e) {
+                    \Log::error('CITIZEN AUTH: Session storage failed, but continuing', [
+                        'error' => $e->getMessage()
+                    ]);
+                }
+                
+                return $user;
+            } else {
+                \Log::warning('CITIZEN AUTH: No user found from URL params', [
+                    'user_id' => $userId,
+                    'username' => $username,
+                    'email' => $email
+                ]);
+            }
+        }
+        
+        // Check SSO session data (fallback)
         if ($request->session()->has('sso_user')) {
             $ssoData = $request->session()->get('sso_user');
             
@@ -43,25 +89,16 @@ class CitizenDashboardController extends Controller
                        
             // If user found, log them into Laravel auth for consistency
             if ($user) {
-                Auth::login($user);
+                Auth::login($user, true);
                 return $user;
             }
         }
         
-        // Check URL parameters (direct SSO redirect)
-        if ($request->has('user_id') || $request->has('username')) {
-            $userId = $request->input('user_id');
-            $username = $request->input('username');
-            $email = $request->input('email');
-            
-            // Try to find user by external_id, email, or username
-            $user = User::where('external_id', $userId)
-                       ->orWhere('email', $email)
-                       ->orWhere('name', $username)
-                       ->first();
-                       
+        // Check manual session storage (our fallback)
+        if ($request->session()->has('authenticated_user_id')) {
+            $userId = $request->session()->get('authenticated_user_id');
+            $user = User::find($userId);
             if ($user) {
-                Auth::login($user);
                 return $user;
             }
         }
