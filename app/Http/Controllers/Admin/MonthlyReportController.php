@@ -88,11 +88,12 @@ class MonthlyReportController extends Controller
             ->sortKeys();
 
         // Top users (by booking count)
+        // Group by applicant_name since dummy data has user_id = NULL
         $topUsers = $bookings->where('status', 'approved')
-            ->groupBy('user_id')
+            ->groupBy('applicant_name')
             ->map(function ($userBookings) {
                 return [
-                    'user_name' => $userBookings->first()->user_name ?? $userBookings->first()->applicant_name ?? 'N/A',
+                    'user_name' => $userBookings->first()->applicant_name ?? $userBookings->first()->user_name ?? 'N/A',
                     'bookings_count' => $userBookings->count(),
                     'total_spent' => $userBookings->sum('total_fee'),
                 ];

@@ -51,8 +51,8 @@
                     <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
                         <td class="py-3 px-4 text-sm text-gray-800">{{ $booking->id }}</td>
                         <td class="py-3 px-4 text-sm text-gray-800">{{ $booking->facility->name }}</td>
-                        <td class="py-3 px-4 text-sm text-gray-800">{{ $booking->start_time }}</td>
-                        <td class="py-3 px-4 text-sm text-gray-800">{{ $booking->end_time }}</td>
+                        <td class="py-3 px-4 text-sm text-gray-800">{{ \Carbon\Carbon::parse($booking->start_time)->format('g:i A') }}</td>
+                        <td class="py-3 px-4 text-sm text-gray-800">{{ \Carbon\Carbon::parse($booking->end_time)->format('g:i A') }}</td>
                         <td class="py-3 px-4 text-sm font-semibold">
                             @if($booking->status === 'approved')
                                 <span class="text-green-600">{{ ucfirst($booking->status) }}</span>

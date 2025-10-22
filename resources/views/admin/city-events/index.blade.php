@@ -90,7 +90,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-gray-900">{{ \Carbon\Carbon::parse($event->event_date)->format('M d, Y') }}</div>
-                                    <div class="text-sm text-gray-500">{{ $event->start_time }} - {{ $event->end_time }}</div>
+                                    <div class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($event->start_time)->format('g:i A') }} - {{ \Carbon\Carbon::parse($event->end_time)->format('g:i A') }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     {{ number_format($event->expected_attendees) }}

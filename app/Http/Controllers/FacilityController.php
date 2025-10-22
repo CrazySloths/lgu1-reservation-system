@@ -506,10 +506,21 @@ class FacilityController extends Controller
             }
             
             // Try to get bookings from database first
+            // Show: PAID bookings OR City Events (free, no payment required)
             $bookings = collect();
             try {
-                $bookings = Booking::with('facility')
+                $bookings = Booking::with(['facility', 'paymentSlip'])
                                 ->whereIn('status', ['approved', 'pending'])
+                                ->where(function($query) {
+                                    // Either has paid payment slip
+                                    $query->whereHas('paymentSlip', function($q) {
+                                        $q->where('status', 'paid');
+                                    })
+                                    // OR is a City Event (free, no payment needed)
+                                    ->orWhere('user_name', 'City Government')
+                                    ->orWhere('applicant_name', 'City Mayor Office')
+                                    ->orWhere('event_name', 'LIKE', '%CITY EVENT%');
+                                })
                                 ->get();
             } catch (\Exception $e) {
                 \Log::warning('getAllEvents: Database query failed, trying file storage', ['error' => $e->getMessage()]);
@@ -569,11 +580,18 @@ class FacilityController extends Controller
                     $eventDate = substr($eventDate, 0, 10);
                 }
                 
+                // Format times for display (avoid timezone issues)
+                $startTime = $bookingArray['start_time'] ?? '09:00';
+                $endTime = $bookingArray['end_time'] ?? '17:00';
+                $startTimeFormatted = \Carbon\Carbon::parse($startTime)->format('g:i A');
+                $endTimeFormatted = \Carbon\Carbon::parse($endTime)->format('g:i A');
+                $eventDateFormatted = \Carbon\Carbon::parse($eventDate)->format('M d, Y');
+                
                 $events[] = [
                     'id' => $bookingArray['id'] ?? 0,
                     'title' => $title,
-                    'start' => $eventDate . 'T' . ($bookingArray['start_time'] ?? '09:00'),
-                    'end' => $eventDate . 'T' . ($bookingArray['end_time'] ?? '17:00'),
+                    'start' => $eventDate . 'T' . $startTime,
+                    'end' => $eventDate . 'T' . $endTime,
                     'backgroundColor' => $backgroundColor,
                     'borderColor' => $backgroundColor,
                     'textColor' => '#FFFFFF',
@@ -584,7 +602,10 @@ class FacilityController extends Controller
                         'attendees' => $bookingArray['expected_attendees'] ?? 0,
                         'status' => $bookingArray['status'] ?? 'pending',
                         'description' => $bookingArray['event_description'] ?? '',
-                        'isCityEvent' => $isCityEvent
+                        'isCityEvent' => $isCityEvent,
+                        'event_date_formatted' => $eventDateFormatted,
+                        'start_time_formatted' => $startTimeFormatted,
+                        'end_time_formatted' => $endTimeFormatted
                     ]
                 ];
             }
@@ -617,8 +638,19 @@ class FacilityController extends Controller
     
     public function getEvents($facility_id)
     {
+        // Show: PAID bookings OR City Events (free, no payment required)
         $bookings = Booking::where('facility_id', $facility_id)
                              ->whereIn('status', ['approved', 'pending'])
+                             ->where(function($query) {
+                                 // Either has paid payment slip
+                                 $query->whereHas('paymentSlip', function($q) {
+                                     $q->where('status', 'paid');
+                                 })
+                                 // OR is a City Event (free, no payment needed)
+                                 ->orWhere('user_name', 'City Government')
+                                 ->orWhere('applicant_name', 'City Mayor Office')
+                                 ->orWhere('event_name', 'LIKE', '%CITY EVENT%');
+                             })
                              ->get();
 
         $events = [];
@@ -741,11 +773,8 @@ class FacilityController extends Controller
      */
     public function showUserBookings()
     {
-        // Change this to the exact user name from your database to see their bookings.
-        $current_user_name = 'test 1'; 
-        
-        $bookings = Booking::where('user_name', $current_user_name)
-                             ->with('facility')
+        // Show ALL bookings for admins (no filtering by user)
+        $bookings = Booking::with('facility')
                              ->orderBy('created_at', 'desc')
                              ->get();
         

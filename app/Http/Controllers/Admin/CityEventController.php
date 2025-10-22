@@ -17,9 +17,12 @@ class CityEventController extends Controller
      */
     public function index()
     {
-        $cityEvents = Booking::where('user_name', 'City Government')
-            ->orWhere('event_name', 'LIKE', '%City Event%')
-            ->orWhere('applicant_name', 'City Mayor Office')
+        $cityEvents = Booking::where(function($query) {
+                $query->where('user_name', 'City Government')
+                      ->orWhere('event_name', 'LIKE', '%City Event%')
+                      ->orWhere('event_name', 'LIKE', '%CITY EVENT%')
+                      ->orWhere('applicant_name', 'City Mayor Office');
+            })
             ->orderBy('event_date', 'desc')
             ->paginate(15);
 
@@ -31,7 +34,7 @@ class CityEventController extends Controller
      */
     public function create()
     {
-        $facilities = Facility::where('status', 'available')->get();
+        $facilities = Facility::where('status', 'active')->get();
         return view('admin.city-events.create', compact('facilities'));
     }
 
@@ -130,7 +133,7 @@ class CityEventController extends Controller
     public function edit($id)
     {
         $cityEvent = Booking::findOrFail($id);
-        $facilities = Facility::where('status', 'available')->get();
+        $facilities = Facility::where('status', 'active')->get();
         return view('admin.city-events.edit', compact('cityEvent', 'facilities'));
     }
 

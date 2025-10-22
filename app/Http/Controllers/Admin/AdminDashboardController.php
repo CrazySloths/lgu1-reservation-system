@@ -49,32 +49,21 @@ class AdminDashboardController extends Controller
         
         // Overdue Payments (payment slips past due date and not paid)
         $overduePayments = PaymentSlip::with(['booking.facility', 'booking.user'])
-            ->where('status', 'pending')
+            ->where('status', 'unpaid')
             ->where('due_date', '<', now())
             ->orderBy('due_date', 'asc')
             ->get();
         
-        // Monthly Statistics (current month)
-        $currentMonth = now()->format('Y-m');
+        // Monthly Statistics (ALL TIME for better overview)
         $monthlyStats = [
-            'bookings_count' => Booking::whereRaw("DATE_FORMAT(event_date, '%Y-%m') = ?", [$currentMonth])->count(),
-            'approved_bookings' => Booking::whereRaw("DATE_FORMAT(event_date, '%Y-%m') = ?", [$currentMonth])
-                                        ->where('status', 'approved')
-                                        ->count(),
-            'revenue' => PaymentSlip::whereRaw("DATE_FORMAT(created_at, '%Y-%m') = ?", [$currentMonth])
-                                    ->where('status', 'paid')
-                                    ->sum('amount'),
-            'pending_revenue' => PaymentSlip::whereRaw("DATE_FORMAT(created_at, '%Y-%m') = ?", [$currentMonth])
-                                           ->where('status', 'pending')
-                                           ->sum('amount')
+            'bookings_count' => Booking::count(),
+            'approved_bookings' => Booking::where('status', 'approved')->count(),
+            'revenue' => PaymentSlip::where('status', 'paid')->sum('amount'),
+            'pending_revenue' => PaymentSlip::where('status', 'unpaid')->sum('amount')
         ];
         
-        // Facility Statistics (bookings per facility this month)
-        $facilityStats = Facility::withCount([
-            'bookings' => function ($query) use ($currentMonth) {
-                $query->whereRaw("DATE_FORMAT(event_date, '%Y-%m') = ?", [$currentMonth]);
-            }
-        ])
+        // Facility Statistics (total bookings per facility)
+        $facilityStats = Facility::withCount('bookings')
         ->get()
         ->map(function ($facility) {
             return (object) [
@@ -96,11 +85,17 @@ class AdminDashboardController extends Controller
         // Recent Activity (last 5 booking updates)
         $recentActivity = $this->getRecentActivity();
         
+        // Today's Events Count
+        $todaysEventsCount = Booking::where('status', 'approved')
+            ->whereDate('event_date', now()->toDateString())
+            ->count();
+        
         \Log::info("Admin Dashboard loaded with REAL data for: " . $admin->name, [
             'pending_approvals' => $pendingApprovalsCount,
             'conflicts' => $conflicts->count(),
             'overdue_payments' => $overduePayments->count(),
-            'monthly_bookings' => $monthlyStats['bookings_count']
+            'monthly_bookings' => $monthlyStats['bookings_count'],
+            'todays_events' => $todaysEventsCount
         ]);
         
         return view('admin.dashboard', compact(
@@ -112,7 +107,8 @@ class AdminDashboardController extends Controller
             'monthlyStats',
             'facilityStats',
             'upcomingReservations',
-            'recentActivity'
+            'recentActivity',
+            'todaysEventsCount'
         ));
     }
     
@@ -229,7 +225,7 @@ class AdminDashboardController extends Controller
         $stats = [
             'pending_approvals' => Booking::where('status', 'pending')->count(),
             'conflicts' => $this->detectScheduleConflicts()->count(),
-            'overdue_payments' => PaymentSlip::where('status', 'pending')
+            'overdue_payments' => PaymentSlip::where('status', 'unpaid')
                                            ->where('due_date', '<', now())
                                            ->count(),
             'todays_events' => Booking::where('status', 'approved')
