@@ -192,17 +192,8 @@ Route::get('/calendar', function() {
 Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('logout');
 
 // Citizen Authentication Routes (No middleware - auth handled by SsoController)
-Route::prefix('citizen')->middleware('sso')->group(function () {
-    
-    // 🚀 CRITICAL FIX: DASHBOARD ROUTE
-    // The dashboard is the landing page for SSO. It must run the SSO middleware first,
-    // then apply standard authentication check.
-    Route::get('/dashboard', [CitizenDashboardController::class, 'index'])
-        ->middleware([
-            \App\Http\Middleware\SsoAuthMiddleware::class, 
-            'auth:web'                                     
-        ])
-        ->name('citizen.dashboard');
+Route::prefix('citizen')->group(function () {
+    Route::get('/dashboard', [CitizenDashboardController::class, 'index'])->name('citizen.dashboard');
 
     Route::middleware('auth:web')->group(function () {
         
