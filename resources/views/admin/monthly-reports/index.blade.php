@@ -162,15 +162,15 @@
                 <tbody class="bg-white divide-y divide-gray-200">
                     @foreach($topUsers as $index => $user)
                         <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold">
                                 @if($index === 0)
-                                    🥇
+                                    <i class="fas fa-medal text-yellow-500 text-lg"></i>
                                 @elseif($index === 1)
-                                    🥈
+                                    <i class="fas fa-medal text-gray-400 text-lg"></i>
                                 @elseif($index === 2)
-                                    🥉
+                                    <i class="fas fa-medal text-orange-600 text-lg"></i>
                                 @else
-                                    {{ $index + 1 }}
+                                    <span class="text-gray-900">{{ $index + 1 }}</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $user['user_name'] }}</td>
