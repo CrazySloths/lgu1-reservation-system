@@ -580,11 +580,18 @@ class FacilityController extends Controller
                     $eventDate = substr($eventDate, 0, 10);
                 }
                 
+                // Format times for display (avoid timezone issues)
+                $startTime = $bookingArray['start_time'] ?? '09:00';
+                $endTime = $bookingArray['end_time'] ?? '17:00';
+                $startTimeFormatted = \Carbon\Carbon::parse($startTime)->format('g:i A');
+                $endTimeFormatted = \Carbon\Carbon::parse($endTime)->format('g:i A');
+                $eventDateFormatted = \Carbon\Carbon::parse($eventDate)->format('M d, Y');
+                
                 $events[] = [
                     'id' => $bookingArray['id'] ?? 0,
                     'title' => $title,
-                    'start' => $eventDate . 'T' . ($bookingArray['start_time'] ?? '09:00'),
-                    'end' => $eventDate . 'T' . ($bookingArray['end_time'] ?? '17:00'),
+                    'start' => $eventDate . 'T' . $startTime,
+                    'end' => $eventDate . 'T' . $endTime,
                     'backgroundColor' => $backgroundColor,
                     'borderColor' => $backgroundColor,
                     'textColor' => '#FFFFFF',
@@ -595,7 +602,10 @@ class FacilityController extends Controller
                         'attendees' => $bookingArray['expected_attendees'] ?? 0,
                         'status' => $bookingArray['status'] ?? 'pending',
                         'description' => $bookingArray['event_description'] ?? '',
-                        'isCityEvent' => $isCityEvent
+                        'isCityEvent' => $isCityEvent,
+                        'event_date_formatted' => $eventDateFormatted,
+                        'start_time_formatted' => $startTimeFormatted,
+                        'end_time_formatted' => $endTimeFormatted
                     ]
                 ];
             }

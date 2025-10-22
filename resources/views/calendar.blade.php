@@ -146,8 +146,8 @@
                         <div class="text-left space-y-2">
                             <p><strong>Facility:</strong> ${props.facility_name || 'N/A'}</p>
                             <p><strong>Applicant:</strong> ${props.applicant || 'N/A'}</p>
-                            <p><strong>Date:</strong> ${event.start.toLocaleDateString()}</p>
-                            <p><strong>Time:</strong> ${event.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - ${event.end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                            <p><strong>Date:</strong> ${props.event_date_formatted || event.start.toLocaleDateString()}</p>
+                            <p><strong>Time:</strong> ${props.start_time_formatted || 'N/A'} - ${props.end_time_formatted || 'N/A'}</p>
                             <p><strong>Attendees:</strong> ${props.attendees || 'N/A'}</p>
                             <p><strong>Status:</strong> <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${props.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">${props.status ? props.status.toUpperCase() : 'N/A'}</span></p>
                             ${props.description ? `<p><strong>Description:</strong> ${props.description}</p>` : ''}
