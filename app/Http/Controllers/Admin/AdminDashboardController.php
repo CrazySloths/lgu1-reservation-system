@@ -85,11 +85,17 @@ class AdminDashboardController extends Controller
         // Recent Activity (last 5 booking updates)
         $recentActivity = $this->getRecentActivity();
         
+        // Today's Events Count
+        $todaysEventsCount = Booking::where('status', 'approved')
+            ->whereDate('event_date', now()->toDateString())
+            ->count();
+        
         \Log::info("Admin Dashboard loaded with REAL data for: " . $admin->name, [
             'pending_approvals' => $pendingApprovalsCount,
             'conflicts' => $conflicts->count(),
             'overdue_payments' => $overduePayments->count(),
-            'monthly_bookings' => $monthlyStats['bookings_count']
+            'monthly_bookings' => $monthlyStats['bookings_count'],
+            'todays_events' => $todaysEventsCount
         ]);
         
         return view('admin.dashboard', compact(
@@ -101,7 +107,8 @@ class AdminDashboardController extends Controller
             'monthlyStats',
             'facilityStats',
             'upcomingReservations',
-            'recentActivity'
+            'recentActivity',
+            'todaysEventsCount'
         ));
     }
     
