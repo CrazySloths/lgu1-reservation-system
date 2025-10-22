@@ -52,14 +52,15 @@ class SsoAuthMiddleware
                 $request->session()->regenerate();
                 
                 // Continue to the requested page
-                if ($user->role === 'citizen')
+                if (isset($user->role) && $user->role === 'citizen')
                 {
                     return redirect()->intended('/citizen');
                 }
-                if ($user->role === 'admin')
+                if (isset($user->role) && $user->role === 'admin')
                 {
                     return redirect()->intended('/admin/dashboard');
                 }
+                return redirect('/'); // Default redirect if role is not set
             } else {
                 Log::warning('SSO Middleware: No user found from SSO parameters', [
                     'user_id' => $userId,
