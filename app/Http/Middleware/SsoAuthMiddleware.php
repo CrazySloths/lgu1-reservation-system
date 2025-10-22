@@ -52,9 +52,13 @@ class SsoAuthMiddleware
                 $request->session()->regenerate();
                 
                 // Continue to the requested page
-                if($user-> === 'citizen')
+                if ($user->role === 'citizen')
                 {
-                    return redirect()->route('citizen.dashboard');
+                    return redirect()->intended('/citizen');
+                }
+                if ($user->role === 'admin')
+                {
+                    return redirect()->intended('/admin/dashboard');
                 }
             } else {
                 Log::warning('SSO Middleware: No user found from SSO parameters', [

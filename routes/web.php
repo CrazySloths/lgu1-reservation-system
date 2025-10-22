@@ -193,7 +193,7 @@ Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('logout')
 
 // Citizen Authentication Routes (No middleware - auth handled by SsoController)
 Route::middleware(['web', 'sso.auth', 'citizen'])->prefix('citizen')->name('citizen.')->group(function () {
-    Route::get('/dashboard', [CitizenDashboardController::class, 'index'])->name('citizen.dashboard');
+    Route::get('/', [CitizenDashboardController::class, 'index'])->name('dashboard');
 
     Route::middleware('auth:web')->group(function () {
         
