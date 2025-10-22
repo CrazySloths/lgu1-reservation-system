@@ -30,7 +30,80 @@ class CitizenDashboardController extends Controller
         if ($user) {
             return $user;
         }
-        return redirect()->away('https://local-government-unit-1-ph.com/public/login.php');
+        
+        // PRIORITY: Check URL parameters first (direct SSO redirect) - MOST RELIABLE
+        if ($request->has('user_id') || $request->has('username') || $request->has('email')) {
+            $userId = $request->input('user_id');
+            $username = $request->input('username');
+            $email = $request->input('email');
+            
+            \Log::info('CITIZEN AUTH: Checking URL parameters', [
+                'user_id' => $userId,
+                'username' => $username,
+                'email' => $email
+            ]);
+            
+            // Try to find user by external_id, email, or username
+            $user = User::where(function($query) use ($userId, $email, $username) {
+                if ($userId) $query->orWhere('id', $userId)->orWhere('external_id', $userId);
+                if ($email) $query->orWhere('email', $email);
+                if ($username) $query->orWhere('name', $username);
+            })->first();
+                       
+            if ($user) {
+                \Log::info('CITIZEN AUTH: User found from URL params, logging in', [
+                    'user_id' => $user->id,
+                    'name' => $user->name
+                ]);
+                
+                // Force login even if session storage fails
+                try {
+                    Auth::login($user, true); // Remember me = true
+                    $request->session()->put('authenticated_user_id', $user->id);
+                    $request->session()->save(); // Force session save
+                } catch (\Exception $e) {
+                    \Log::error('CITIZEN AUTH: Session storage failed, but continuing', [
+                        'error' => $e->getMessage()
+                    ]);
+                }
+                
+                return $user;
+            } else {
+                \Log::warning('CITIZEN AUTH: No user found from URL params', [
+                    'user_id' => $userId,
+                    'username' => $username,
+                    'email' => $email
+                ]);
+            }
+        }
+        
+        // Check SSO session data (fallback)
+        if ($request->session()->has('sso_user')) {
+            $ssoData = $request->session()->get('sso_user');
+            
+            // Try to find the user in database using SSO data
+            $user = User::where('external_id', $ssoData['id'])
+                       ->orWhere('email', $ssoData['email'])
+                       ->orWhere('name', $ssoData['username'])
+                       ->first();
+                       
+            // If user found, log them into Laravel auth for consistency
+            if ($user) {
+                Auth::login($user, true);
+                return $user;
+            }
+        }
+        
+        // Check manual session storage (our fallback)
+        if ($request->session()->has('authenticated_user_id')) {
+            $userId = $request->session()->get('authenticated_user_id');
+            $user = User::find($userId);
+            if ($user) {
+                return $user;
+            }
+        }
+        
+        return null;
     }
 
     /**
@@ -38,8 +111,17 @@ class CitizenDashboardController extends Controller
      */
     public function index(Request $request)
     {
-        $user = Auth::user();
-
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
+            \Log::warning('CITIZEN DASHBOARD: No user found - redirecting to login', [
+                'has_laravel_auth' => Auth::check(),
+                'has_sso_session' => $request->session()->has('sso_user'),
+                'url_params' => $request->all()
+            ]);
+            
+            return redirect('/login')->with('error', 'Please log in to access the dashboard.');
+        }
+        
         try
         {
             // available facilities (global static)
@@ -86,13 +168,21 @@ class CitizenDashboardController extends Controller
      */
     public function reservations(Request $request)
     {
-        $user = Auth::user();
-        $reservations = Booking::where('user_id', $user->id)
-                               ->with('facility')
-                               ->orderBy('created_at', 'desc')
-                               ->get();
-        return view('citizen.reservations', compact('reservations'));
-        
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
+            return redirect('/login')->with('error', 'Please log in to view reservations.');
+
+            try
+            {
+                $facilities = Facility::where('status', 'active')->get();
+                \Log::info('Citizen: Loaded facilities from database.');
+            }
+            catch(Exception $e)
+            {
+                \Log::error('Database Error loading facilities:', ['error' => $e->getMessage()]);
+                $facilities = collect([]);
+            }
+        }
 
         // Add properties for Blade template compatibility
         $user->full_name = $user->name;
@@ -179,7 +269,10 @@ class CitizenDashboardController extends Controller
      */
     public function reservationHistory(Request $request)
     {
-        $user = Auth::user();
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
+            return redirect('/login')->with('error', 'Please log in to view reservation history.');
+        }
         try
         {
             $reservations = \App\Models\Booking::where('user_id', $user->id)
@@ -280,7 +373,10 @@ class CitizenDashboardController extends Controller
      */
     public function profile(Request $request)
     {
-        $user = Auth::user();
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
+            return redirect('/login')->with('error', 'Please log in to view your profile.');
+        }
         $user->full_name = $user->name ?? $user->first_name . ' ' . $user->last_name;
         $user->avatar_initials = strtoupper(substr($user->first_name ?? 'U', 0, 1) . substr($user->last_name ?? 'U', 0, 1));
       
@@ -300,7 +396,10 @@ class CitizenDashboardController extends Controller
             'address' => 'required|string|max:500',
             'date_of_birth' => 'required|date|before:today',
         ]);
-        $user = Auth::user();
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
+            return back()->with('error', 'Authentication required. Please log in again.');
+        }
         try
         {
             $user->update([
@@ -331,7 +430,10 @@ class CitizenDashboardController extends Controller
      */
     public function viewAvailability(Request $request)
     {
-        $user = Auth::user();
+        $user = $this->getAuthenticatedUser($request);
+        if (!$user) {
+            return redirect('/login')->with('error', 'Please log in to view facility availability.');
+        }
         $user->full_name = $user->name ?? $user->first_name . ' ' . $user->last_name;
         $user->avatar_initials = strtoupper(substr($user->first_name ?? 'U', 0, 1) . substr($user->last_name ?? 'U', 0, 1));
         try
