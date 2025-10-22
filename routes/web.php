@@ -192,7 +192,7 @@ Route::get('/calendar', function() {
 Route::post('/logout', [CitizenAuthController::class, 'logout'])->name('logout');
 
 // Citizen Authentication Routes (No middleware - auth handled by SsoController)
-Route::prefix('citizen')->group(function () {
+Route::middleware(['web', 'sso.auth', 'citizen'])->prefix('citizen')->name('citizen.')->group(function () {
     Route::get('/dashboard', [CitizenDashboardController::class, 'index'])->name('citizen.dashboard');
 
     Route::middleware('auth:web')->group(function () {
@@ -250,7 +250,15 @@ Route::prefix('citizen')->group(function () {
 // HOME ROUTE
 // ============================================
 Route::get('/', function () {
-    return redirect()->route('citizen.dashboard');
+    if (Auth::check() && Auth::user()->role === 'citizen') {
+        return redirect()->route('citizen.dashboard');
+    }
+    return redirect()->route('login');
 })->name('home');
+
+
+//Route::get('/', function () {
+  //  return redirect()->route('citizen.dashboard');
+//})->name('home');
 
 
