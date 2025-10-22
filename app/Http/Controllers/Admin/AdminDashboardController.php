@@ -49,7 +49,7 @@ class AdminDashboardController extends Controller
         
         // Overdue Payments (payment slips past due date and not paid)
         $overduePayments = PaymentSlip::with(['booking.facility', 'booking.user'])
-            ->where('status', 'pending')
+            ->where('status', 'unpaid')
             ->where('due_date', '<', now())
             ->orderBy('due_date', 'asc')
             ->get();
@@ -59,7 +59,7 @@ class AdminDashboardController extends Controller
             'bookings_count' => Booking::count(),
             'approved_bookings' => Booking::where('status', 'approved')->count(),
             'revenue' => PaymentSlip::where('status', 'paid')->sum('amount'),
-            'pending_revenue' => PaymentSlip::where('status', 'pending')->sum('amount')
+            'pending_revenue' => PaymentSlip::where('status', 'unpaid')->sum('amount')
         ];
         
         // Facility Statistics (total bookings per facility)
@@ -218,7 +218,7 @@ class AdminDashboardController extends Controller
         $stats = [
             'pending_approvals' => Booking::where('status', 'pending')->count(),
             'conflicts' => $this->detectScheduleConflicts()->count(),
-            'overdue_payments' => PaymentSlip::where('status', 'pending')
+            'overdue_payments' => PaymentSlip::where('status', 'unpaid')
                                            ->where('due_date', '<', now())
                                            ->count(),
             'todays_events' => Booking::where('status', 'approved')
