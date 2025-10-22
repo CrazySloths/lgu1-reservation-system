@@ -116,7 +116,7 @@
                             <td class="px-6 py-4">
                                 <div class="text-sm font-medium text-gray-900">{{ $reservation->event_name }}</div>
                                 <div class="text-sm text-gray-500">{{ $reservation->event_date->format('M j, Y') }}</div>
-                                <div class="text-sm text-gray-500">{{ $reservation->start_time }} - {{ $reservation->end_time }}</div>
+                                <div class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($reservation->start_time)->format('g:i A') }} - {{ \Carbon\Carbon::parse($reservation->end_time)->format('g:i A') }}</div>
                                 <div class="text-sm text-gray-500">{{ $reservation->expected_attendees }} attendees</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
