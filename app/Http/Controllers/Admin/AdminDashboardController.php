@@ -54,27 +54,16 @@ class AdminDashboardController extends Controller
             ->orderBy('due_date', 'asc')
             ->get();
         
-        // Monthly Statistics (current month)
-        $currentMonth = now()->format('Y-m');
+        // Monthly Statistics (ALL TIME for better overview)
         $monthlyStats = [
-            'bookings_count' => Booking::whereRaw("DATE_FORMAT(event_date, '%Y-%m') = ?", [$currentMonth])->count(),
-            'approved_bookings' => Booking::whereRaw("DATE_FORMAT(event_date, '%Y-%m') = ?", [$currentMonth])
-                                        ->where('status', 'approved')
-                                        ->count(),
-            'revenue' => PaymentSlip::whereRaw("DATE_FORMAT(created_at, '%Y-%m') = ?", [$currentMonth])
-                                    ->where('status', 'paid')
-                                    ->sum('amount'),
-            'pending_revenue' => PaymentSlip::whereRaw("DATE_FORMAT(created_at, '%Y-%m') = ?", [$currentMonth])
-                                           ->where('status', 'pending')
-                                           ->sum('amount')
+            'bookings_count' => Booking::count(),
+            'approved_bookings' => Booking::where('status', 'approved')->count(),
+            'revenue' => PaymentSlip::where('status', 'paid')->sum('amount'),
+            'pending_revenue' => PaymentSlip::where('status', 'pending')->sum('amount')
         ];
         
-        // Facility Statistics (bookings per facility this month)
-        $facilityStats = Facility::withCount([
-            'bookings' => function ($query) use ($currentMonth) {
-                $query->whereRaw("DATE_FORMAT(event_date, '%Y-%m') = ?", [$currentMonth]);
-            }
-        ])
+        // Facility Statistics (total bookings per facility)
+        $facilityStats = Facility::withCount('bookings')
         ->get()
         ->map(function ($facility) {
             return (object) [

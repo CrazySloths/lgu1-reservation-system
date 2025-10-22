@@ -114,9 +114,9 @@
         <!-- Left Column: Monthly Overview & Quick Actions -->
         <div class="lg:col-span-2 space-y-6">
             
-            <!-- Monthly Statistics -->
+            <!-- Overall Statistics -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ now()->format('F Y') }} Overview</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Overall Statistics</h3>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="text-center">
                         <p class="text-3xl font-bold text-lgu-headline">{{ $monthlyStats['bookings_count'] }}</p>
@@ -139,7 +139,7 @@
 
             <!-- Facility Utilization -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Facility Utilization ({{ now()->format('F') }})</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Facility Utilization (All Time)</h3>
                 <div class="space-y-4">
                     @forelse($facilityStats as $facility)
                         <div class="flex items-center justify-between">
