@@ -54,11 +54,11 @@ class SsoAuthMiddleware
                 // Continue to the requested page
                 if (isset($user->role) && $user->role === 'citizen')
                 {
-                    return redirect()->intended('/citizen');
+                    return redirect()->route('citizen.dashboard');
                 }
                 if (isset($user->role) && $user->role === 'admin')
                 {
-                    return redirect()->intended('/admin/dashboard');
+                    return redirect()->route('admin.dashboard');
                 }
                 return redirect('/'); // Default redirect if role is not set
             } else {
