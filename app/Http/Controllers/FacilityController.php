@@ -749,11 +749,8 @@ class FacilityController extends Controller
      */
     public function showUserBookings()
     {
-        // Change this to the exact user name from your database to see their bookings.
-        $current_user_name = 'test 1'; 
-        
-        $bookings = Booking::where('user_name', $current_user_name)
-                             ->with('facility')
+        // Show ALL bookings for admins (no filtering by user)
+        $bookings = Booking::with('facility')
                              ->orderBy('created_at', 'desc')
                              ->get();
         
