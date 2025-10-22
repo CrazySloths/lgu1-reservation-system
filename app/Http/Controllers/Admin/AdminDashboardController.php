@@ -3,27 +3,25 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
+use App\Models\Facility;
+use App\Models\PaymentSlip;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class AdminDashboardController extends Controller
 {
     /**
-     * Display the admin dashboard with static data support
+     * Display the admin dashboard with REAL database data
      */
     public function index(Request $request)
     {
-        // Get static admin from session
-        session_start();
-        $admin = null;
+        // Get authenticated admin
+        $admin = Auth::user();
         
-        if (isset($_SESSION['static_admin_user'])) {
-            $adminData = $_SESSION['static_admin_user'];
-            $admin = (object) $adminData;
-            $admin->full_name = $admin->name;
-            $admin->avatar_initials = $this->generateInitials($admin->name);
-        }
-        
-        // Fallback admin data
+        // Fallback admin data if not authenticated
         if (!$admin) {
             $admin = (object) [
                 'id' => 1,
@@ -32,123 +30,78 @@ class AdminDashboardController extends Controller
                 'role' => 'admin',
                 'status' => 'active'
             ];
-            $admin->full_name = $admin->name;
-            $admin->avatar_initials = $this->generateInitials($admin->name);
         }
         
-        // Static dashboard statistics (no database queries)
-        $pendingApprovalsCount = 12;
-        $pendingApprovals = collect([
-            (object)[
-                'id' => 1,
-                'event_name' => 'Community Meeting',
-                'event_date' => '2024-10-15',
-                'start_time' => '09:00:00',
-                'end_time' => '12:00:00',
-                'facility' => (object)['name' => 'Community Hall'],
-                'user' => (object)['name' => 'John Doe']
-            ],
-            (object)[
-                'id' => 2,
-                'event_name' => 'Sports Tournament',
-                'event_date' => '2024-10-20',
-                'start_time' => '14:00:00',
-                'end_time' => '18:00:00',
-                'facility' => (object)['name' => 'Sports Complex'],
-                'user' => (object)['name' => 'Jane Smith']
-            ]
-        ]);
+        $admin->full_name = $admin->name;
+        $admin->avatar_initials = $this->generateInitials($admin->name);
         
-        $conflicts = collect([]);
+        // REAL DATABASE QUERIES
         
-        $overduePayments = collect([
-            (object)[
-                'id' => 1,
-                'amount' => 5000,
-                'due_date' => '2024-09-20',
-                'booking' => (object)[
-                    'facility' => (object)['name' => 'Conference Room']
-                ],
-                'user' => (object)['name' => 'Mike Johnson']
-            ]
-        ]);
+        // Pending Approvals (status = pending)
+        $pendingApprovals = Booking::with(['facility', 'user'])
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->get();
+        $pendingApprovalsCount = $pendingApprovals->count();
         
-        // Static monthly statistics
+        // Schedule Conflicts (detect overlapping bookings)
+        $conflicts = $this->detectScheduleConflicts();
+        
+        // Overdue Payments (payment slips past due date and not paid)
+        $overduePayments = PaymentSlip::with(['booking.facility', 'booking.user'])
+            ->where('status', 'pending')
+            ->where('due_date', '<', now())
+            ->orderBy('due_date', 'asc')
+            ->get();
+        
+        // Monthly Statistics (current month)
+        $currentMonth = now()->format('Y-m');
         $monthlyStats = [
-            'bookings_count' => 89,
-            'approved_bookings' => 67,
-            'revenue' => 125000.00,
-            'pending_revenue' => 45000.00
+            'bookings_count' => Booking::whereRaw("DATE_FORMAT(event_date, '%Y-%m') = ?", [$currentMonth])->count(),
+            'approved_bookings' => Booking::whereRaw("DATE_FORMAT(event_date, '%Y-%m') = ?", [$currentMonth])
+                                        ->where('status', 'approved')
+                                        ->count(),
+            'revenue' => PaymentSlip::whereRaw("DATE_FORMAT(created_at, '%Y-%m') = ?", [$currentMonth])
+                                    ->where('status', 'paid')
+                                    ->sum('amount'),
+            'pending_revenue' => PaymentSlip::whereRaw("DATE_FORMAT(created_at, '%Y-%m') = ?", [$currentMonth])
+                                           ->where('status', 'pending')
+                                           ->sum('amount')
         ];
         
-        // Static facility stats
-        $facilityStats = collect([
-            (object)[
-                'id' => 1,
-                'name' => 'Community Hall',
-                'monthly_bookings' => 15
-            ],
-            (object)[
-                'id' => 2,
-                'name' => 'Sports Complex',
-                'monthly_bookings' => 22
-            ],
-            (object)[
-                'id' => 3,
-                'name' => 'Conference Room',
-                'monthly_bookings' => 30
-            ]
-        ]);
+        // Facility Statistics (bookings per facility this month)
+        $facilityStats = Facility::withCount([
+            'bookings' => function ($query) use ($currentMonth) {
+                $query->whereRaw("DATE_FORMAT(event_date, '%Y-%m') = ?", [$currentMonth]);
+            }
+        ])
+        ->get()
+        ->map(function ($facility) {
+            return (object) [
+                'id' => $facility->id,
+                'name' => $facility->name,
+                'monthly_bookings' => $facility->bookings_count
+            ];
+        });
         
-        // Static upcoming reservations
-        $upcomingReservations = collect([
-            (object)[
-                'id' => 1,
-                'event_name' => 'Youth Workshop',
-                'event_date' => '2024-09-30',
-                'start_time' => '09:00:00',
-                'facility' => (object)['name' => 'Training Center'],
-                'user' => (object)['name' => 'Sarah Wilson']
-            ],
-            (object)[
-                'id' => 2,
-                'event_name' => 'Health Seminar',
-                'event_date' => '2024-10-02',
-                'start_time' => '14:00:00',
-                'facility' => (object)['name' => 'Community Hall'],
-                'user' => (object)['name' => 'Dr. Martinez']
-            ]
-        ]);
+        // Upcoming Reservations (approved bookings in the future)
+        $upcomingReservations = Booking::with(['facility', 'user'])
+            ->where('status', 'approved')
+            ->where('event_date', '>=', now()->toDateString())
+            ->orderBy('event_date', 'asc')
+            ->orderBy('start_time', 'asc')
+            ->limit(5)
+            ->get();
         
-        // Static recent activity
-        $recentActivity = collect([
-            [
-                'type' => 'approval',
-                'message' => 'Reservation approved for Community Hall',
-                'details' => 'Event: Town Meeting on Oct 1, 2024',
-                'time' => now()->subHours(2),
-                'icon' => 'check-circle',
-                'color' => 'text-green-600'
-            ],
-            [
-                'type' => 'payment',
-                'message' => 'Payment received for Sports Complex',
-                'details' => '₱8,000.00 - PAY-2024-001',
-                'time' => now()->subHours(4),
-                'icon' => 'currency-dollar',
-                'color' => 'text-blue-600'
-            ],
-            [
-                'type' => 'new_booking',
-                'message' => 'New reservation request for Conference Room',
-                'details' => 'Event: Business Meeting on Oct 5, 2024',
-                'time' => now()->subHours(6),
-                'icon' => 'calendar',
-                'color' => 'text-yellow-600'
-            ]
-        ]);
+        // Recent Activity (last 5 booking updates)
+        $recentActivity = $this->getRecentActivity();
         
-        error_log("Admin Dashboard loaded with static data for: " . $admin->name);
+        \Log::info("Admin Dashboard loaded with REAL data for: " . $admin->name, [
+            'pending_approvals' => $pendingApprovalsCount,
+            'conflicts' => $conflicts->count(),
+            'overdue_payments' => $overduePayments->count(),
+            'monthly_bookings' => $monthlyStats['bookings_count']
+        ]);
         
         return view('admin.dashboard', compact(
             'admin',
@@ -161,6 +114,96 @@ class AdminDashboardController extends Controller
             'upcomingReservations',
             'recentActivity'
         ));
+    }
+    
+    /**
+     * Detect schedule conflicts (overlapping bookings for same facility)
+     */
+    private function detectScheduleConflicts()
+    {
+        $conflicts = collect([]);
+        
+        // Get all approved bookings for the next 30 days
+        $bookings = Booking::with('facility')
+            ->where('status', 'approved')
+            ->where('event_date', '>=', now()->toDateString())
+            ->where('event_date', '<=', now()->addDays(30)->toDateString())
+            ->orderBy('event_date')
+            ->orderBy('start_time')
+            ->get();
+        
+        // Check for overlaps
+        foreach ($bookings as $booking) {
+            $overlapping = Booking::where('facility_id', $booking->facility_id)
+                ->where('id', '!=', $booking->id)
+                ->where('status', 'approved')
+                ->where('event_date', $booking->event_date)
+                ->where(function($query) use ($booking) {
+                    $query->whereBetween('start_time', [$booking->start_time, $booking->end_time])
+                          ->orWhereBetween('end_time', [$booking->start_time, $booking->end_time])
+                          ->orWhere(function($q) use ($booking) {
+                              $q->where('start_time', '<=', $booking->start_time)
+                                ->where('end_time', '>=', $booking->end_time);
+                          });
+                })
+                ->first();
+            
+            if ($overlapping) {
+                $conflicts->push((object)[
+                    'booking1' => $booking,
+                    'booking2' => $overlapping
+                ]);
+            }
+        }
+        
+        return $conflicts;
+    }
+    
+    /**
+     * Get recent activity feed
+     */
+    private function getRecentActivity()
+    {
+        $activities = collect([]);
+        
+        // Recent approvals
+        $recentApprovals = Booking::with('facility')
+            ->where('status', 'approved')
+            ->orderBy('updated_at', 'desc')
+            ->limit(3)
+            ->get();
+        
+        foreach ($recentApprovals as $booking) {
+            $activities->push([
+                'type' => 'approval',
+                'message' => 'Reservation approved for ' . $booking->facility->name,
+                'details' => 'Event: ' . $booking->event_name . ' on ' . Carbon::parse($booking->event_date)->format('M d, Y'),
+                'time' => $booking->updated_at,
+                'icon' => 'check-circle',
+                'color' => 'text-green-600'
+            ]);
+        }
+        
+        // Recent payments
+        $recentPayments = PaymentSlip::with('booking')
+            ->where('status', 'paid')
+            ->orderBy('updated_at', 'desc')
+            ->limit(2)
+            ->get();
+        
+        foreach ($recentPayments as $payment) {
+            $activities->push([
+                'type' => 'payment',
+                'message' => 'Payment received',
+                'details' => '₱' . number_format($payment->amount, 2) . ' - ' . $payment->reference_number,
+                'time' => $payment->updated_at,
+                'icon' => 'currency-dollar',
+                'color' => 'text-blue-600'
+            ]);
+        }
+        
+        // Sort by time
+        return $activities->sortByDesc('time')->take(5);
     }
     
     /**
@@ -179,16 +222,19 @@ class AdminDashboardController extends Controller
     }
     
     /**
-     * Get quick stats for admin dashboard
+     * Get quick stats for admin dashboard (REAL DATA)
      */
     public function getQuickStats(Request $request)
     {
-        // Return static stats since database is unreliable
         $stats = [
-            'pending_approvals' => 12,
-            'conflicts' => 0,
-            'overdue_payments' => 1,
-            'todays_events' => 3
+            'pending_approvals' => Booking::where('status', 'pending')->count(),
+            'conflicts' => $this->detectScheduleConflicts()->count(),
+            'overdue_payments' => PaymentSlip::where('status', 'pending')
+                                           ->where('due_date', '<', now())
+                                           ->count(),
+            'todays_events' => Booking::where('status', 'approved')
+                                     ->whereDate('event_date', now()->toDateString())
+                                     ->count()
         ];
         
         return response()->json($stats);
