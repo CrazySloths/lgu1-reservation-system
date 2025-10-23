@@ -115,9 +115,19 @@ class CityEventController extends Controller
         ]);
 
         // Create exempt payment slip for city event (for tracking purposes only)
+        // Generate exempt slip number
+        $year = now()->format('Y');
+        $month = now()->format('m');
+        $exemptCount = PaymentSlip::where('status', 'exempt')
+            ->whereYear('created_at', $year)
+            ->whereMonth('created_at', $month)
+            ->count() + 1;
+        $slipNumber = sprintf('EXEMPT-%s-%s-%03d', $year, $month, $exemptCount);
+        
         PaymentSlip::create([
             'booking_id' => $booking->id,
             'user_id' => Auth::id() ?? 1,
+            'slip_number' => $slipNumber,
             'status' => 'exempt',
         ]);
 

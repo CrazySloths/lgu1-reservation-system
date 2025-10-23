@@ -6,12 +6,14 @@
 INSERT INTO payment_slips (
     booking_id,
     user_id,
+    slip_number,
     status,
     created_at,
     updated_at
 ) VALUES (
     31,  -- Booking ID for "CITY EVENT: Community Health Fair"
     1,   -- Admin user ID (as the system generator)
+    'EXEMPT-2025-10-001',  -- Exempt slip number (not a real payment slip)
     'exempt',
     NOW(),
     NOW()
