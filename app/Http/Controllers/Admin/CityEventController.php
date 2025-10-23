@@ -129,6 +129,7 @@ class CityEventController extends Controller
             'user_id' => Auth::id() ?? 1,
             'slip_number' => $slipNumber,
             'status' => 'exempt',
+            'generated_by' => Auth::id() ?? 1,
         ]);
 
         return redirect()->route('admin.city-events.index')
