@@ -129,6 +129,7 @@ class CityEventController extends Controller
             'user_id' => Auth::id() ?? 1,
             'slip_number' => $slipNumber,
             'amount' => 0,
+            'due_date' => $request->event_date,
             'status' => 'exempt',
             'generated_by' => Auth::id() ?? 1,
         ]);
