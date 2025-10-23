@@ -16,12 +16,12 @@ class SsoAuthMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        // 1. If user is already authenticated in Laravel, just continue.
+        // If user is already authenticated in Laravel, just continue.
         if (Auth::check()) {
             return $next($request);
         }
 
-        // 2. Check for SSO URL parameters (user coming from external SSO login)
+        // Check for SSO URL parameters (user coming from SSO login)
         if ($request->has('user_id') || $request->has('username') || $request->has('email')) {
             $userId = $request->input('user_id');
             $username = $request->input('username');
@@ -51,19 +51,16 @@ class SsoAuthMiddleware
                 Auth::login($user, true); // Remember me = true
                 $request->session()->regenerate();
                 
-                // ✅ FIX: Use redirect()->route() to clear the URL and prevent the login loop (Crucial for stability)
+                // Continue to the requested page
                 if (isset($user->role) && $user->role === 'citizen')
                 {
                     return redirect()->route('citizen.dashboard');
                 }
                 if (isset($user->role) && $user->role === 'admin')
                 {
-                    return redirect()->route('admin.dashboard'); 
+                    return redirect()->route('admin.dashboard');
                 }
-                
-                // Fallback redirect for other roles
-                return redirect('/');
-
+                return redirect('/'); // Default redirect if role is not set
             } else {
                 Log::warning('SSO Middleware: No user found from SSO parameters', [
                     'user_id' => $userId,
@@ -71,12 +68,13 @@ class SsoAuthMiddleware
                     'email' => $email
                 ]);
                 
-                // TEMP FIX: User not found, but we stop the external redirect. Continue to internal login.
+                // User not found - redirect back to SSO with error
+                return redirect()->away('https://local-government-unit-1-ph.com/public/login.php?error=user_not_found');
             }
         }
 
-        // 3. No SSO parameters and not authenticated. Instead of redirecting externally, go to internal login.
-        Log::info('SSO Middleware: User not authenticated, redirecting to internal login page.');
-        return redirect()->route('login'); // Redirect to the internal Laravel login route
+        // No SSO parameters and not authenticated - redirect to SSO login
+        Log::info('SSO Middleware: User not authenticated, redirecting to SSO login page.');
+        return redirect()->away('https://local-government-unit-1-ph.com/    public/login.php');
     }
 }
