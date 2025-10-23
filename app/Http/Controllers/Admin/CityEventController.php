@@ -128,6 +128,7 @@ class CityEventController extends Controller
             'booking_id' => $booking->id,
             'user_id' => Auth::id() ?? 1,
             'slip_number' => $slipNumber,
+            'amount' => 0,
             'status' => 'exempt',
             'generated_by' => Auth::id() ?? 1,
         ]);
