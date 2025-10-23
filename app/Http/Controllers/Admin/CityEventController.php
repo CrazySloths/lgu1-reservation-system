@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Facility;
+use App\Models\PaymentSlip;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -111,6 +112,13 @@ class CityEventController extends Controller
             'approved_by' => Auth::id() ?? 1,
             'approved_at' => now(),
             'admin_notes' => 'City Event - Mayor Authorization: ' . $request->mayor_authorization,
+        ]);
+
+        // Create exempt payment slip for city event (for tracking purposes only)
+        PaymentSlip::create([
+            'booking_id' => $booking->id,
+            'user_id' => Auth::id() ?? 1,
+            'status' => 'exempt',
         ]);
 
         return redirect()->route('admin.city-events.index')
