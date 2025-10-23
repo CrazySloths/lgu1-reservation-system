@@ -20,14 +20,18 @@ use App\Http\Controllers\Admin\ScheduleConflictController;
 // SSO AUTHENTICATION ROUTES - TEMPORARILY DISABLED
 // ============================================
 
-Route::middleware(['web'])->group(function () {
-     Route::get('/sso/login', [SsoController::class, 'login'])->name('sso.login');
- });
+//Route::middleware(['web'])->group(function () {
+    // Route::get('/sso/login', [SsoController::class, 'login'])->name('sso.login');
+ //});
 
 // // Helpful redirect for users who access the system directly
+ //Route::get('/login', function() {
+   //  return redirect()->away('https://local-government-unit-1-ph.com/public/login.php');
+ //})->name('login');
+
  Route::get('/login', function() {
-     return redirect()->away('https://local-government-unit-1-ph.com/public/login.php');
- })->name('login');
+    return view('login.disabled'); 
+})->name('login');
 
 // ============================================
 // ADMIN PORTAL ROUTES (Protected)
