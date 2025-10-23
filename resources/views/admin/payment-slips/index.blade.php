@@ -75,6 +75,13 @@
                     {{ $statusCounts['expired'] }}
                 </span>
             </a>
+            <a href="{{ route('admin.payment-slips.index', ['status' => 'exempt']) }}" 
+               class="py-2 px-1 border-b-2 font-medium text-sm {{ $status === 'exempt' ? 'border-purple-500 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                Exempt 
+                <span class="ml-2 py-0.5 px-2 rounded-full text-xs {{ $status === 'exempt' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-900' }}">
+                    {{ $statusCounts['exempt'] ?? 0 }}
+                </span>
+            </a>
         </nav>
     </div>
 </div>
@@ -138,12 +145,21 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">₱{{ number_format($slip->amount, 2) }}</div>
+                                @if($slip->status === 'exempt')
+                                    <div class="text-sm font-medium text-gray-400">N/A</div>
+                                    <div class="text-xs text-gray-500">No payment required</div>
+                                @else
+                                    <div class="text-sm font-medium text-gray-900">₱{{ number_format($slip->amount, 2) }}</div>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($slip->status === 'paid')
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                         <i class="fas fa-check-circle mr-1"></i> Paid
+                                    </span>
+                                @elseif($slip->status === 'exempt')
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                        <i class="fas fa-landmark mr-1"></i> Exempt
                                     </span>
                                 @elseif($slip->status === 'expired')
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -156,16 +172,21 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">{{ $slip->due_date->format('M j, Y') }}</div>
-                                @if($slip->status === 'unpaid')
-                                    @if($slip->days_until_due > 0)
-                                        <div class="text-sm text-yellow-600">{{ $slip->days_until_due }} days left</div>
-                                    @else
-                                        <div class="text-sm text-red-600">Overdue</div>
+                                @if($slip->status === 'exempt')
+                                    <div class="text-sm text-gray-400">N/A</div>
+                                    <div class="text-xs text-gray-500">City Event</div>
+                                @else
+                                    <div class="text-sm text-gray-900">{{ $slip->due_date->format('M j, Y') }}</div>
+                                    @if($slip->status === 'unpaid')
+                                        @if($slip->days_until_due > 0)
+                                            <div class="text-sm text-yellow-600">{{ $slip->days_until_due }} days left</div>
+                                        @else
+                                            <div class="text-sm text-red-600">Overdue</div>
+                                        @endif
                                     @endif
-                                @endif
-                                @if($slip->paid_at)
-                                    <div class="text-sm text-green-600">Paid {{ $slip->paid_at->format('M j') }}</div>
+                                    @if($slip->paid_at)
+                                        <div class="text-sm text-green-600">Paid {{ $slip->paid_at->format('M j') }}</div>
+                                    @endif
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
