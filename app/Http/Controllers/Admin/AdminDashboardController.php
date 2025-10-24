@@ -145,7 +145,9 @@ class AdminDashboardController extends Controller
                 ->first();
             
             if ($overlapping) {
-                $conflicts->push((object)[
+                $conflicts->push([
+                    'facility' => $booking->facility,
+                    'date' => $booking->event_date,
                     'booking1' => $booking,
                     'booking2' => $overlapping
                 ]);
@@ -191,7 +193,7 @@ class AdminDashboardController extends Controller
             $activities->push([
                 'type' => 'payment',
                 'message' => 'Payment received',
-                'details' => '₱' . number_format($payment->amount, 2) . ' - ' . $payment->reference_number,
+                'details' => '₱' . number_format($payment->amount, 2) . ' - ' . $payment->slip_number,
                 'time' => $payment->updated_at,
                 'icon' => 'currency-dollar',
                 'color' => 'text-blue-600'
