@@ -53,6 +53,11 @@ class RolesAndPermissionsSeeder extends Seeder
                 'role_name' => 'Applicant',
                 'description' => 'Facility reservation applicant'
             ],
+            [
+                'subsystem_id' => 4,
+                'role_name' => 'Treasurer',
+                'description' => 'City Treasurer\'s Office - Payment verification and receipt generation'
+            ],
         ]);
 
         // Insert Basic Permissions
@@ -75,6 +80,6 @@ class RolesAndPermissionsSeeder extends Seeder
             ]);
         }
 
-        echo "✅ Roles, subsystems, and permissions seeded successfully!\n";
+        echo "SUCCESS: Roles, subsystems, and permissions seeded successfully!\n";
     }
 }

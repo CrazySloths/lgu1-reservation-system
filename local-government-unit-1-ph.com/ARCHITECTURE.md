@@ -645,6 +645,7 @@ Trigger Events:
 - **JavaScript:** Alpine.js (lightweight reactivity)
 - **Icons:** Lucide Icons (NO emojis)
 - **Alerts:** SweetAlert2 (ALL alerts must be modal)
+- **Charts/Graphs:** ApexCharts (open-source charting library)
 - **Typography:** Poppins font (all weights)
 
 ### **AI/Analytics**

@@ -40,7 +40,17 @@
 
             <!-- Status Filters -->
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-3">Filter by Status</label>
+                <div class="flex items-center justify-between mb-3">
+                    <label class="block text-sm font-semibold text-gray-700">Filter by Status</label>
+                    <a href="<?php echo e(route('citizen.reservation.history')); ?>" 
+                       class="text-sm text-lgu-button hover:text-lgu-highlight font-semibold inline-flex items-center gap-1 cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                            <path d="M3 3v5h5"/>
+                        </svg>
+                        View Booking History
+                    </a>
+                </div>
                 <div class="flex flex-wrap gap-3">
                     <a href="<?php echo e(route('citizen.reservations', ['status' => 'all', 'search' => $search])); ?>" 
                        class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md cursor-pointer <?php echo e($status === 'all' ? 'bg-lgu-button text-lgu-button-text shadow-lg scale-105' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'); ?>">
@@ -63,13 +73,6 @@
                         </svg>
                         Completed <span class="ml-1 px-2 py-0.5 bg-white/30 rounded-full text-xs"><?php echo e($statusCounts['completed']); ?></span>
                     </a>
-                    <a href="<?php echo e(route('citizen.reservations', ['status' => 'cancelled', 'search' => $search])); ?>" 
-                       class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md cursor-pointer <?php echo e($status === 'cancelled' ? 'bg-lgu-button text-lgu-button-text shadow-lg scale-105' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'); ?>">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-1">
-                            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
-                        </svg>
-                        Cancelled <span class="ml-1 px-2 py-0.5 bg-white/30 rounded-full text-xs"><?php echo e($statusCounts['cancelled']); ?></span>
-                    </a>
                 </div>
             </div>
         </div>
@@ -78,7 +81,7 @@
     <!-- Bookings List -->
     <?php if($bookings->isEmpty()): ?>
         <div class="bg-white shadow-xl rounded-2xl p-16 text-center border border-gray-100">
-            <div class="mx-auto w-24 h-24 bg-gradient-to-br from-lgu-bg to-lgu-button/20 rounded-full flex items-center justify-center mb-6 shadow-lg">
+            <div class="mx-auto w-24 h-24 bg-lgu-bg rounded-full flex items-center justify-center mb-6 shadow-lg">
                 <svg class="w-12 h-12 text-lgu-button" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                 </svg>
@@ -101,10 +104,12 @@
                         'pending' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-800', 'border' => 'border-yellow-300', 'label' => 'Pending Review'],
                         'staff_verified' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-800', 'border' => 'border-purple-300', 'label' => 'Verified'],
                         'payment_pending' => ['bg' => 'bg-orange-100', 'text' => 'text-orange-800', 'border' => 'border-orange-300', 'label' => 'Awaiting Payment'],
+                        'paid' => ['bg' => 'bg-cyan-100', 'text' => 'text-cyan-800', 'border' => 'border-cyan-300', 'label' => 'Payment Verified'],
                         'confirmed' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'border' => 'border-green-300', 'label' => 'Confirmed'],
                         'completed' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-800', 'border' => 'border-blue-300', 'label' => 'Completed'],
                         'cancelled' => ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'border' => 'border-gray-300', 'label' => 'Cancelled'],
                         'rejected' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'border' => 'border-red-300', 'label' => 'Rejected'],
+                        'expired' => ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'border' => 'border-gray-300', 'label' => 'Expired'],
                         default => ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'border' => 'border-gray-300', 'label' => ucfirst($booking->status)]
                     };
                     $startTime = \Carbon\Carbon::parse($booking->start_time);
@@ -120,7 +125,7 @@
                                      alt="<?php echo e($booking->facility_name); ?>" 
                                      class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                             <?php else: ?>
-                                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-lgu-bg to-lgu-button/30">
+                                <div class="w-full h-full flex items-center justify-center bg-lgu-button/30">
                                     <svg class="w-20 h-20 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                                     </svg>

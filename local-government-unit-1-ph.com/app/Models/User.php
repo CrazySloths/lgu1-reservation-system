@@ -13,6 +13,13 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
+     * The database connection to use (auth_db)
+     *
+     * @var string
+     */
+    protected $connection = 'auth_db';
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
@@ -81,5 +88,21 @@ class User extends Authenticatable
             'is_caloocan_resident' => $this->is_caloocan_resident,
             'city_discount' => $this->is_caloocan_resident ? 30.00 : 0.00,
         ];
+    }
+
+    /**
+     * Get the city that the user belongs to.
+     */
+    public function philippineCity()
+    {
+        return $this->belongsTo(PhilippineCity::class, 'city_id', 'id');
+    }
+
+    /**
+     * Get the barangay that the user belongs to.
+     */
+    public function barangay()
+    {
+        return $this->belongsTo(PhilippineBarangay::class, 'barangay_id', 'id');
     }
 }

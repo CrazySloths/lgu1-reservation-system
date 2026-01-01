@@ -135,7 +135,7 @@
                                 </div>
                                 <div>
                                     <h4 class="text-sm font-medium text-gray-900">{{ $payment->slip_number }}</h4>
-                                    <p class="text-xs text-gray-600">₱{{ number_format($payment->amount, 2) }} • Due {{ $payment->due_date->diffForHumans() }}</p>
+                                    <p class="text-xs text-gray-600">₱{{ number_format($payment->amount_due, 2) }} • Due {{ \Carbon\Carbon::parse($payment->payment_deadline)->diffForHumans() }}</p>
                                 </div>
                             </div>
                             <a href="{{ route('citizen.payment-slips.show', $payment->id) }}" class="text-yellow-600 hover:text-yellow-800 text-sm font-medium">

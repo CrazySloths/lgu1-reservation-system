@@ -415,9 +415,9 @@
                                     <span class="text-gray-600">Time Extension ({{ $pricing['extension_hours'] }} {{ $pricing['extension_hours'] == 1 ? 'hour' : 'hours' }})</span>
                                     <span>₱{{ number_format($pricing['extension_rate'], 2) }}</span>
                                 </div>
-                                @if(isset($pricing['pricing_model']) && $pricing['pricing_model'] === 'per_person' && isset($pricing['extension_rate_per_hour']))
+                                @if(isset($pricing['pricing_model']) && $pricing['pricing_model'] === 'per_person' && isset($pricing['extension_rate_per_block']))
                                     <div class="text-xs text-gray-500 mt-1">
-                                        ₱{{ number_format($pricing['extension_rate_per_hour'], 2) }} per person/hour × {{ number_format($pricing['expected_attendees']) }} people × {{ $pricing['extension_hours'] }} {{ $pricing['extension_hours'] == 1 ? 'hour' : 'hours' }}
+                                        ₱{{ number_format($pricing['extension_rate_per_block'], 2) }} per person per 2-hour block × {{ number_format($pricing['expected_attendees']) }} people × {{ $pricing['extension_blocks'] }} {{ $pricing['extension_blocks'] == 1 ? 'block' : 'blocks' }}
                                     </div>
                                 @endif
                             </div>

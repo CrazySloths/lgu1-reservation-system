@@ -104,7 +104,7 @@
 
                 <!-- Attachment -->
                 @if($announcement->attachment_path)
-                    <div class="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-300 rounded-xl p-6">
+                    <div class="bg-green-50 border-2 border-green-300 rounded-xl p-6">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-4">
                                 <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">

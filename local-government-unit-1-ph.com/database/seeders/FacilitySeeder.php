@@ -325,6 +325,6 @@ class FacilitySeeder extends Seeder
             'display_order' => 4
         ]);
 
-        $this->command->info('✅ Facilities seeded successfully! Created facilities for Caloocan City and Quezon City.');
+        $this->command->info('SUCCESS: Facilities seeded successfully! Created facilities for Caloocan City and Quezon City.');
     }
 }

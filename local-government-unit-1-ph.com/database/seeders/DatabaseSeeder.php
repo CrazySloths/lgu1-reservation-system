@@ -20,6 +20,6 @@ class DatabaseSeeder extends Seeder
             FacilitySeeder::class,
         ]);
         
-        $this->command->info('✅ All seeders completed successfully!');
+        $this->command->info('SUCCESS: All seeders completed successfully!');
     }
 }

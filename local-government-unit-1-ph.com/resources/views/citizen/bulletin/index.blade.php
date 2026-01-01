@@ -72,7 +72,7 @@
 
     <!-- Announcements List -->
     @if($announcements->isEmpty())
-        <div class="bg-gradient-to-br from-gray-50 to-gray-100 shadow-lg rounded-xl p-16 text-center">
+        <div class="bg-gray-50 shadow-lg rounded-xl p-16 text-center">
             <div class="mx-auto w-24 h-24 bg-white shadow-lg rounded-full flex items-center justify-center mb-6">
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400">
                     <path d="M3 7V5c0-1.1.9-2 2-2h2"/><path d="M17 3h2c1.1 0 2 .9 2 2v2"/><path d="M21 17v2c0 1.1-.9 2-2 2h-2"/><path d="M7 21H5c-1.1 0-2-.9-2-2v-2"/>

@@ -5,7 +5,49 @@
 @section('page-subtitle', $paymentSlip->slip_number)
 
 @section('page-content')
-<div class="space-y-6">
+
+@push('styles')
+<style>
+/* Hide print-only on screen */
+#payment-slip-print {
+    display: none;
+}
+
+@media print {
+    /* Hide everything with no-print class */
+    .no-print {
+        display: none !important;
+    }
+    
+    /* Show only the print section */
+    #payment-slip-print {
+        display: block !important;
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+    }
+    
+    /* Clean page */
+    body {
+        background: white !important;
+    }
+    
+    @page {
+        margin: 2cm;
+    }
+}
+</style>
+@endpush
+
+<!-- Print-Only Header -->
+<div id="payment-slip-print" style="display: none;">
+    <h1 style="font-size: 48px; font-weight: bold; color: #1f2937; text-align: center; margin: 0;">
+        Slip # {{ $paymentSlip->slip_number }}
+    </h1>
+</div>
+
+<div class="space-y-6 no-print">
     <!-- Back Button -->
     <div>
         <a href="{{ route('citizen.payment-slips') }}" 
@@ -18,6 +60,7 @@
     </div>
 
     <!-- Status Alert -->
+    <div class="no-print">
     @php
         // Use match for fixed Tailwind classes
         $statusInfo = match($paymentSlip->status) {
@@ -42,7 +85,7 @@
                 'message' => ''
             ]
         };
-        $dueDate = \Carbon\Carbon::parse($paymentSlip->due_date);
+        $dueDate = \Carbon\Carbon::parse($paymentSlip->payment_deadline);
         $isOverdue = $paymentSlip->status === 'unpaid' && $dueDate->isPast();
         $daysUntilDue = $isOverdue ? abs($dueDate->diffInDays(now(), false)) : $dueDate->diffInDays(now(), false);
     @endphp
@@ -68,12 +111,14 @@
                 <div class="flex items-center gap-3 flex-wrap">
                     <h3 class="text-2xl font-bold {{ $statusInfo['text'] }}">{{ $statusInfo['label'] }}</h3>
                     @if($isOverdue)
-                        <span class="px-4 py-1.5 bg-red-600 text-white text-sm font-bold rounded-full shadow-lg">
-                            ⚠ {{ $daysUntilDue }} {{ $daysUntilDue == 1 ? 'DAY' : 'DAYS' }} OVERDUE
+                        <span class="px-4 py-1.5 bg-red-600 text-white text-sm font-bold rounded-full shadow-lg inline-flex items-center gap-1">
+                            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                            {{ $daysUntilDue }} {{ $daysUntilDue == 1 ? 'DAY' : 'DAYS' }} OVERDUE
                         </span>
                     @elseif($paymentSlip->status === 'unpaid' && $daysUntilDue <= 3)
-                        <span class="px-4 py-1.5 bg-yellow-500 text-white text-sm font-bold rounded-full shadow-lg">
-                            ⏰ {{ $daysUntilDue }} {{ $daysUntilDue == 1 ? 'DAY' : 'DAYS' }} LEFT
+                        <span class="px-4 py-1.5 bg-yellow-500 text-white text-sm font-bold rounded-full shadow-lg inline-flex items-center gap-1">
+                            <i data-lucide="clock" class="w-4 h-4"></i>
+                            {{ $daysUntilDue }} {{ $daysUntilDue == 1 ? 'DAY' : 'DAYS' }} LEFT
                         </span>
                     @endif
                 </div>
@@ -83,8 +128,9 @@
             </div>
         </div>
     </div>
+    </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 no-print">
         <!-- Main Content -->
         <div class="lg:col-span-2 space-y-6">
             <!-- Payment Slip Information -->
@@ -189,7 +235,7 @@
                     <div class="border-t-2 border-gray-300 pt-3">
                         <div class="flex justify-between text-lg font-bold text-lgu-headline">
                             <span>Total Amount Due:</span>
-                            <span>₱{{ number_format($paymentSlip->amount, 2) }}</span>
+                            <span>₱{{ number_format($paymentSlip->amount_due, 2) }}</span>
                         </div>
                     </div>
                 </div>
@@ -213,84 +259,90 @@
                 </div>
             @endif
 
-            <!-- Payment Proof Upload (for unpaid slips) -->
+            <!-- Payment Instructions (for unpaid slips) -->
             @if($paymentSlip->status === 'unpaid')
-                <div class="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 rounded-xl p-8 shadow-lg">
+                <div class="bg-blue-50 border-2 border-blue-300 rounded-xl p-8 shadow-lg no-print">
                     <div class="flex items-center gap-3 mb-6">
                         <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>
-                            </svg>
+                            <i data-lucide="credit-card" class="w-6 h-6 text-white"></i>
                         </div>
                         <div>
-                            <h3 class="text-2xl font-bold text-blue-900">Upload Payment Proof</h3>
-                            <p class="text-sm text-blue-700">Submit your receipt for verification</p>
-                        </div>
-                    </div>
-                    <div class="bg-white border-2 border-blue-200 rounded-lg p-5 mb-5">
-                        <div class="flex items-start gap-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 flex-shrink-0 mt-0.5">
-                                <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
-                            </svg>
-                            <p class="text-sm text-blue-900 leading-relaxed">
-                                After making your payment, please upload your payment receipt or proof of payment here. Our staff will verify and confirm your payment within 24-48 hours.
-                            </p>
+                            <h3 class="text-2xl font-bold text-blue-900">How to Pay</h3>
+                            <p class="text-sm text-blue-700">Choose your payment method below</p>
                         </div>
                     </div>
                     
-                    <form id="paymentProofForm" enctype="multipart/form-data" class="space-y-5">
-                        @csrf
-                        <div>
-                            <label for="payment_method" class="block text-sm font-bold text-gray-900 mb-2">
-                                Payment Method <span class="text-red-500">*</span>
-                            </label>
-                            <select name="payment_method" id="payment_method" required
-                                    class="block w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-lgu-button focus:border-lgu-button transition-all">
-                                <option value="">-- Select Payment Method --</option>
-                                <option value="cash">💵 Cash</option>
-                                <option value="gcash">📱 GCash</option>
-                                <option value="paymaya">💳 PayMaya</option>
-                                <option value="bank_transfer">🏦 Bank Transfer</option>
-                                <option value="check">📝 Check</option>
-                            </select>
+                    <div class="space-y-4">
+                        <!-- Cash at CTO -->
+                        <div class="bg-white border-2 border-gray-200 rounded-lg p-5">
+                            <h4 class="font-bold text-lg text-gray-900 mb-3 flex items-center gap-2">
+                                <i data-lucide="building-2" class="w-5 h-5 text-lgu-button"></i>
+                                Pay at City Treasurer's Office (Cash)
+                            </h4>
+                            <ol class="list-decimal list-inside space-y-2 text-sm text-gray-700 ml-2">
+                                <li>Visit the City Treasurer's Office</li>
+                                <li>Show this payment slip (print or mobile)</li>
+                                <li>Pay <strong class="text-lgu-headline">₱{{ number_format($paymentSlip->amount_due, 2) }}</strong> to the cashier</li>
+                                <li>Treasurer will mark payment as received in the system</li>
+                                <li>You'll receive an Official Receipt automatically</li>
+                            </ol>
                         </div>
 
-                        <div>
-                            <label for="reference_number" class="block text-sm font-bold text-gray-900 mb-2">
-                                Reference Number <span class="text-gray-500 font-normal">(Optional)</span>
-                            </label>
-                            <input type="text" name="reference_number" id="reference_number"
-                                   class="block w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-lgu-button focus:border-lgu-button transition-all"
-                                   placeholder="Enter transaction ID or reference number">
+                        <!-- Online Payment -->
+                        <div class="bg-white border-2 border-gray-200 rounded-lg p-5">
+                            <h4 class="font-bold text-lg text-gray-900 mb-3 flex items-center gap-2">
+                                <i data-lucide="smartphone" class="w-5 h-5 text-lgu-button"></i>
+                                Pay Online (Cashless)
+                            </h4>
+                            <p class="text-sm text-gray-700 mb-4">
+                                Pay using GCash, Maya, or Bank Transfer. Simply send payment and enter your reference number!
+                            </p>
+                            <a href="{{ route('citizen.payment-slips.cashless', $paymentSlip->id) }}"
+                               class="w-full bg-lgu-button text-lgu-button-text font-bold py-4 rounded-lg hover:bg-lgu-highlight transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                                <i data-lucide="credit-card" class="w-5 h-5"></i>
+                                Pay Online Now
+                            </a>
                         </div>
-
+                    </div>
+                </div>
+            @endif
+            
+            <!-- Download Official Receipt (for paid slips) -->
+            @if($paymentSlip->status === 'paid' && $paymentSlip->transaction_reference)
+                <div class="bg-green-50 border-2 border-green-300 rounded-xl p-8 shadow-lg">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                            <i data-lucide="file-text" class="w-6 h-6 text-white"></i>
+                        </div>
                         <div>
-                            <label for="payment_proof" class="block text-sm font-bold text-gray-900 mb-2">
-                                Payment Receipt/Proof <span class="text-red-500">*</span>
-                            </label>
-                            <input type="file" name="payment_proof" id="payment_proof" accept="image/*,.pdf" required
-                                   class="block w-full text-sm text-gray-900 border-2 border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none file:mr-4 file:py-3 file:px-4 file:rounded-l-lg file:border-0 file:bg-lgu-button file:text-lgu-button-text file:font-semibold hover:file:bg-lgu-highlight transition-all">
-                            <div class="mt-2 flex items-center gap-2 text-xs text-gray-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
-                                </svg>
-                                <span>Accepted: JPG, PNG, PDF • Max size: 5MB</span>
+                            <h3 class="text-2xl font-bold text-green-900">Payment Received</h3>
+                            <p class="text-sm text-green-700">Your official receipt is ready</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white border-2 border-green-200 rounded-lg p-6 mb-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Official Receipt Number</p>
+                                <p class="text-2xl font-bold text-green-600">{{ $paymentSlip->transaction_reference }}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm text-gray-600 mb-1">Date Issued</p>
+                                <p class="text-base font-semibold text-gray-900">{{ \Carbon\Carbon::parse($paymentSlip->paid_at)->format('M d, Y') }}</p>
                             </div>
                         </div>
-
-                        <button type="submit" id="uploadBtn"
-                                class="w-full px-8 py-4 bg-lgu-button text-lgu-button-text font-bold text-lg rounded-lg hover:bg-lgu-highlight transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 cursor-pointer flex items-center justify-center gap-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>
-                            </svg>
-                            Upload Payment Proof
-                        </button>
-                    </form>
+                    </div>
+                    
+                    <a href="{{ route('citizen.payments.receipt', $paymentSlip->id) }}" 
+                       class="w-full bg-green-600 text-white font-bold py-4 rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                        Download Official Receipt (PDF)
+                    </a>
                 </div>
             @endif
 
-            <!-- Payment Receipt (if uploaded) -->
-            @if($paymentSlip->payment_receipt_url)
+            {{-- Payment Receipt (will be shown after payment is verified by Treasurer) --}}
+            {{-- @if(isset($paymentSlip->payment_receipt_url) && $paymentSlip->payment_receipt_url)
                 <div class="bg-white shadow rounded-lg p-6">
                     <h3 class="text-xl font-bold text-gray-900 mb-4">Uploaded Payment Proof</h3>
                     <div class="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -301,8 +353,8 @@
                             <div>
                                 <p class="font-medium text-green-900">Payment Receipt</p>
                                 <p class="text-sm text-green-700">{{ $paymentSlip->payment_method ? ucfirst(str_replace('_', ' ', $paymentSlip->payment_method)) : 'Uploaded' }}</p>
-                                @if($paymentSlip->gateway_reference_number)
-                                    <p class="text-xs text-green-600">Ref: {{ $paymentSlip->gateway_reference_number }}</p>
+                                @if(isset($paymentSlip->transaction_reference) && $paymentSlip->transaction_reference)
+                                    <p class="text-xs text-green-600">Ref: {{ $paymentSlip->transaction_reference }}</p>
                                 @endif
                             </div>
                         </div>
@@ -320,7 +372,7 @@
                         </p>
                     @endif
                 </div>
-            @endif
+            @endif --}}
         </div>
 
         <!-- Sidebar: Important Dates & Actions -->
@@ -370,17 +422,18 @@
                     </div>
                 </div>
 
-                @if($paymentSlip->or_number)
+                {{-- Official Receipt (will be shown after payment is verified by Treasurer) --}}
+                {{-- @if(isset($paymentSlip->or_number) && $paymentSlip->or_number)
                     <div class="border-t border-gray-200 pt-4">
                         <h4 class="text-sm font-bold text-gray-900 mb-2">Official Receipt</h4>
                         <p class="text-2xl font-bold text-lgu-headline">{{ $paymentSlip->or_number }}</p>
-                        @if($paymentSlip->treasurer_cashier_name)
+                        @if(isset($paymentSlip->treasurer_cashier_name) && $paymentSlip->treasurer_cashier_name)
                             <p class="text-xs text-gray-600 mt-1">Issued by: {{ $paymentSlip->treasurer_cashier_name }}</p>
                         @endif
                     </div>
-                @endif
+                @endif --}}
 
-                <div class="border-t border-gray-200 pt-4">
+                <div class="border-t border-gray-200 pt-4 no-print">
                     <h4 class="text-sm font-bold text-gray-900 mb-3">Quick Actions</h4>
                     <div class="space-y-3">
                         <a href="{{ route('citizen.reservations.show', $paymentSlip->booking_id) }}" 
@@ -413,92 +466,21 @@
 
 @push('scripts')
 <script>
-document.getElementById('paymentProofForm')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const paymentMethod = document.getElementById('payment_method').value;
-    const paymentProof = document.getElementById('payment_proof').files[0];
-    
-    // Client-side validation
-    if (!paymentMethod) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Payment Method Required',
-            text: 'Please select a payment method before uploading.',
-            confirmButtonColor: '#0f5b3a'
-        });
-        return;
-    }
-    
-    if (!paymentProof) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Payment Proof Required',
-            text: 'Please select a file to upload.',
-            confirmButtonColor: '#0f5b3a'
-        });
-        return;
-    }
-    
-    // Check file size (5MB max)
-    if (paymentProof.size > 5242880) {
-        Swal.fire({
-            icon: 'error',
-            title: 'File Too Large',
-            text: 'File size must not exceed 5MB.',
-            confirmButtonColor: '#0f5b3a'
-        });
-        return;
-    }
-    
-    const uploadBtn = document.getElementById('uploadBtn');
-    uploadBtn.disabled = true;
-    uploadBtn.innerHTML = '<svg class="animate-spin h-5 w-5 inline-block mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Uploading...';
-    
-    const formData = new FormData(this);
-    
-    fetch('/citizen/payments/{{ $paymentSlip->id }}/upload-proof', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Upload Successful!',
-                text: data.message,
-                confirmButtonColor: '#0f5b3a',
-                confirmButtonText: 'Okay'
-            }).then(() => {
-                location.reload();
-            });
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Upload Failed',
-                text: data.message || 'An error occurred while uploading.',
-                confirmButtonColor: '#0f5b3a'
-            });
-            uploadBtn.disabled = false;
-            uploadBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg> Upload Payment Proof';
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Network Error',
-            text: 'An unexpected error occurred. Please check your connection and try again.',
-            confirmButtonColor: '#0f5b3a'
-        });
-        uploadBtn.disabled = false;
-        uploadBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block mr-2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg> Upload Payment Proof';
+// Show coming soon alert with SweetAlert2
+function showComingSoonAlert() {
+    Swal.fire({
+        icon: 'info',
+        title: 'Coming Soon!',
+        text: 'Online payment integration coming soon!',
+        confirmButtonColor: '#0f5b3a',
+        confirmButtonText: 'Okay'
     });
-});
+}
+
+// Initialize Lucide icons
+if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+}
 </script>
 @endpush
 @endsection

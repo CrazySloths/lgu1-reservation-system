@@ -4,6 +4,11 @@
 <?php $__env->startSection('page-title', 'New Booking'); ?>
 <?php $__env->startSection('page-subtitle', 'Step 1 of 3: Select Facility, Date & Time'); ?>
 
+<?php
+    // Get session data for form restoration
+    $sessionData = session('booking_step1', []);
+?>
+
 <?php $__env->startSection('page-content'); ?>
 <div class="max-w-4xl mx-auto">
     <!-- Progress Steps -->
@@ -253,7 +258,7 @@ unset($__errorArgs, $__bag); ?>
                                value="<?php echo e(old('start_time_display', '08:00 AM')); ?>"
                                style="-webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;"
                                class="block w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg cursor-pointer hover:border-lgu-button focus:ring-lgu-button focus:border-lgu-button bg-white transition font-semibold text-gray-700">
-                        <input type="hidden" name="start_time" id="start_time" value="<?php echo e(old('start_time', '08:00')); ?>">
+                        <input type="hidden" name="start_time" id="start_time" value="<?php echo e(old('start_time', $sessionData['start_time'] ?? '08:00')); ?>">
                         <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock text-gray-400">
                                 <circle cx="12" cy="12" r="10"/>
@@ -287,7 +292,7 @@ unset($__errorArgs, $__bag); ?>
                                value="<?php echo e(old('end_time_display', '11:00 AM')); ?>"
                                style="-webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;"
                                class="block w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg cursor-pointer hover:border-lgu-button focus:ring-lgu-button focus:border-lgu-button bg-white transition font-semibold text-gray-700">
-                        <input type="hidden" name="end_time" id="end_time" value="<?php echo e(old('end_time', '11:00')); ?>">
+                        <input type="hidden" name="end_time" id="end_time" value="<?php echo e(old('end_time', $sessionData['end_time'] ?? '11:00')); ?>">
                         <div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock text-gray-400">
                                 <circle cx="12" cy="12" r="10"/>
@@ -460,11 +465,16 @@ unset($__errorArgs, $__bag); ?>
                     </svg>
                     Expected Number of Attendees <span class="text-red-500">*</span>
                 </label>
-                <input type="number" name="expected_attendees" id="expected_attendees" required min="1" max="<?php echo e($facility->capacity ?? 1000); ?>"
-                       value="<?php echo e(old('expected_attendees')); ?>"
-                       placeholder="e.g., 50"
+                <input type="number" name="expected_attendees" id="expected_attendees" required 
+                       min="<?php echo e($facility->min_capacity ?? 1); ?>" 
+                       max="<?php echo e($facility->capacity ?? 1000); ?>"
+                       value="<?php echo e(old('expected_attendees', session('booking_step1.expected_attendees'))); ?>"
+                       placeholder="Minimum <?php echo e($facility->min_capacity ?? 1); ?> people"
                        class="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-lgu-button focus:border-lgu-button">
-                <p class="mt-1 text-xs text-gray-500">Maximum capacity: <?php echo e(number_format($facility->capacity ?? 1000)); ?> people</p>
+                <p class="mt-1 text-xs text-gray-500">
+                    <span class="font-semibold text-lgu-headline">Minimum: <?php echo e(number_format($facility->min_capacity ?? 1)); ?> people</span> • 
+                    Maximum: <?php echo e(number_format($facility->capacity ?? 1000)); ?> people
+                </p>
                 <?php $__errorArgs = ['expected_attendees'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -478,7 +488,7 @@ unset($__errorArgs, $__bag); ?>
             </div>
 
             <!-- Real-time Pricing Breakdown -->
-            <div id="pricingBreakdown" class="mb-8 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-lgu-stroke rounded-xl p-6 shadow-sm" style="display: none;">
+            <div id="pricingBreakdown" class="mb-8 bg-blue-50 border-2 border-lgu-stroke rounded-xl p-6 shadow-sm" style="display: none;">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-bold text-lgu-headline flex items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calculator mr-2">
@@ -790,15 +800,86 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 nextStepBtn.disabled = false;
             } else {
+                // Build conflicts list HTML
+                let conflictsHtml = '';
+                if (data.conflicts && data.conflicts.length > 0) {
+                    conflictsHtml = `<div class="mt-3">
+                        <p class="text-sm font-medium text-red-700 mb-2 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock mr-1.5">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            Already Booked:
+                        </p>
+                        <ul class="text-sm text-red-600 space-y-1">`;
+                    data.conflicts.forEach(conflict => {
+                        conflictsHtml += `<li class="flex items-start">
+                            <span class="inline-block w-1.5 h-1.5 bg-red-500 rounded-full mr-2 mt-1.5"></span>
+                            <div class="flex-1">
+                                <div>${conflict.start} - ${conflict.end}</div>
+                                <div class="text-xs text-red-500 mt-0.5">+ 2-hour buffer until ${conflict.buffer_end} (cleanup & inspection)</div>
+                            </div>
+                        </li>`;
+                    });
+                    conflictsHtml += '</ul></div>';
+                }
+
+                // Build available slots HTML
+                let slotsHtml = '';
+                if (data.available_slots && data.available_slots.length > 0) {
+                    slotsHtml = `<div class="mt-4 pt-4 border-t border-red-200">
+                        <p class="text-sm font-medium text-green-700 mb-2 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle mr-1.5">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <path d="m9 11 3 3L22 4"/>
+                            </svg>
+                            Available Time Slots Today:
+                        </p>
+                        <div class="grid grid-cols-1 gap-2">`;
+                    data.available_slots.forEach((slot, index) => {
+                        slotsHtml += `
+                            <button type="button" 
+                                    onclick="selectTimeSlot('${slot.start_24h}', '${slot.end_24h}', '${slot.start}', '${slot.end}')"
+                                    class="text-left px-3 py-2 bg-green-50 hover:bg-green-100 border border-green-300 rounded-lg text-sm text-green-800 transition-colors flex items-center justify-between">
+                                <span class="font-medium">${slot.start} - ${slot.end}</span>
+                                <span class="text-xs text-green-600 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mouse-pointer-click mr-1">
+                                        <path d="m9 9 5 12 1.774-5.226L21 14 9 9z"/>
+                                        <path d="m16.071 16.071 4.243 4.243"/>
+                                        <path d="m7.188 2.239.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656-2.12 2.122"/>
+                                    </svg>
+                                    Click to use
+                                </span>
+                            </button>
+                        `;
+                    });
+                    slotsHtml += '</div></div>';
+                } else {
+                    slotsHtml = `<div class="mt-4 pt-4 border-t border-red-200">
+                        <p class="text-sm text-gray-600 flex items-start">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info mr-1.5 mt-0.5 flex-shrink-0">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 16v-4"/>
+                                <path d="M12 8h.01"/>
+                            </svg>
+                            <span><strong>Tip:</strong> Try a different date - this facility is fully booked today.</span>
+                        </p>
+                    </div>`;
+                }
+
                 availabilityResult.className = 'p-4 bg-red-50 border border-red-200 rounded-lg mb-6';
                 availabilityResult.innerHTML = `
-                    <div class="flex items-center text-red-800">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-circle mr-2">
+                    <div class="flex items-start text-red-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-circle mr-2 mt-0.5 flex-shrink-0">
                             <circle cx="12" cy="12" r="10"/>
                             <path d="m15 9-6 6"/>
                             <path d="m9 9 6 6"/>
                         </svg>
-                        <span class="font-medium">Facility is not available for the selected time. Please choose another date or time.</span>
+                        <div class="flex-1">
+                            <span class="font-medium">Time slot not available</span>
+                            ${conflictsHtml}
+                            ${slotsHtml}
+                        </div>
                     </div>
                 `;
                 nextStepBtn.disabled = true;
@@ -807,6 +888,29 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error checking availability:', error);
         }
     }
+
+    // Function to select an available time slot (called from HTML buttons)
+    window.selectTimeSlot = function(start24h, end24h, start12h, end12h) {
+        // Update the time inputs
+        startTimeInput.value = start24h;
+        startTimeDisplayInput.value = start12h;
+        endTimeInput.value = end24h;
+        endTimeDisplayInput.value = end12h;
+        
+        // Recheck availability (should now be green)
+        checkAvailability();
+        
+        // Show success message
+        Swal.fire({
+            icon: 'success',
+            title: 'Time Updated!',
+            text: `New time: ${start12h} - ${end12h}`,
+            timer: 2000,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
+        });
+    };
 
     // Add event listeners (only for elements that exist)
     if (facilitySelect) {
@@ -1126,7 +1230,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Check if end time is at least 3 hours after start time
+            // Check if duration is ONLY 3 or 5 hours
             const startTime = startTimeInput.value;
             if (startTime) {
                 const [startHour, startMin] = startTime.split(':').map(Number);
@@ -1134,10 +1238,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const endMinutes = hour24 * 60 + parseInt(selectedMinute);
                 const durationHours = (endMinutes - startMinutes) / 60;
                 
-                if (durationHours < 3) {
+                // Only allow 3 hours or 5 hours
+                if (durationHours !== 3 && durationHours !== 5) {
                     showTimeError(
-                        'Insufficient Duration',
-                        `The minimum booking duration is 3 hours. Your selection would only be ${durationHours.toFixed(1)} hours. Please select a later end time or adjust your start time.`
+                        'Invalid Duration',
+                        `You selected ${durationHours} hours.\n\nFacility bookings must be:\n• 3 hours (standard duration), OR\n• 5 hours (3 hours + 2-hour extension)\n\nOnly ONE 2-hour extension is allowed.\n\nPlease select a valid end time.`
                     );
                     return;
                 }
@@ -1149,6 +1254,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         closeTimePicker();
         checkAvailability();
+        calculateRealTimePricing(); // Trigger pricing recalculation immediately
+        saveFormData(); // Save updated time to localStorage and session
     });
     
     // Close modal handlers
@@ -1298,19 +1405,38 @@ document.addEventListener('DOMContentLoaded', function() {
         per_person_rate: <?php echo e($facility->per_person_rate ?? 130); ?>,
         per_person_extension_rate: <?php echo e($facility->per_person_extension_rate ?? 30); ?>,
         base_hours: <?php echo e($facility->base_hours ?? 3); ?>,
+        min_capacity: <?php echo e($facility->min_capacity ?? 1); ?>,
         max_capacity: <?php echo e($facility->capacity ?? 1000); ?>
 
     };
     
-    // Auto-cap attendees to facility capacity
-    expectedAttendeesInput.addEventListener('input', function() {
+    // Auto-enforce minimum and maximum capacity (validate on blur, not every keystroke)
+    expectedAttendeesInput.addEventListener('blur', function() {
+        const minCapacity = facilityPricing.min_capacity;
         const maxCapacity = facilityPricing.max_capacity;
         let value = parseInt(this.value);
+        
+        if (value < minCapacity && value !== '' && !isNaN(value)) {
+            this.value = minCapacity;
+            
+            // Show minimum capacity notification
+            Swal.fire({
+                icon: 'warning',
+                title: 'Minimum Capacity Required',
+                html: `This facility requires a <strong>minimum of ${minCapacity.toLocaleString()} attendees</strong> to ensure cost-effectiveness.<br><br>The number has been adjusted automatically.`,
+                confirmButtonColor: '#2C5F2D',
+                timer: 4000,
+                timerProgressBar: true
+            });
+            
+            // Recalculate price with adjusted value
+            calculateRealTimePricing();
+        }
         
         if (value > maxCapacity) {
             this.value = maxCapacity;
             
-            // Show a friendly notification
+            // Show maximum capacity notification
             Swal.fire({
                 icon: 'info',
                 title: 'Maximum Capacity Reached',
@@ -1319,6 +1445,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 timer: 3000,
                 timerProgressBar: true
             });
+            
+            // Recalculate price with adjusted value
+            calculateRealTimePricing();
         }
     });
     
@@ -1346,8 +1475,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Calculate pricing
         const baseHours = facilityPricing.base_hours;
         const extensionHours = Math.max(0, totalHours - baseHours);
+        const extensionBlocks = Math.ceil(extensionHours / 2); // 2-hour blocks, rounded up
         const baseRate = facilityPricing.per_person_rate * attendees;
-        const extensionRate = extensionHours > 0 ? (facilityPricing.per_person_extension_rate * attendees * extensionHours) : 0;
+        const extensionRate = extensionHours > 0 ? (facilityPricing.per_person_extension_rate * attendees * extensionBlocks) : 0;
         const subtotal = baseRate + extensionRate;
         
         // Update display
@@ -1362,7 +1492,7 @@ document.addEventListener('DOMContentLoaded', function() {
             extensionSection.style.display = 'block';
             document.getElementById('extensionHoursDisplay').textContent = extensionHours.toFixed(1);
             document.getElementById('extensionRateDisplay').textContent = '₱' + extensionRate.toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('extensionRateDetails').innerHTML = '₱' + facilityPricing.per_person_extension_rate.toFixed(2) + ' per person/hour × ' + attendees.toLocaleString() + ' people × ' + extensionHours.toFixed(1) + ' hours';
+            document.getElementById('extensionRateDetails').innerHTML = '₱' + facilityPricing.per_person_extension_rate.toFixed(2) + ' per person per 2-hour block × ' + attendees.toLocaleString() + ' people × ' + extensionBlocks + (extensionBlocks === 1 ? ' block' : ' blocks');
         } else {
             extensionSection.style.display = 'none';
         }
@@ -1376,7 +1506,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add event listeners for real-time calculation
     if (startTimeInput && endTimeInput && expectedAttendeesInput) {
         startTimeInput.addEventListener('change', calculateRealTimePricing);
+        startTimeInput.addEventListener('input', calculateRealTimePricing);
         endTimeInput.addEventListener('change', calculateRealTimePricing);
+        endTimeInput.addEventListener('input', calculateRealTimePricing);
         expectedAttendeesInput.addEventListener('input', calculateRealTimePricing);
         
         // Calculate on page load if data is available

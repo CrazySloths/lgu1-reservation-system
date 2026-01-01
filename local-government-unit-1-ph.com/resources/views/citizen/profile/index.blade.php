@@ -7,7 +7,7 @@
 @section('page-content')
 <div class="space-y-6">
     <!-- Profile Header Card -->
-    <div class="bg-gradient-to-r from-lgu-headline to-lgu-button rounded-xl shadow-lg p-8 text-white">
+    <div class="bg-lgu-headline rounded-xl shadow-lg p-8 text-white">
         <div class="flex flex-col md:flex-row items-center gap-6">
             <!-- Avatar -->
             <div class="relative group">

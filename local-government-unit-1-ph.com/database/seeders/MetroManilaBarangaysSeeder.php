@@ -51,7 +51,7 @@ class MetroManilaBarangaysSeeder extends Seeder
 
         $this->command->info('');
         $this->command->info('='.str_repeat('=', 60));
-        $this->command->info('✅ Metro Manila Barangays Seeding COMPLETE!');
+        $this->command->info('SUCCESS: Metro Manila Barangays Seeding COMPLETE!');
         $this->command->info('');
         $this->command->info('📊 Current Coverage:');
         $this->command->info('   • Manila: ~30 barangays (sample)');

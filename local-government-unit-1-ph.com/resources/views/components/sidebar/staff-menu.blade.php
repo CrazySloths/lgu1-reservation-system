@@ -1,42 +1,107 @@
-<li>
-    <a href="{{ route('staff.dashboard') }}" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
-        <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
-        </svg>
-        Dashboard
-    </a>
-</li>
-<li>
-    <a href="{{ route('staff.verification.index') }}" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
-        <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-        </svg>
-        Verification Queue
-    </a>
-</li>
-<li>
-    <a href="{{ route('bookings.approval') }}" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
-        <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
-            <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"></path>
-        </svg>
-        All Bookings
-    </a>
-</li>
-<li>
-    <a href="{{ route('calendar') }}" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
-        <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
-        </svg>
-        Schedule Calendar
-    </a>
-</li>
-<li>
-    <a href="{{ route('facility.list') }}" class="sidebar-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
-        <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm6 6H7v2h6v-2z" clip-rule="evenodd"></path>
-        </svg>
-        Facilities
-    </a>
-</li>
+<!-- MAIN SECTION -->
+<div class="px-gr-md mb-gr-lg">
+    <h4 class="text-gray-400 text-caption font-semibold uppercase tracking-wider mb-gr-xs">Main</h4>
+    <ul class="space-y-gr-xs">
+        <li>
+            <a href="{{ route('staff.dashboard') }}" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('staff.dashboard') ? 'active' : '' }}">
+                <i data-lucide="layout-dashboard" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+    </ul>
+</div>
 
+<!-- BOOKING VERIFICATION SUBMODULE -->
+<div class="px-gr-md mb-gr-lg">
+    <h4 class="text-gray-400 text-caption font-semibold uppercase tracking-wider mb-gr-xs">Booking Verification</h4>
+    <ul class="space-y-gr-xs">
+        <li>
+            <a href="{{ route('staff.verification-queue') }}" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('staff.verification-queue') ? 'active' : '' }}">
+                <i data-lucide="clock" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
+                <span>Verification Queue</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ route('staff.bookings.index') }}" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('staff.bookings.*') ? 'active' : '' }}">
+                <i data-lucide="calendar-check" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
+                <span>All Bookings</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ route('staff.calendar') }}" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('staff.calendar') ? 'active' : '' }}">
+                <i data-lucide="calendar-days" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
+                <span>Calendar View</span>
+            </a>
+        </li>
+    </ul>
+</div>
+
+<!-- FACILITIES INFORMATION SUBMODULE (Read-Only Access) -->
+<div class="px-gr-md mb-gr-lg">
+    <h4 class="text-gray-400 text-caption font-semibold uppercase tracking-wider mb-gr-xs">Facilities</h4>
+    <ul class="space-y-gr-xs">
+        <li>
+            <a href="#" onclick="showComingSoon('View Facilities'); return false;" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 opacity-60">
+                <i data-lucide="building-2" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
+                <span>View Facilities</span>
+                <span class="ml-auto text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full">Soon</span>
+            </a>
+        </li>
+        <li>
+            <a href="#" onclick="showComingSoon('Equipment List'); return false;" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 opacity-60">
+                <i data-lucide="package" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
+                <span>Equipment List</span>
+                <span class="ml-auto text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full">Soon</span>
+            </a>
+        </li>
+        <li>
+            <a href="#" onclick="showComingSoon('Pricing Information'); return false;" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 opacity-60">
+                <i data-lucide="tag" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
+                <span>Pricing Info</span>
+                <span class="ml-auto text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full">Soon</span>
+            </a>
+        </li>
+    </ul>
+</div>
+
+<!-- REPORTS & ANALYTICS SUBMODULE (Limited Access) -->
+<div class="px-gr-md mb-gr-lg">
+    <h4 class="text-gray-400 text-caption font-semibold uppercase tracking-wider mb-gr-xs">Reports</h4>
+    <ul class="space-y-gr-xs">
+        <li>
+            <a href="#" onclick="showComingSoon('Verification Reports'); return false;" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 opacity-60">
+                <i data-lucide="file-bar-chart" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
+                <span>My Statistics</span>
+                <span class="ml-auto text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full">Soon</span>
+            </a>
+        </li>
+        <li>
+            <a href="#" onclick="showComingSoon('Activity Log'); return false;" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 opacity-60">
+                <i data-lucide="file-text" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
+                <span>Activity Log</span>
+                <span class="ml-auto text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full">Soon</span>
+            </a>
+        </li>
+    </ul>
+</div>
+
+<!-- COMMUNICATIONS SUBMODULE -->
+<div class="px-gr-md mb-gr-lg">
+    <h4 class="text-gray-400 text-caption font-semibold uppercase tracking-wider mb-gr-xs">Communications</h4>
+    <ul class="space-y-gr-xs">
+        <li>
+            <a href="#" onclick="showComingSoon('Send Notifications'); return false;" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 opacity-60">
+                <i data-lucide="send" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
+                <span>Send Notification</span>
+                <span class="ml-auto text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full">Soon</span>
+            </a>
+        </li>
+        <li>
+            <a href="#" onclick="showComingSoon('Message Templates'); return false;" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 opacity-60">
+                <i data-lucide="mail" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
+                <span>Templates</span>
+                <span class="ml-auto text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full">Soon</span>
+            </a>
+        </li>
+    </ul>
+</div>

@@ -65,7 +65,7 @@ use Illuminate\Support\Facades\Storage;
                                                      alt="<?php echo e($item->name); ?>" 
                                                      class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
                                             <?php else: ?>
-                                                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-lgu-bg to-lgu-button">
+                                                <div class="w-full h-full flex items-center justify-center bg-lgu-button">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white opacity-50">
                                                         <rect width="18" height="18" x="3" y="3" rx="2"/>
                                                         <path d="M7 7h.01"/>
@@ -78,7 +78,7 @@ use Illuminate\Support\Facades\Storage;
                                             <!-- Stock Badge -->
                                             <div class="absolute top-3 right-3">
                                                 <span class="px-3 py-1 bg-white bg-opacity-90 backdrop-blur-sm rounded-full text-xs font-semibold text-gray-700 shadow">
-                                                    <?php echo e($item->quantity_available); ?> available
+                                                    <?php echo e($item->quantity_available_now); ?> available
                                                 </span>
                                             </div>
                                         </div>
@@ -99,7 +99,7 @@ use Illuminate\Support\Facades\Storage;
                                                            name="equipment[<?php echo e($item->id); ?>]" 
                                                            id="equipment_<?php echo e($item->id); ?>"
                                                            min="0" 
-                                                           max="<?php echo e($item->quantity_available); ?>" 
+                                                           max="<?php echo e($item->quantity_available_now); ?>" 
                                                            value="0"
                                                            data-price="<?php echo e($item->price_per_unit); ?>"
                                                            class="equipment-input w-20 px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-lgu-button focus:border-lgu-button text-center font-semibold cursor-pointer">
@@ -153,9 +153,17 @@ use Illuminate\Support\Facades\Storage;
                     </div>
 
                     <?php if($pricing['extension_hours'] > 0): ?>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">Extension (<?php echo e($pricing['extension_blocks']); ?> x 2 hours)</span>
-                            <span class="font-medium">₱<?php echo e(number_format($pricing['extension_rate'], 2)); ?></span>
+                        <div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">Time Extension (<?php echo e($pricing['extension_hours']); ?> <?php echo e($pricing['extension_hours'] == 1 ? 'hour' : 'hours'); ?>)</span>
+                                <span class="font-medium">₱<?php echo e(number_format($pricing['extension_rate'], 2)); ?></span>
+                            </div>
+                            <?php if($pricing['pricing_model'] == 'per_person' && isset($pricing['extension_rate_per_block'])): ?>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    ₱<?php echo e(number_format($pricing['extension_rate_per_block'], 2)); ?> per person per 2-hour block × <?php echo e(number_format($pricing['expected_attendees'])); ?> people × <?php echo e($pricing['extension_blocks']); ?> <?php echo e($pricing['extension_blocks'] == 1 ? 'block' : 'blocks'); ?>
+
+                                </div>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
 

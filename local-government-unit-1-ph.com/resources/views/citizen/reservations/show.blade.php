@@ -44,6 +44,14 @@
                 'label' => 'Awaiting Payment',
                 'message' => 'Please settle your payment to confirm this booking.'
             ],
+            'paid' => [
+                'bg' => 'bg-cyan-50',
+                'border' => 'border-cyan-500',
+                'text' => 'text-cyan-800',
+                'icon' => 'text-cyan-500',
+                'label' => 'Payment Verified',
+                'message' => 'Your payment has been verified by the treasurer! Awaiting admin final confirmation.'
+            ],
             'confirmed' => [
                 'bg' => 'bg-green-50',
                 'border' => 'border-green-500',
@@ -104,6 +112,129 @@
             </div>
         </div>
     </div>
+
+    @if($booking->status === 'staff_verified')
+        <!-- Payment Deadline Countdown -->
+        @php
+            $deadline = $booking->getPaymentDeadline();
+            $hoursRemaining = $booking->getHoursUntilDeadline();
+            $isOverdue = $booking->isPaymentOverdue();
+            $isCritical = $booking->isDeadlineCritical();
+            $isApproaching = $booking->isDeadlineApproaching();
+        @endphp
+
+        @if($isOverdue)
+            <div class="bg-red-50 border-l-4 border-red-500 p-5 rounded-lg shadow-sm">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i data-lucide="alert-circle" class="w-6 h-6 text-red-500"></i>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <h3 class="text-base font-bold text-red-800">Payment Deadline Passed</h3>
+                        <p class="text-sm text-red-700 mt-1">
+                            The 48-hour payment deadline has passed. This booking will be automatically expired soon.
+                        </p>
+                        <p class="text-sm text-red-600 mt-2">
+                            <strong>Deadline was:</strong> {{ $deadline->format('M d, Y h:i A') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        @elseif($isCritical)
+            <div class="bg-orange-50 border-l-4 border-orange-500 p-5 rounded-lg shadow-sm">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i data-lucide="clock-alert" class="w-6 h-6 text-orange-500"></i>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <h3 class="text-base font-bold text-orange-800">URGENT: Payment Deadline Approaching</h3>
+                        <p class="text-sm text-orange-700 mt-1">
+                            Less than 6 hours remaining! Please submit your payment immediately to secure this booking.
+                        </p>
+                        <div class="mt-3 bg-white border border-orange-200 rounded-lg p-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-caption text-orange-600 font-medium">Time Remaining</p>
+                                    <p class="text-h3 font-bold text-orange-600" id="countdown-timer">
+                                        {{ $booking->formatTimeRemaining() }}
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-caption text-orange-600 font-medium">Deadline</p>
+                                    <p class="text-small font-bold text-orange-700">
+                                        {{ $deadline->format('M d, Y') }}<br>
+                                        {{ $deadline->format('h:i A') }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @elseif($isApproaching)
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-5 rounded-lg shadow-sm">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i data-lucide="clock" class="w-6 h-6 text-yellow-500"></i>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <h3 class="text-base font-bold text-yellow-800">Payment Deadline Reminder</h3>
+                        <p class="text-sm text-yellow-700 mt-1">
+                            Less than 24 hours remaining. Please submit your payment soon to avoid expiration.
+                        </p>
+                        <div class="mt-3 bg-white border border-yellow-200 rounded-lg p-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-caption text-yellow-600 font-medium">Time Remaining</p>
+                                    <p class="text-h3 font-bold text-yellow-600" id="countdown-timer">
+                                        {{ $booking->formatTimeRemaining() }}
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-caption text-yellow-600 font-medium">Deadline</p>
+                                    <p class="text-small font-bold text-yellow-700">
+                                        {{ $deadline->format('M d, Y') }}<br>
+                                        {{ $deadline->format('h:i A') }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @else
+            <div class="bg-green-50 border-l-4 border-green-500 p-5 rounded-lg shadow-sm">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i data-lucide="check-circle" class="w-6 h-6 text-green-500"></i>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <h3 class="text-base font-bold text-green-800">Payment Required Within 48 Hours</h3>
+                        <p class="text-sm text-green-700 mt-1">
+                            Your booking has been verified! Please submit payment before the deadline to confirm your reservation.
+                        </p>
+                        <div class="mt-3 bg-white border border-green-200 rounded-lg p-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-caption text-green-600 font-medium">Time Remaining</p>
+                                    <p class="text-h3 font-bold text-green-600" id="countdown-timer">
+                                        {{ $booking->formatTimeRemaining() }}
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-caption text-green-600 font-medium">Deadline</p>
+                                    <p class="text-small font-bold text-green-700">
+                                        {{ $deadline->format('M d, Y') }}<br>
+                                        {{ $deadline->format('h:i A') }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+    @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Main Content -->
@@ -196,32 +327,87 @@
             <div class="bg-white shadow rounded-lg p-6">
                 <h3 class="text-xl font-bold text-gray-900 mb-4">Documents</h3>
                 <div class="space-y-4">
-                    <!-- Valid ID -->
+                    <!-- Valid ID - Front -->
                     <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                         <div class="flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-lgu-button mr-3">
                                 <rect width="20" height="14" x="2" y="7" rx="2"/><path d="M2 12h20"/><path d="M7 15h3"/><path d="M7 19h7"/>
                             </svg>
                             <div>
-                                <p class="font-medium text-gray-900">Valid Government ID</p>
+                                <p class="font-medium text-gray-900">Valid ID - Front</p>
                                 <p class="text-sm text-gray-600">Required for verification</p>
                             </div>
                         </div>
-                        @if($booking->valid_id_path)
-                            <a href="{{ asset('storage/' . $booking->valid_id_path) }}" target="_blank"
+                        @if($booking->valid_id_front_path)
+                            <a href="{{ asset('storage/' . $booking->valid_id_front_path) }}" target="_blank"
                                class="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition text-sm font-medium">
                                 View
                             </a>
                         @else
-                            <button type="button" onclick="openUploadModal('valid_id')"
-                                    class="px-4 py-2 bg-lgu-button text-lgu-button-text rounded-lg hover:bg-lgu-highlight transition text-sm font-medium">
-                                Upload
-                            </button>
+                            <span class="px-4 py-2 bg-gray-100 text-gray-500 rounded-lg text-sm font-medium">
+                                Not Uploaded
+                            </span>
+                        @endif
+                    </div>
+
+                    <!-- Valid ID - Back -->
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-lgu-button mr-3">
+                                <rect width="20" height="14" x="2" y="7" rx="2"/><path d="M2 12h20"/><path d="M7 15h3"/><path d="M7 19h7"/>
+                            </svg>
+                            <div>
+                                <p class="font-medium text-gray-900">Valid ID - Back</p>
+                                <p class="text-sm text-gray-600">Required for verification</p>
+                            </div>
+                        </div>
+                        @if($booking->valid_id_back_path)
+                            <a href="{{ asset('storage/' . $booking->valid_id_back_path) }}" target="_blank"
+                               class="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition text-sm font-medium">
+                                View
+                            </a>
+                        @else
+                            <span class="px-4 py-2 bg-gray-100 text-gray-500 rounded-lg text-sm font-medium">
+                                Not Uploaded
+                            </span>
+                        @endif
+                    </div>
+
+                    <!-- Selfie with ID -->
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-lgu-button mr-3">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            <div>
+                                <p class="font-medium text-gray-900">Selfie with ID</p>
+                                <p class="text-sm text-gray-600">Required for verification</p>
+                            </div>
+                        </div>
+                        @if($booking->valid_id_selfie_path)
+                            <a href="{{ asset('storage/' . $booking->valid_id_selfie_path) }}" target="_blank"
+                               class="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition text-sm font-medium">
+                                View
+                            </a>
+                        @else
+                            <span class="px-4 py-2 bg-gray-100 text-gray-500 rounded-lg text-sm font-medium">
+                                Not Uploaded
+                            </span>
                         @endif
                     </div>
 
                     <!-- Special Discount ID -->
                     @if($booking->special_discount_type)
+                        @php
+                            // Check if Valid ID Type matches the discount type (auto-applied scenario)
+                            $isAutoApplied = false;
+                            if (($booking->valid_id_type === 'School ID' && $booking->special_discount_type === 'student') ||
+                                ($booking->valid_id_type === 'Senior Citizen ID' && $booking->special_discount_type === 'senior') ||
+                                ($booking->valid_id_type === 'PWD ID' && $booking->special_discount_type === 'pwd')) {
+                                $isAutoApplied = true;
+                            }
+                        @endphp
+
                         <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                             <div class="flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-lgu-button mr-3">
@@ -229,19 +415,26 @@
                                 </svg>
                                 <div>
                                     <p class="font-medium text-gray-900">{{ ucfirst($booking->special_discount_type) }} ID</p>
-                                    <p class="text-sm text-gray-600">For {{ $booking->special_discount_rate * 100 }}% discount</p>
+                                    <p class="text-sm text-gray-600">For {{ number_format($booking->special_discount_rate, 0) }}% discount
+                                        @if($isAutoApplied)
+                                            <span class="text-blue-600">(See Valid ID above)</span>
+                                        @endif
+                                    </p>
                                 </div>
                             </div>
-                            @if($booking->special_discount_id_path)
+                            @if($isAutoApplied)
+                                <span class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium">
+                                    Same as Valid ID
+                                </span>
+                            @elseif($booking->special_discount_id_path)
                                 <a href="{{ asset('storage/' . $booking->special_discount_id_path) }}" target="_blank"
                                    class="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition text-sm font-medium">
                                     View
                                 </a>
                             @else
-                                <button type="button" onclick="openUploadModal('special_discount_id')"
-                                        class="px-4 py-2 bg-lgu-button text-lgu-button-text rounded-lg hover:bg-lgu-highlight transition text-sm font-medium">
-                                    Upload
-                                </button>
+                                <span class="px-4 py-2 bg-gray-100 text-gray-500 rounded-lg text-sm font-medium">
+                                    Not Uploaded
+                                </span>
                             @endif
                         </div>
                     @endif
@@ -263,10 +456,9 @@
                                 View
                             </a>
                         @else
-                            <button type="button" onclick="openUploadModal('supporting_doc')"
-                                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-medium">
-                                Upload
-                            </button>
+                            <span class="px-4 py-2 bg-gray-100 text-gray-500 rounded-lg text-sm font-medium">
+                                Not Uploaded
+                            </span>
                         @endif
                     </div>
                 </div>
@@ -312,13 +504,13 @@
                     </div>
                     @if($booking->resident_discount_amount > 0)
                         <div class="flex justify-between text-green-600">
-                            <span>Resident Discount ({{ $booking->resident_discount_rate * 100 }}%):</span>
+                            <span>Resident Discount ({{ number_format($booking->resident_discount_rate, 0) }}%):</span>
                             <span>- ₱{{ number_format($booking->resident_discount_amount, 2) }}</span>
                         </div>
                     @endif
                     @if($booking->special_discount_amount > 0)
                         <div class="flex justify-between text-green-600">
-                            <span>{{ ucfirst($booking->special_discount_type) }} Discount ({{ $booking->special_discount_rate * 100 }}%):</span>
+                            <span>{{ ucfirst($booking->special_discount_type) }} Discount ({{ number_format($booking->special_discount_rate, 0) }}%):</span>
                             <span>- ₱{{ number_format($booking->special_discount_amount, 2) }}</span>
                         </div>
                     @endif
@@ -370,7 +562,7 @@
                     </h4>
                     <div class="space-y-4 relative">
                         <!-- Timeline Line -->
-                        <div class="absolute left-1.5 top-2 bottom-2 w-0.5 bg-gradient-to-b from-lgu-button via-gray-300 to-gray-200"></div>
+                        <div class="absolute left-1.5 top-2 bottom-2 w-0.5 bg-gray-300"></div>
                         
                         <!-- Created -->
                         <div class="flex items-start relative">
@@ -635,6 +827,55 @@ function cancelBooking(bookingId) {
             confirmButton: 'px-6 py-2.5 rounded-lg font-semibold cursor-pointer'
         }
     });
+@endif
+
+@if($booking->status === 'staff_verified' && !$booking->isPaymentOverdue())
+// Countdown Timer - Update every minute
+@php
+    $deadline = $booking->getPaymentDeadline();
+    $deadlineTimestamp = $deadline ? $deadline->timestamp * 1000 : null;
+@endphp
+
+@if($deadlineTimestamp)
+function updateCountdown() {
+    const deadlineTime = {{ $deadlineTimestamp }};
+    const now = Date.now();
+    const difference = deadlineTime - now;
+
+    if (difference <= 0) {
+        // Deadline passed, reload page to show "overdue" message
+        location.reload();
+        return;
+    }
+
+    // Calculate time components
+    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+
+    // Format countdown string
+    let countdownText = '';
+    if (days > 0) {
+        countdownText = `${days}d ${hours}h ${minutes}m`;
+    } else if (hours > 0) {
+        countdownText = `${hours}h ${minutes}m`;
+    } else {
+        countdownText = `${minutes}m`;
+    }
+
+    // Update the countdown timer element
+    const timerElement = document.getElementById('countdown-timer');
+    if (timerElement) {
+        timerElement.textContent = countdownText;
+    }
+}
+
+// Update countdown immediately
+updateCountdown();
+
+// Update countdown every minute
+setInterval(updateCountdown, 60000);
+@endif
 @endif
 </script>
 @endpush
