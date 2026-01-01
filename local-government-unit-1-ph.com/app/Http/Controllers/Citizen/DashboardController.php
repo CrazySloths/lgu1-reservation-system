@@ -53,16 +53,18 @@ class DashboardController extends Controller
         // Get unpaid payment slips count
         $unpaidPaymentSlips = DB::connection('facilities_db')
             ->table('payment_slips')
-            ->where('user_id', $userId)
-            ->where('status', 'unpaid')
+            ->join('bookings', 'payment_slips.booking_id', '=', 'bookings.id')
+            ->where('bookings.user_id', $userId)
+            ->where('payment_slips.status', 'unpaid')
             ->count();
         
         // Get total spent (from paid payment slips)
         $totalSpent = DB::connection('facilities_db')
             ->table('payment_slips')
-            ->where('user_id', $userId)
-            ->where('status', 'paid')
-            ->sum('amount') ?? 0;
+            ->join('bookings', 'payment_slips.booking_id', '=', 'bookings.id')
+            ->where('bookings.user_id', $userId)
+            ->where('payment_slips.status', 'paid')
+            ->sum('payment_slips.amount_due') ?? 0;
         
         // Get upcoming bookings (next 5)
         $upcomingBookings = DB::connection('facilities_db')
@@ -77,10 +79,12 @@ class DashboardController extends Controller
         // Get pending payments (unpaid payment slips)
         $pendingPayments = DB::connection('facilities_db')
             ->table('payment_slips')
-            ->where('user_id', $userId)
-            ->where('status', 'unpaid')
-            ->where('due_date', '>=', Carbon::now())
-            ->orderBy('due_date', 'asc')
+            ->join('bookings', 'payment_slips.booking_id', '=', 'bookings.id')
+            ->where('bookings.user_id', $userId)
+            ->where('payment_slips.status', 'unpaid')
+            ->where('payment_slips.payment_deadline', '>=', Carbon::now())
+            ->orderBy('payment_slips.payment_deadline', 'asc')
+            ->select('payment_slips.*')
             ->get();
         
         return view('citizen.dashboard', [

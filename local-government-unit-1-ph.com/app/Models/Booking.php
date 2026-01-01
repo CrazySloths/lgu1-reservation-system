@@ -4,12 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Booking extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     /**
      * The database connection that should be used by the model.
@@ -51,42 +50,39 @@ class Booking extends Model
         'start_time',
         'end_time',
         'expected_attendees',
-        'total_fee',
-        'status',
-        'admin_notes',
-        'approved_by',
-        'approved_at',
-        'rejected_reason',
-        // Document file paths
-        'valid_id_path',
-        'id_back_path',
-        'id_selfie_path',
-        'authorization_letter_path',
-        'event_proposal_path',
-        'digital_signature',
-        // Discount and pricing fields
-        'selected_id_type',
+        'purpose',
+        'special_requests',
+        // Pricing fields (actual column names)
+        'base_rate',
+        'extension_rate',
         'subtotal',
         'equipment_total',
-        'city_discount_percentage',
-        'city_discount_amount',
-        'identity_discount_type',
-        'identity_discount_percentage',
-        'identity_discount_amount',
-        'total_savings',
-        'pricing_breakdown',
-        'id_verified',
-        'id_verified_at',
-        'id_verification_notes',
-        // Enhanced status fields
+        'city_of_residence',
+        'is_resident',
+        'resident_discount_rate',
+        'resident_discount_amount',
+        'special_discount_type',
+        'special_discount_id_path',
+        'special_discount_rate',
+        'special_discount_amount',
+        'total_discount',
+        'total_amount',
+        // Document file paths (actual column names)
+        'valid_id_type',
+        'valid_id_front_path',
+        'valid_id_back_path',
+        'valid_id_selfie_path',
+        'supporting_doc_path',
+        // Status and approval fields
+        'status',
+        'rejected_reason',
+        'staff_verified_by',
+        'staff_verified_at',
+        'staff_notes',
         'admin_approved_by',
         'admin_approved_at',
         'admin_approval_notes',
-        'reserved_until',
-        'rejection_category',
-        'rejected_by',
-        'rejected_at',
-        'staff_notes'
+        'reserved_until'
     ];
 
     /**
@@ -96,36 +92,39 @@ class Booking extends Model
      */
     protected $casts = [
         'event_date' => 'date',
-        'start_time' => 'string',
-        'end_time' => 'string',
+        'start_time' => 'datetime',
+        'end_time' => 'datetime',
         'expected_attendees' => 'integer',
-        'total_fee' => 'decimal:2',
-        'approved_at' => 'datetime',
+        'base_rate' => 'decimal:2',
+        'extension_rate' => 'decimal:2',
         'subtotal' => 'decimal:2',
         'equipment_total' => 'decimal:2',
-        'city_discount_percentage' => 'decimal:2',
-        'city_discount_amount' => 'decimal:2',
-        'identity_discount_percentage' => 'decimal:2',
-        'identity_discount_amount' => 'decimal:2',
-        'total_savings' => 'decimal:2',
-        'pricing_breakdown' => 'array',
-        'id_verified' => 'boolean',
-        'id_verified_at' => 'datetime',
+        'is_resident' => 'boolean',
+        'resident_discount_rate' => 'decimal:2',
+        'resident_discount_amount' => 'decimal:2',
+        'special_discount_rate' => 'decimal:2',
+        'special_discount_amount' => 'decimal:2',
+        'total_discount' => 'decimal:2',
+        'total_amount' => 'decimal:2',
+        'staff_verified_at' => 'datetime',
         'admin_approved_at' => 'datetime',
         'reserved_until' => 'datetime',
-        'rejected_at' => 'datetime',
     ];
 
     /**
      * Get the facility that owns the booking.
+     * Note: Uses FacilityDb which queries facilities from facilities_db
      */
     public function facility(): BelongsTo
     {
-        return $this->belongsTo(Facility::class, 'facility_id', 'facility_id');
+        return $this->belongsTo(FacilityDb::class, 'facility_id', 'facility_id');
     }
 
     /**
      * Get the user that owns the booking.
+     * Note: Users are in the default database (auth_db), not facilities_db
+     * This relationship cannot be eager loaded due to cross-database constraints
+     * Load it manually when needed: User::find($booking->user_id)
      */
     public function user(): BelongsTo
     {
@@ -247,65 +246,185 @@ class Booking extends Model
     }
 
     /**
-     * Check if extending this booking would cause conflicts with other bookings
+     * Check for schedule conflicts with other bookings
+     * Single source of truth for conflict detection - NO REDUNDANCY
      * 
-     * @param string $newEndTime The proposed new end time
      * @return array Array with 'hasConflict' boolean and 'conflicts' collection
      */
-    public function checkExtensionConflict($newEndTime): array
+    public function checkScheduleConflicts(): array
     {
-        // Validate that the new end time is actually an extension
-        if ($newEndTime <= $this->end_time) {
-            return [
-                'hasConflict' => false,
-                'conflicts' => collect(),
-                'message' => 'New end time must be later than current end time'
-            ];
-        }
-
-        // Find conflicting bookings on the same facility and date
+        // Find conflicting bookings:
+        // - Same facility
+        // - Same date
+        // - Already approved or paid (locked slots)
+        // - Overlapping time range
         $conflicts = self::where('facility_id', $this->facility_id)
-            ->where('event_date', $this->event_date)
             ->where('id', '!=', $this->id) // Exclude current booking
-            ->whereIn('status', ['approved', 'pending']) // Only check approved/pending bookings
-            ->where(function($query) use ($newEndTime) {
-                // Check if the EXTENDED time (current start to new end) overlaps with other bookings
-                // Overlap occurs when: this.start < other.end AND this.newEnd > other.start
-                $query->where(function($q) use ($newEndTime) {
-                    $q->where('start_time', '<', $newEndTime)
-                      ->where('end_time', '>', $this->start_time);
+            ->where('event_date', $this->event_date) // Same date
+            ->whereIn('status', ['staff_verified', 'paid', 'confirmed']) // Only check locked bookings
+            ->where(function($query) {
+                // Time overlap detection:
+                // Overlap exists if: (start1 < end2) AND (end1 > start2)
+                $query->where(function($q) {
+                    // Other booking starts during this booking
+                    $q->where('start_time', '>=', $this->start_time)
+                      ->where('start_time', '<', $this->end_time);
+                })
+                ->orWhere(function($q) {
+                    // Other booking ends during this booking
+                    $q->where('end_time', '>', $this->start_time)
+                      ->where('end_time', '<=', $this->end_time);
+                })
+                ->orWhere(function($q) {
+                    // Other booking completely contains this booking
+                    $q->where('start_time', '<=', $this->start_time)
+                      ->where('end_time', '>=', $this->end_time);
                 });
             })
-            ->with(['facility', 'user'])
+            ->with(['facility.lguCity'])
             ->get();
 
         return [
             'hasConflict' => $conflicts->isNotEmpty(),
             'conflicts' => $conflicts,
+            'conflictCount' => $conflicts->count(),
             'message' => $conflicts->isNotEmpty() 
-                ? 'Extension would conflict with ' . $conflicts->count() . ' existing booking(s)'
-                : 'No conflicts detected'
+                ? $conflicts->count() . ' conflicting booking(s) detected'
+                : 'No schedule conflicts'
         ];
     }
 
     /**
-     * Extend the booking end time
+     * Get the payment deadline (48 hours after staff verification)
      * 
-     * @param string $newEndTime
+     * @return \Carbon\Carbon|null
+     */
+    public function getPaymentDeadline()
+    {
+        if ($this->status === 'staff_verified' && $this->staff_verified_at) {
+            // Deadline is 48 hours from when staff verified the booking
+            return $this->staff_verified_at->copy()->addHours(48);
+        }
+        
+        return null;
+    }
+
+    /**
+     * Get remaining time until payment deadline
+     * 
+     * @return \Carbon\CarbonInterval|null
+     */
+    public function getTimeUntilDeadline()
+    {
+        $deadline = $this->getPaymentDeadline();
+        
+        if (!$deadline) {
+            return null;
+        }
+
+        $now = \Carbon\Carbon::now();
+        
+        if ($now->greaterThan($deadline)) {
+            return null; // Deadline has passed
+        }
+
+        return $now->diff($deadline);
+    }
+
+    /**
+     * Get remaining hours until payment deadline
+     * 
+     * @return float|null
+     */
+    public function getHoursUntilDeadline()
+    {
+        $deadline = $this->getPaymentDeadline();
+        
+        if (!$deadline) {
+            return null;
+        }
+
+        $now = \Carbon\Carbon::now();
+        
+        if ($now->greaterThan($deadline)) {
+            return 0; // Deadline has passed
+        }
+
+        return $now->floatDiffInHours($deadline);
+    }
+
+    /**
+     * Check if payment deadline is approaching (< 24 hours remaining)
+     * 
      * @return bool
      */
-    public function extendBooking($newEndTime): bool
+    public function isDeadlineApproaching(): bool
     {
-        // Check for conflicts first
-        $conflictCheck = $this->checkExtensionConflict($newEndTime);
+        $hoursRemaining = $this->getHoursUntilDeadline();
         
-        if ($conflictCheck['hasConflict']) {
+        if ($hoursRemaining === null) {
             return false;
         }
 
-        // Update the end time
-        $this->end_time = $newEndTime;
-        return $this->save();
+        return $hoursRemaining > 0 && $hoursRemaining <= 24;
+    }
+
+    /**
+     * Check if payment deadline is critical (< 6 hours remaining)
+     * 
+     * @return bool
+     */
+    public function isDeadlineCritical(): bool
+    {
+        $hoursRemaining = $this->getHoursUntilDeadline();
+        
+        if ($hoursRemaining === null) {
+            return false;
+        }
+
+        return $hoursRemaining > 0 && $hoursRemaining <= 6;
+    }
+
+    /**
+     * Check if payment is overdue (deadline has passed)
+     * 
+     * @return bool
+     */
+    public function isPaymentOverdue(): bool
+    {
+        $deadline = $this->getPaymentDeadline();
+        
+        if (!$deadline) {
+            return false;
+        }
+
+        return \Carbon\Carbon::now()->greaterThan($deadline);
+    }
+
+    /**
+     * Format remaining time for display
+     * 
+     * @return string
+     */
+    public function formatTimeRemaining(): string
+    {
+        $interval = $this->getTimeUntilDeadline();
+        
+        if (!$interval) {
+            return 'Expired';
+        }
+
+        $days = $interval->d;
+        $hours = $interval->h;
+        $minutes = $interval->i;
+
+        if ($days > 0) {
+            return "{$days}d {$hours}h {$minutes}m";
+        } elseif ($hours > 0) {
+            return "{$hours}h {$minutes}m";
+        } else {
+            return "{$minutes}m";
+        }
     }
 }
 

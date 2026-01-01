@@ -1,691 +1,543 @@
-# 🔗 HYBRID INTEGRATION PROCESSES - PUBLIC FACILITIES RESERVATION SYSTEM
+# HYBRID INTEGRATION PROCESSES
 
-**Document Type:** Hybrid Process Workflows (Internal + External)  
-**Date Created:** December 6, 2025  
-**Purpose:** Document the 6 processes combining internal operations with external LGU system integrations
-
----
-
-## 📋 TABLE OF CONTENTS
-
-1. [Overview](#overview)
-2. [Process 1: New Facility Construction](#process-1-new-facility-construction)
-3. [Process 2: Government Event - Energy Efficiency](#process-2-government-event---energy-efficiency)
-4. [Process 3: Government Event - Housing & Resettlement](#process-3-government-event---housing--resettlement)
-5. [Process 4: Traffic Coordination](#process-4-traffic-coordination)
-6. [Process 5: Damage & Maintenance](#process-5-damage--maintenance)
-7. [Process 6: Payment Verification](#process-6-payment-verification)
-8. [Integration Summary](#integration-summary)
+**Project:** LGU1 Public Facilities Reservation System  
+**Document Type:** Cross-Departmental Process Specifications  
+**Created:** December 24, 2025  
+**Status:** Planning / Implementation
 
 ---
 
-## 📊 OVERVIEW
+## 📋 OVERVIEW
 
-### **The 6 Hybrid Processes**
-
-```
-┌─────────────────────────────────────────────────────┐
-│     HYBRID PROCESSES (Internal + External)          │
-├─────────────────────────────────────────────────────┤
-│                                                     │
-│ 1. New Facility Construction................16 steps│
-│    Integrates: Urban Planning + Infrastructure +    │
-│                Utility Billing (3 systems)          │
-│                                                     │
-│ 2. Government Event (Energy)...............16 steps │
-│    Integrates: Energy Efficiency System             │
-│                                                     │
-│ 3. Government Event (Housing)..............14 steps │
-│    Integrates: Housing & Resettlement System        │
-│                                                     │
-│ 4. Traffic Coordination....................15 steps │
-│    Integrates: Road Transportation System           │
-│                                                     │
-│ 5. Damage & Maintenance....................17 steps │
-│    Integrates: Community Infrastructure System      │
-│                                                     │
-│ 6. Payment Verification....................15 steps │
-│    Integrates: Treasurer's Office                   │
-│                                                     │
-├─────────────────────────────────────────────────────┤
-│ TOTAL: 93 workflow steps across 6 processes        │
-│ EXTERNAL SYSTEMS: 8 different LGU integrations      │
-└─────────────────────────────────────────────────────┘
-```
+This document describes processes that involve both **external stakeholders (citizens)** and **internal departments (CTO, CBD, etc.)**, showing how the Facilities Reservation System acts as a bridge between different parties.
 
 ---
 
-## 🏗️ PROCESS 1: NEW FACILITY CONSTRUCTION
+## 💰 PROCESS 1: PAYMENT VERIFICATION & REVENUE COLLECTION
 
-**Integrates With:** Urban Planning + Infrastructure + Utility Billing  
-**Duration:** 6-18 months  
-**Trigger:** Admin identifies need for new facility
+### Overview
+The payment process involves the citizen, the Facilities System, the City Treasurer's Office (CTO), and eventually the City Budget Department (CBD).
 
-### **Process Flow**
-
-```
-INTERNAL PHASE 1: Need Identification (Steps 1-3)
-├─ Admin analyzes AI insights (high demand detected)
-├─ Admin initiates "Request New Facility"
-└─ System prepares facility requirements
-
-        ↓ API CALL ↓
-
-EXTERNAL PHASE 1: Urban Planning (Steps 4-7)
-├─ POST /api/land/search (send requirements)
-├─ WEBHOOK receives available land parcels
-├─ Admin selects land
-└─ POST /api/land/reserve (confirm selection)
-
-        ↓ API CALL ↓
-
-EXTERNAL PHASE 2: Infrastructure (Steps 8-10)
-├─ POST /api/infrastructure/projects (create project)
-├─ WEBHOOK receives project_id and status updates
-└─ Track construction progress
-
-        ↓ API CALL ↓
-
-EXTERNAL PHASE 3: Utility Billing (Steps 11-12)
-├─ POST /api/utility/water-connection (request)
-└─ WEBHOOK receives meter_number and account_number
-
-        ↓ BACK TO INTERNAL ↓
-
-INTERNAL PHASE 2: Completion (Steps 13-16)
-├─ Update facility database (create new facility record)
-├─ Mark facility as "Active"
-├─ Add to public facility directory
-└─ Seed equipment inventory
-```
-
-### **Key Integration Points**
-
-**1. Urban Planning Integration:**
-```json
-// Request
-POST /api/external/urban-planning/land/search
-{
-  "required_area": 500,
-  "zoning_type": "public_facility",
-  "accessibility_needs": "near_main_road",
-  "min_distance_from_residential": 100
-}
-
-// Response (Webhook)
-{
-  "lands": [
-    {
-      "land_id": "LP-2025-001",
-      "location": "Barangay 123",
-      "area": 520,
-      "zoning": "public_facility",
-      "ownership": "city_owned"
-    }
-  ]
-}
-```
-
-**2. Infrastructure Integration:**
-```json
-// Request
-POST /api/external/infrastructure/projects
-{
-  "facility_type": "covered_court",
-  "land_id": "LP-2025-001",
-  "budget": 5000000,
-  "timeline_months": 12,
-  "specifications": {...}
-}
-
-// Response
-{
-  "project_id": "INFRA-2025-045",
-  "status": "approved",
-  "estimated_completion": "2026-12-31"
-}
-```
-
-**3. Utility Billing Integration:**
-```json
-// Request
-POST /api/external/utility/water-connection
-{
-  "project_id": "INFRA-2025-045",
-  "fixture_count": {
-    "toilets": 4,
-    "sinks": 6,
-    "drinking_fountains": 2
-  }
-}
-
-// Response (Webhook)
-{
-  "connection_status": "approved",
-  "meter_number": "WM-2025-789",
-  "account_number": "UTIL-2025-456"
-}
-```
-
-### **Database Changes**
-
-**New Tables:**
-- `construction_projects` (tracks facility construction)
-- `external_land_selections` (land from Urban Planning)
-- `utility_connections` (water meter info)
-
-**Facility Record Created:**
-```sql
-INSERT INTO facilities (
-  name, lgu_city_id, capacity, base_rate, status,
-  water_meter_number, water_account_number,
-  construction_project_id, activated_at
-) VALUES (...);
-```
-
----
-
-## 🌿 PROCESS 2: GOVERNMENT EVENT - ENERGY EFFICIENCY
-
-**Integrates With:** Energy Efficiency & Conservation Management System  
-**Duration:** 2-4 weeks  
-**Trigger:** Energy Office plans DOE seminar
-
-### **Process Flow**
+### Process Flow
 
 ```
-EXTERNAL PHASE 1: Request (Steps 1)
-└─ POST /api/public-facilities/request (from Energy system)
+┌─────────────────────────────────────────────────────────────────────┐
+│                    PAYMENT LIFECYCLE PROCESS                         │
+└─────────────────────────────────────────────────────────────────────┘
 
-INTERNAL PHASE 1: Admin Processing (Steps 2-9)
-├─ Admin receives request in dashboard
-├─ Check facility availability
-├─ Check equipment availability
-├─ Coordinate with organizer
-├─ Get supplier quotations (for consumables)
-├─ Finance approves budget
-├─ Admin assigns facility (fee waived)
-└─ Finalize event details
-
-EXTERNAL PHASE 2: Confirmation (Steps 10-11)
-├─ PUT /api/energy/events/{id}/schedule (send approval)
-└─ WEBHOOK receives final attendee count
-
-INTERNAL PHASE 2: Event Execution (Steps 12-14)
-├─ Event happens (seminar conducted)
-├─ Post-event inspection
-└─ Collect feedback (QR code + paper forms)
-
-EXTERNAL PHASE 3: Liquidation (Steps 15-16)
-└─ POST /api/energy/events/{id}/liquidation (itemized report)
+Step 1: Booking Approved
+┌──────────┐
+│ Citizen  │ → Receives booking approval notification
+└──────────┘   → Invoice with amount due
+               → Payment deadline (48 hours)
+               
+Step 2: Payment Made
+┌──────────┐         ┌─────────────┐
+│ Citizen  │────────►│     CTO     │
+└──────────┘  Pays   │ (Treasurer) │
+               at    └─────────────┘
+              Office        │
+                           ▼
+                    Receipt Issued
+                           │
+                           ▼
+┌──────────┐         ┌─────────────────┐
+│ Citizen  │────────►│ Facilities      │
+└──────────┘ Uploads │ System          │
+             Receipt └─────────────────┘
+             Photo          │
+                           ▼
+                    Status: Payment Submitted
+                           │
+                           ▼
+Step 3: Payment Verification
+                    ┌─────────────┐
+                    │ Treasurer   │
+                    │ (In System) │
+                    └─────────────┘
+                           │
+                           ▼
+                  Verifies Payment
+                           │
+                ┌──────────┴──────────┐
+                ▼                     ▼
+         [Valid]                [Invalid]
+                │                     │
+                ▼                     ▼
+    Generate OR              Request Resubmit
+                │                     │
+                ▼                     ▼
+Step 4: Confirmation
+┌──────────────────────┐      ┌──────────┐
+│ Facilities System    │─────►│ Citizen  │
+└──────────────────────┘      └──────────┘
+  • Status: Confirmed          • Receives OR via email
+  • OR Number assigned          • Booking confirmed
+  • Slot locked                 • Notification sent
+  • Equipment reserved
+                │
+                ▼
+Step 5: Revenue Reporting
+        ┌─────────────────────┐
+        │ Facilities System   │
+        └─────────────────────┘
+                │
+                ▼
+        Daily Collection Report
+                │
+                ▼
+        ┌─────────────┐
+        │    CTO      │ → For treasury records
+        └─────────────┘ → Remittance tracking
+                │
+                ▼
+        Monthly Revenue Report
+                │
+                ▼
+        ┌─────────────┐
+        │    CBD      │ → For budget planning
+        └─────────────┘ → Revenue analysis
 ```
 
-### **Key Data Exchange**
+### Stakeholder Roles
 
-**Request Format:**
+| Stakeholder | Responsibility | System Access |
+|-------------|---------------|---------------|
+| **Citizen** | Make payment, upload proof | Citizen Portal |
+| **Treasurer** | Verify payment, issue OR | Treasurer Dashboard |
+| **Facilities System** | Track payment, generate OR, record revenue | Automated |
+| **CTO** | Receive daily reports, reconcile collections | Reports (Email/Export) |
+| **CBD** | Receive monthly reports, track revenue | Reports (Email/Export) |
+
+### Data Flow
+
+**Payment Record Structure:**
 ```json
 {
-  "event_type": "doe_energy_seminar",
-  "expected_attendees": 200,
-  "preferred_dates": ["2025-12-15", "2025-12-16"],
-  "barangay_target": "All Barangays",
-  "organizer_contact": {...}
+  "booking_id": 123,
+  "amount": 15000.00,
+  "payment_method": "over_the_counter",
+  "payment_date": "2025-12-24 10:30:00",
+  "payment_proof_path": "payments/receipt_123.jpg",
+  "or_number": "OR-QC-2025-001234",
+  "verified_by": "treasurer_user_id",
+  "verified_at": "2025-12-24 14:00:00",
+  "status": "verified"
 }
 ```
 
-**Response Format:**
+**Daily Collection Report (to CTO):**
 ```json
 {
-  "facility_assigned": "City Hall Main Hall",
-  "date": "2025-12-15",
-  "time": "08:00-17:00",
-  "equipment_provided": ["chairs", "tables", "sound_system"],
-  "facility_fee": 0,
-  "equipment_fee": 15300
+  "report_date": "2025-12-24",
+  "total_collections": 145000.00,
+  "transaction_count": 12,
+  "payment_methods": {
+    "cash": 85000.00,
+    "gcash": 40000.00,
+    "bank_transfer": 20000.00
+  },
+  "transactions": [...]
 }
 ```
 
-**Liquidation Report:**
+**Monthly Revenue Report (to CBD):**
 ```json
 {
-  "total_budget": 50000,
-  "expenses": [
-    {"item": "Snacks (200 pax)", "amount": 20000, "receipt": "..."},
-    {"item": "Lunch (200 pax)", "amount": 25000, "receipt": "..."},
-    {"item": "Handouts", "amount": 5000, "receipt": "..."}
-  ],
-  "actual_attendees": 185,
-  "balance": 0
-}
-```
-
-### **Special Features**
-- ✅ Facility fee waived (government event)
-- ✅ Equipment fee charged (actual cost)
-- ✅ Full transparency with receipts
-- ✅ Post-event feedback collection
-- ✅ No raffle, no SMS follow-up (simplified)
-
----
-
-## 🏘️ PROCESS 3: GOVERNMENT EVENT - HOUSING & RESETTLEMENT
-
-**Integrates With:** Housing & Resettlement System  
-**Duration:** 2-4 weeks  
-**Trigger:** Housing Office plans community briefing
-
-### **Process Flow**
-
-```
-EXTERNAL PHASE 1: Request (Step 1)
-└─ POST /api/public-facilities/request (from Housing system)
-
-INTERNAL PHASE: Processing (Steps 2-7)
-├─ Admin receives request
-├─ Check facility capacity (beneficiaries = attendees)
-├─ Assign equipment
-├─ Finance approves budget
-└─ Create government booking
-
-EXTERNAL PHASE 2: Confirmation (Steps 8-9)
-├─ PUT /api/housing/events/{id}/schedule
-└─ WEBHOOK confirms beneficiaries count
-
-INTERNAL PHASE: Execution (Steps 10-12)
-├─ Event happens (relocation briefing)
-├─ Post-event inspection
-└─ Collect feedback (optional)
-
-EXTERNAL PHASE 3: Liquidation (Steps 13-14)
-└─ POST /api/housing/events/{id}/liquidation
-```
-
-### **Key Clarification**
-
-**Beneficiaries = Attendees (Single Field):**
-```json
-{
-  "event_type": "relocation_briefing",
-  "beneficiaries_count": 150,  // Same as expected_attendees
-  "barangay_target": "Barangay 52"
-}
-```
-
-**Why Single Field:**
-- Beneficiaries ARE the attendees
-- No need for separate tracking
-- Simplifies the system
-
----
-
-## 🚦 PROCESS 4: TRAFFIC COORDINATION
-
-**Integrates With:** Road & Transportation Infrastructure Monitoring  
-**Duration:** 1-2 weeks  
-**Trigger:** Large event (>200 attendees) approved
-
-### **Process Flow**
-
-```
-INTERNAL PHASE 1: Booking Approval (Steps 1-5)
-├─ Citizen submits booking (500 attendees)
-├─ Staff verifies
-├─ Admin APPROVES booking FIRST ✓
-├─ Admin evaluates traffic coordination need
-└─ Use simple checklist (not prediction calculator)
-
-EXTERNAL PHASE 1: Assessment (Steps 6-7)
-├─ POST /api/traffic/assessment (request)
-└─ WEBHOOK receives recommendations
-
-INTERNAL PHASE 2: Coordination (Steps 8-11)
-├─ Admin reviews recommendations
-├─ Communicates to organizer
-├─ Organizer acknowledges
-└─ Admin finalizes coordination
-
-EXTERNAL PHASE 2: Enforcer Dispatch (Steps 12-13)
-├─ POST /api/traffic/event-schedule
-└─ WEBHOOK receives enforcer assignments
-
-INTERNAL PHASE 3: Event Day (Steps 14-15)
-├─ Event with traffic management
-└─ Mark as complete
-```
-
-### **Important Principles**
-
-**✅ Booking Approved BEFORE Traffic Assessment:**
-```
-Admin approves booking → Status: payment_pending
-     ↓
-THEN (optional): Request traffic assessment
-     ↓
-Assessment is for COORDINATION, not approval gate
-```
-
-**Simple Checklist (Not Calculator):**
-```
-Traffic Coordination Checklist:
-☐ Expected attendees > 200?
-☐ Weekend or holiday?
-☐ Near main road?
-☐ Limited parking?
-☐ Multiple barangays attending?
-
-If 3+ checked → Consider requesting traffic assessment
-```
-
-**Traffic Enforcers = Free Government Service**
-
----
-
-## 🔧 PROCESS 5: DAMAGE & MAINTENANCE
-
-**Integrates With:** Community Infrastructure Maintenance Management  
-**Duration:** 1-4 weeks  
-**Trigger:** Post-event inspection detects damage
-
-### **Process Flow**
-
-```
-INTERNAL PHASE 1: Inspection (Steps 1-5)
-├─ Staff conducts facility inspection
-├─ Detects damage (broken chairs, damaged walls)
-├─ Determines responsibility (citizen/vendor)
-├─ Creates damage report
-└─ Admin reviews
-
-EXTERNAL PHASE 1: Maintenance Request (Steps 6-7)
-├─ POST /api/maintenance/request
-└─ WEBHOOK receives repair cost + specifications
-
-INTERNAL PHASE 2: Billing (Steps 8-12)
-├─ Admin creates billing notice (2 options)
-├─ Send to citizen
-├─ Citizen chooses: Pay OR Replace with exact match
-├─ Process payment/replacement
-└─ Verify replacement items
-
-EXTERNAL PHASE 2: Repair (Steps 13-14)
-├─ PUT /api/maintenance/request/{id}/approve
-└─ WEBHOOK receives repair schedule/completion
-
-INTERNAL PHASE 3: Completion (Steps 15-17)
-├─ Update facility status (operational)
-├─ Log maintenance history
-└─ Re-open for bookings
-```
-
-### **2-Option System for Damage**
-
-**Option 1: Pay for Repair**
-```
-Broken: 5 Monobloc Chairs
-Repair Cost: ₱500 (assessed by Maintenance system)
-Citizen pays: ₱500
-```
-
-**Option 2: Replace with Exact Match**
-```
-Broken: 5 Monobloc Chairs
-Specifications:
-  - Type: Monobloc Chair (White)
-  - Quantity: 5
-  - Quality: Same as original
-  - Brand: Not required, but must match specs
-
-Citizen provides replacement:
-Staff inspects → Verifies exact match → Accepts
-```
-
-### **Integration Data**
-
-```json
-// Maintenance Request
-POST /api/external/maintenance/request
-{
-  "facility_id": 3,
-  "damage_type": "equipment_broken",
-  "items_damaged": [
-    {"item": "Monobloc Chair", "quantity": 5}
-  ],
-  "urgency": "medium",
-  "photos": ["..."]
-}
-
-// Response
-{
-  "request_id": "MAINT-2025-089",
-  "repair_cost": 500,
-  "estimated_days": 7,
-  "item_specifications": {
-    "type": "Monobloc Chair (White)",
-    "quantity": 5,
-    "quality_standard": "same_as_original"
-  }
+  "report_month": "2025-12",
+  "total_revenue": 1850000.00,
+  "total_bookings": 156,
+  "revenue_by_facility": {...},
+  "discounts_applied": 285000.00,
+  "refunds_issued": 35000.00,
+  "net_revenue": 1530000.00
 }
 ```
 
 ---
 
-## 💳 PROCESS 6: PAYMENT VERIFICATION
+## 🏢 PROCESS 2: BUDGET REQUEST & ALLOCATION
 
-**Integrates With:** Treasurer's Office  
-**Duration:** Minutes to hours  
-**Trigger:** Citizen completes payment
+### Overview
+When facilities need maintenance or new equipment, the request flows from Facilities Management → CBD for approval → CTO for fund release.
 
-### **Process Flow**
+### Process Flow
 
 ```
-INTERNAL PHASE 1: Payment Initiation (Steps 1-4)
-├─ Citizen selects payment method (GCash/Cash/Bank)
-├─ Process via payment gateway
-├─ Receive confirmation from gateway
-└─ Store payment details
+┌─────────────────────────────────────────────────────────────────────┐
+│                BUDGET REQUEST & ALLOCATION PROCESS                   │
+└─────────────────────────────────────────────────────────────────────┘
 
-EXTERNAL PHASE: Treasurer Verification (Steps 5-8)
-├─ POST /api/treasurer/payments (send payment data)
-├─ Treasurer validates payment
-├─ Treasurer issues OR number
-└─ WEBHOOK /webhook/treasurer/confirm (receive OR)
-
-INTERNAL PHASE 2: Confirmation (Steps 9-15)
-├─ Update payment status
-├─ Update booking status (confirmed)
-├─ Generate booking confirmation document
-├─ Generate QR code for event entry
-├─ Send confirmation email (with OR + QR)
-├─ Send SMS notification
-└─ Update admin dashboard
+Step 1: Identify Need
+┌──────────────────────┐
+│ Facility Manager     │ → Identifies maintenance need
+│ (Admin)              │ → Or equipment shortage
+└──────────────────────┘
+         │
+         ▼
+Step 2: Create Budget Request
+┌──────────────────────┐
+│ Facilities System    │ → Admin creates request
+└──────────────────────┘   → Justification
+         │                 → Cost estimate
+         ▼                 → Priority level
+┌─────────────────────────────────────────────┐
+│ Budget Request Details:                      │
+│ • Category: Equipment Purchase               │
+│ • Item: 10 Additional Folding Chairs        │
+│ • Cost: ₱25,000.00                          │
+│ • Justification: High demand, frequent       │
+│   shortage based on utilization data         │
+│ • Supporting Data: 85% equipment utilization │
+└─────────────────────────────────────────────┘
+         │
+         ▼
+Step 3: Route to CBD
+┌─────────────┐
+│     CBD     │ → Reviews request
+└─────────────┘ → Checks budget availability
+         │       → Verifies justification
+         │
+    ┌────┴────┐
+    ▼         ▼
+[Approve]  [Deny]
+    │         │
+    ▼         └─────────────┐
+Certify Funds               │
+Available                   ▼
+    │                 Notify Admin
+    │                 (Request Denied)
+    ▼
+Step 4: Procurement Authorization
+┌──────────────────────┐
+│ Facilities System    │ → Status: CBD Approved
+└──────────────────────┘ → Can proceed with procurement
+         │
+         ▼
+Step 5: Procurement & Purchase
+┌──────────────────────┐
+│ Admin                │ → Purchase equipment
+└──────────────────────┘ → Submit invoice
+         │
+         ▼
+Step 6: Fund Release Request
+┌──────────────────────┐
+│ Facilities System    │ → Request sent to CTO
+└──────────────────────┘ → Invoice attached
+         │
+         ▼
+┌─────────────┐
+│     CTO     │ → Verifies invoice
+└─────────────┘ → Releases check/payment
+         │
+         ▼
+Step 7: Update Budget Tracking
+┌──────────────────────┐
+│ Facilities System    │ → Budget spent updated
+└──────────────────────┘ → Equipment inventory updated
+         │                → Asset tracking initiated
+         ▼
+   Complete
 ```
 
-### **Integration Data**
+### Stakeholder Roles
 
-**Payment Submission:**
-```json
-POST /api/external/treasurer/payments
-{
-  "booking_id": 12345,
-  "amount": 6300,
-  "gateway": "gcash",
-  "gateway_transaction_id": "GC-2025-789456",
-  "payment_date": "2025-12-05T10:30:00+08:00",
-  "payer_name": "Maria Santos",
-  "payer_contact": "0917-123-4567"
-}
+| Stakeholder | Responsibility | Timing |
+|-------------|---------------|---------|
+| **Admin** | Identify need, create request | As needed |
+| **CBD** | Review request, certify funds | Within 5 working days |
+| **Admin** | Procure equipment | After CBD approval |
+| **CTO** | Release funds | After invoice submission |
+| **Facilities System** | Track entire process | Real-time |
+
+---
+
+## 📊 PROCESS 3: FINANCIAL ASSISTANCE COORDINATION
+
+### Overview
+When facilities are used for government events or community programs that qualify for financial assistance, coordination between Facilities, CTO, and program offices is required.
+
+### Process Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│            GOVERNMENT EVENT WITH FINANCIAL ASSISTANCE                │
+└─────────────────────────────────────────────────────────────────────┘
+
+Step 1: Government Event Request
+┌──────────────────────┐
+│ Government Office    │ → Requests facility for event
+│ (e.g., Social Welfare)│ → Marks as government event
+└──────────────────────┘ → No payment required
+         │
+         ▼
+Step 2: Admin Review
+┌──────────────────────┐
+│ Facility Admin       │ → Verifies government status
+└──────────────────────┘ → Approves free booking
+         │
+         ▼
+Step 3: Budget Allocation
+┌─────────────┐
+│     CBD     │ → Allocates budget for event
+└─────────────┘ → Charges to department's budget
+         │       → Not to facilities revenue
+         ▼
+Step 4: Event Execution
+┌──────────────────────┐
+│ Facilities System    │ → Facility booked
+└──────────────────────┘ → Equipment allocated
+         │                → No payment required
+         ▼
+Step 5: Cost Accounting
+┌──────────────────────┐
+│ Facilities System    │ → Calculates opportunity cost
+└──────────────────────┘ → Records foregone revenue
+         │
+         ▼
+┌─────────────┐
+│     CBD     │ → Receives report
+└─────────────┘ → Tracks government event costs
+         │       → Budget planning for next FY
+         ▼
+┌─────────────┐
+│     CTO     │ → Receives revenue report
+└─────────────┘ → Notes: Government event (no collection)
 ```
 
-**Treasurer Webhook:**
-```json
-POST /webhook/treasurer/confirm
-{
-  "booking_id": 12345,
-  "status": "confirmed",
-  "or_number": "TRS-2025-00123",
-  "cashier_name": "Juan Dela Cruz",
-  "cashier_id": "TREAS-456",
-  "confirmed_at": "2025-12-05T10:45:00+08:00"
-}
+### Key Considerations
+
+**Revenue Recognition:**
+- Government events: ₱0 revenue but tracked separately
+- Shows "foregone revenue" for CBD planning
+- Helps justify budget allocations for next fiscal year
+
+**Priority Handling:**
+- Government events have higher priority
+- Can override citizen bookings (with proper notice and refund)
+- Must be scheduled with advance notice
+
+---
+
+## 🔄 PROCESS 4: REFUND & CANCELLATION COORDINATION
+
+### Overview
+When bookings are cancelled (by citizen or admin), refund processing involves multiple departments.
+
+### Process Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    REFUND PROCESSING FLOW                            │
+└─────────────────────────────────────────────────────────────────────┘
+
+Scenario A: Citizen-Initiated Cancellation
+┌──────────┐
+│ Citizen  │ → Requests cancellation
+└──────────┘   → Provides reason
+         │
+         ▼
+┌──────────────────────┐
+│ Facilities System    │ → Checks cancellation policy
+└──────────────────────┘   → 7 days before: Full refund
+         │                 → 3-6 days: 50% refund
+         │                 → < 3 days: No refund
+         ▼
+┌──────────────────────┐
+│ Admin                │ → Reviews request
+└──────────────────────┘ → Approves/Denies
+         │
+         ▼ [Approved]
+┌──────────────────────┐
+│ Facilities System    │ → Status: Refund Approved
+└──────────────────────┘ → Amount: ₱X,XXX.XX
+         │
+         ▼
+┌─────────────┐
+│     CTO     │ → Processes refund
+└─────────────┘ → Issues check or bank transfer
+         │       → Updates OR (marked as refunded)
+         ▼
+┌──────────┐
+│ Citizen  │ → Receives refund
+└──────────┘   → Notification sent
+
+
+Scenario B: Admin-Initiated Cancellation (Override)
+┌──────────────────────┐
+│ Admin                │ → Cancels citizen booking
+└──────────────────────┘   → Reason: Government event
+         │
+         ▼
+┌──────────────────────┐
+│ Facilities System    │ → Auto-approves full refund
+└──────────────────────┘   → Priority: Urgent
+         │
+         ▼
+┌─────────────┐
+│     CTO     │ → Immediate refund processing
+└─────────────┘ → Expedited release
+         │
+         ▼
+┌──────────┐
+│ Citizen  │ → Receives refund + apology
+└──────────┘   → Offered alternative dates
+         │       → Possible discount on rebooking
+         ▼
+┌─────────────┐
+│     CBD     │ → Receives refund report
+└─────────────┘   → Tracks refund expenses
+                  → Budget impact analysis
 ```
 
-**Email Sent to Citizen:**
+### Refund Policy Matrix
+
+| Days Before Event | Refund Amount | Processing Time | Approval Required |
+|-------------------|---------------|-----------------|-------------------|
+| 7+ days | 100% | 3-5 working days | Auto-approved |
+| 4-6 days | 50% | 3-5 working days | Admin approval |
+| 1-3 days | 25% | 5-7 working days | Admin approval |
+| Same day | 0% | N/A | N/A |
+| Admin Override | 100% + benefit | Immediate | Auto-approved |
+
+### Financial Tracking
+
+**For CTO:**
+- Refunds tracked separately from collections
+- Monthly refund report
+- Reconciliation with OR records
+
+**For CBD:**
+- Refund expenses tracked
+- Impact on net revenue
+- Policy effectiveness analysis
+
+---
+
+## 📋 PROCESS 5: ANNUAL REVENUE RECONCILIATION
+
+### Overview
+End-of-year process to reconcile all financial records between Facilities System, CTO, and CBD.
+
+### Process Flow
+
 ```
-Subject: Booking Confirmed! OR #TRS-2025-00123
+┌─────────────────────────────────────────────────────────────────────┐
+│              ANNUAL REVENUE RECONCILIATION PROCESS                   │
+└─────────────────────────────────────────────────────────────────────┘
 
-✅ Your booking is CONFIRMED!
-
-Booking ID: 12345
-Facility: Covered Court
-Date: December 14, 2025
-Time: 2:00 PM - 5:00 PM
-Amount Paid: ₱6,300
-OR Number: TRS-2025-00123
-
-Attachments:
-- Booking Confirmation.pdf
-- Official Receipt.pdf
-- QR Code for Entry.png
+Step 1: System-Generated Annual Report
+┌──────────────────────┐
+│ Facilities System    │ → Generates FY 2025 report
+└──────────────────────┘   → All transactions
+         │                 → All payments
+         │                 → All refunds
+         ▼                 → All discounts
+┌─────────────────────────────────────────┐
+│ Annual Revenue Summary FY 2025:         │
+│ • Total Bookings: 1,856                 │
+│ • Gross Revenue: ₱18,560,000.00        │
+│ • Discounts: (₱2,140,000.00)           │
+│ • Refunds: (₱420,000.00)               │
+│ • Net Revenue: ₱16,000,000.00          │
+└─────────────────────────────────────────┘
+         │
+         ▼
+Step 2: CTO Reconciliation
+┌─────────────┐
+│     CTO     │ → Compares with treasury records
+└─────────────┘ → Matches OR numbers
+         │       → Verifies collections
+         │       → Checks refunds
+         ▼
+  ┌──────────────┐
+  │ Discrepancies?│
+  └──────────────┘
+    │         │
+    NO       YES
+    │         │
+    │         ▼
+    │    ┌──────────────────────┐
+    │    │ Investigation        │
+    │    │ • Missing ORs?       │
+    │    │ • Unrecorded payment?│
+    │    │ • Data entry error?  │
+    │    └──────────────────────┘
+    │         │
+    │         ▼
+    │    Resolve & Recon cile
+    │         │
+    └────┬────┘
+         ▼
+Step 3: CBD Review
+┌─────────────┐
+│     CBD     │ → Reviews revenue vs. budget
+└─────────────┘ → Analyzes trends
+         │       → Plans next FY budget
+         ▼
+┌─────────────────────────────────────────┐
+│ Budget Performance Analysis:             │
+│ • Projected: ₱15,000,000.00             │
+│ • Actual: ₱16,000,000.00                │
+│ • Variance: +₱1,000,000.00 (+6.7%)     │
+│ • Recommendation: Increase FY 2026      │
+│   budget allocation for maintenance     │
+└─────────────────────────────────────────┘
+         │
+         ▼
+Step 4: Audit Trail
+┌──────────────────────┐
+│ All Systems          │ → Final reports archived
+└──────────────────────┘ → Audit-ready
+         │                → Compliance verified
+         ▼
+   Annual Audit Complete
 ```
 
 ---
 
-## 📊 INTEGRATION SUMMARY
+## 🎯 SUCCESS METRICS
 
-### **Complete System Architecture**
+### For Hybrid Processes
 
-```
-┌─────────────────────────────────────────────────────┐
-│   PUBLIC FACILITIES RESERVATION SYSTEM (CENTER)      │
-└─────────────────────────────────────────────────────┘
-                        ↕
-    ┌───────────────────┼───────────────────┐
-    ↓                   ↓                   ↓
-┌─────────┐      ┌─────────┐        ┌─────────┐
-│ Urban   │      │Infrastr-│        │ Utility │
-│Planning │      │ucture   │        │ Billing │
-└─────────┘      └─────────┘        └─────────┘
-                                            ↓
-    ┌───────────────────┼───────────────────┐
-    ↓                   ↓                   ↓
-┌─────────┐      ┌─────────┐        ┌─────────┐
-│ Energy  │      │ Housing │        │  Road   │
-│Efficien-│      │& Resetl-│        │Transport│
-│cy       │      │ement    │        │         │
-└─────────┘      └─────────┘        └─────────┘
-                                            ↓
-    ┌───────────────────┼───────────────────┐
-    ↓                   ↓                   
-┌─────────┐      ┌─────────┐        
-│Maintena-│      │Treasur- │        
-│nce      │      │er Office│        
-└─────────┘      └─────────┘        
-```
+**Efficiency Metrics:**
+- Average payment verification time: < 24 hours
+- Average refund processing time: < 5 days
+- Budget request approval time: < 7 days
+- Annual reconciliation accuracy: > 99.9%
 
-### **Integration Statistics**
+**Quality Metrics:**
+- Payment discrepancy rate: < 0.1%
+- Refund dispute rate: < 1%
+- Citizen satisfaction with payment process: > 4.5/5
+- Department collaboration score: > 4/5
 
-| Process | Internal Steps | External Steps | External Systems | Duration |
-|---------|---------------|----------------|------------------|----------|
-| New Facility Construction | 6 | 10 | 3 (Urban + Infra + Utility) | 6-18 months |
-| Energy Efficiency Event | 10 | 6 | 1 (Energy) | 2-4 weeks |
-| Housing Event | 9 | 5 | 1 (Housing) | 2-4 weeks |
-| Traffic Coordination | 9 | 6 | 1 (Road Transport) | 1-2 weeks |
-| Damage & Maintenance | 11 | 6 | 1 (Maintenance) | 1-4 weeks |
-| Payment Verification | 10 | 5 | 1 (Treasurer) | Minutes |
-| **TOTAL** | **55** | **38** | **8 unique systems** | **Varies** |
-
-### **API Endpoints Summary**
-
-**Outgoing (Public Facilities → External):**
-- POST /api/external/urban-planning/land/search
-- POST /api/external/infrastructure/projects
-- POST /api/external/utility/water-connection
-- POST /api/external/energy/events/{id}/schedule
-- POST /api/external/housing/events/{id}/schedule
-- POST /api/external/traffic/assessment
-- POST /api/external/maintenance/request
-- POST /api/external/treasurer/payments
-
-**Incoming (External → Public Facilities):**
-- POST /webhook/land/available
-- POST /webhook/infrastructure/status
-- POST /webhook/utility/connection-status
-- POST /webhook/energy/confirmed
-- POST /webhook/housing/confirmed
-- POST /webhook/traffic/assessment
-- POST /webhook/maintenance/completed
-- POST /webhook/treasurer/confirm
-
-### **Database Tables for External Integration**
-
-```sql
--- External integration tracking
-external_api_logs (tracks all API calls)
-external_webhooks (logs all webhook receipts)
-
--- Per-system tables
-land_selections (from Urban Planning)
-construction_projects (Infrastructure tracking)
-utility_connections (water meter info)
-government_event_requests (Energy + Housing)
-traffic_assessments (Road Transport coordination)
-maintenance_requests (repairs and replacements)
-treasurer_payments (OR numbers and verification)
-```
+**Financial Metrics:**
+- Revenue collection rate: > 95%
+- On-time payment rate: > 90%
+- Refund rate: < 5%
+- Budget utilization rate: 80-95% (optimal)
 
 ---
 
-## ✅ HYBRID PROCESS COMPLETE
+## 📝 NOTES
 
-### **System Capabilities**
+### Key Principles
 
-**Internal Operations (5 Processes):**
-1. ✅ Complete booking workflow
-2. ✅ Two-tier discount calculation
-3. ✅ Equipment rental with real-time inventory
-4. ✅ Schedule conflict detection
-5. ✅ AI-powered analytics
+1. **Transparency:** All stakeholders see relevant transaction data
+2. **Accountability:** Every action logged and auditable
+3. **Efficiency:** Minimal manual intervention
+4. **Accuracy:** Automated calculations reduce errors
+5. **Compliance:** Follows government accounting standards
 
-**Hybrid Operations (6 Processes):**
-1. ✅ New facility construction (3 systems)
-2. ✅ Government events - Energy Efficiency
-3. ✅ Government events - Housing & Resettlement
-4. ✅ Traffic coordination for large events
-5. ✅ Damage repair and maintenance
-6. ✅ Payment verification with OR issuance
+### Future Enhancements
 
-**Total Integration:**
-- **11 major processes**
-- **8 external LGU systems**
-- **16 API endpoints**
-- **16 webhook handlers**
-- **155 total workflow steps**
+- **Real-time integration:** API connections between systems
+- **Automated reconciliation:** AI-powered discrepancy detection
+- **Blockchain:** Immutable audit trail for all transactions
+- **Mobile apps:** Officers can approve on-the-go
 
 ---
 
-## 🎯 FOR PANEL PRESENTATION
-
-**"Our Public Facilities Reservation System is a comprehensive integrated solution featuring:**
-
-- **11 major processes** (5 internal + 6 hybrid)
-- **8 external system integrations** across LGU departments
-- **Real-time coordination** with Urban Planning, Infrastructure, Utilities, Energy, Housing, Roads, Maintenance, and Treasurer's Office
-- **Complete transparency** from facility construction to payment verification
-- **AI-powered insights** for resource optimization
-- **Full accountability** with itemized reports and OR numbers
-
-This represents a **truly integrated e-governance solution** where all LGU systems work together seamlessly to serve our citizens."
-
----
-
-*Document Version: 1.0*  
-*Last Updated: December 6, 2025*  
-*Status: Complete ✅*
-
-**Documentation Set Complete:**
-1. ✅ INTERNAL_INTEGRATIONS.md
-2. ✅ INTERNAL_PROCESSES.md
-3. ✅ HYBRID_INTEGRATION_PROCESSES.md
-
-**Total Documentation:** 3,000+ lines covering complete system architecture
-
+**Last Updated:** December 24, 2025  
+**Next Review:** Quarterly

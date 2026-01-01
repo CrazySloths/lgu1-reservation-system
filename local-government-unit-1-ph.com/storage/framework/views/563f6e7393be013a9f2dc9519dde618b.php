@@ -451,9 +451,9 @@ unset($__errorArgs, $__bag); ?>
                                     <span class="text-gray-600">Time Extension (<?php echo e($pricing['extension_hours']); ?> <?php echo e($pricing['extension_hours'] == 1 ? 'hour' : 'hours'); ?>)</span>
                                     <span>₱<?php echo e(number_format($pricing['extension_rate'], 2)); ?></span>
                                 </div>
-                                <?php if(isset($pricing['pricing_model']) && $pricing['pricing_model'] === 'per_person' && isset($pricing['extension_rate_per_hour'])): ?>
+                                <?php if(isset($pricing['pricing_model']) && $pricing['pricing_model'] === 'per_person' && isset($pricing['extension_rate_per_block'])): ?>
                                     <div class="text-xs text-gray-500 mt-1">
-                                        ₱<?php echo e(number_format($pricing['extension_rate_per_hour'], 2)); ?> per person/hour × <?php echo e(number_format($pricing['expected_attendees'])); ?> people × <?php echo e($pricing['extension_hours']); ?> <?php echo e($pricing['extension_hours'] == 1 ? 'hour' : 'hours'); ?>
+                                        ₱<?php echo e(number_format($pricing['extension_rate_per_block'], 2)); ?> per person per 2-hour block × <?php echo e(number_format($pricing['expected_attendees'])); ?> people × <?php echo e($pricing['extension_blocks']); ?> <?php echo e($pricing['extension_blocks'] == 1 ? 'block' : 'blocks'); ?>
 
                                     </div>
                                 <?php endif; ?>

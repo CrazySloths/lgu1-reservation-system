@@ -17,6 +17,16 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\CheckRole::class,
         ]);
     })
+    ->withSchedule(function ($schedule) {
+        // Expire unpaid bookings every hour
+        $schedule->command('bookings:expire-unpaid')->hourly();
+        
+        // Mark finished bookings as completed every hour
+        $schedule->command('bookings:complete-finished')->hourly();
+        
+        // Send payment reminders (24h and 6h before deadline)
+        $schedule->command('payments:send-reminders')->hourly();
+    })
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();

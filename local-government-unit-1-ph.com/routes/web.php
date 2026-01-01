@@ -199,6 +199,10 @@ Route::post('/login/verify-otp', function () {
                 $redirectUrl = route('admin.dashboard');
             } elseif ($user->subsystem_role_name === 'Reservations Staff') {
                 $redirectUrl = route('staff.dashboard');
+            } elseif ($user->subsystem_role_name === 'Treasurer') {
+                $redirectUrl = route('treasurer.dashboard');
+            } elseif ($user->subsystem_role_name === 'CBD Staff') {
+                $redirectUrl = route('cbd.dashboard');
             }
             
             return response()->json([
@@ -1107,6 +1111,12 @@ Route::post('/logout', function () {
     return redirect()->route('login')->with('success', 'You have been logged out.');
 })->name('logout');
 
+// GET Logout Route (for expired sessions/direct access)
+Route::get('/logout', function () {
+    session()->flush(); // Clear all session data
+    return redirect()->route('login')->with('info', 'Session expired. Please login again.');
+})->name('logout.get');
+
 // Clear registration session (called from Step 6 success)
 Route::post('/register/clear-session', function () {
     session()->forget(['pending_user_id', 'pending_user_email', 'pending_user_name', 'registration_complete', 'verified']);
@@ -1151,7 +1161,27 @@ Route::middleware(['auth', 'role:Admin'])->group(function () {
     
     Route::get('/admin/dashboard/quick-stats', [App\Http\Controllers\Admin\AdminDashboardController::class, 'getQuickStats'])->name('admin.dashboard.quick-stats');
     
-    // Admin Routes (placeholder - to be implemented)
+    // Admin Routes
+    Route::get('/admin/payment-queue', [\App\Http\Controllers\Admin\PaymentVerificationController::class, 'index'])->name('admin.payment-queue');
+    Route::get('/admin/bookings', [\App\Http\Controllers\Admin\BookingManagementController::class, 'index'])->name('admin.bookings.index');
+    Route::get('/admin/bookings/{id}/review', [\App\Http\Controllers\Admin\BookingManagementController::class, 'review'])->name('admin.bookings.review');
+    Route::post('/admin/bookings/{id}/confirm-payment', [\App\Http\Controllers\Admin\PaymentVerificationController::class, 'confirmPayment'])->name('admin.bookings.confirm-payment');
+    Route::post('/admin/bookings/{id}/reject-payment', [\App\Http\Controllers\Admin\PaymentVerificationController::class, 'rejectPayment'])->name('admin.bookings.reject-payment');
+    Route::post('/admin/bookings/{id}/final-confirm', [\App\Http\Controllers\Admin\BookingManagementController::class, 'finalConfirm'])->name('admin.bookings.final-confirm');
+    Route::get('/admin/calendar', [\App\Http\Controllers\Admin\CalendarController::class, 'index'])->name('admin.calendar');
+    Route::get('/admin/calendar/events', [\App\Http\Controllers\Admin\CalendarController::class, 'getEvents'])->name('admin.calendar.events');
+    
+    // Analytics & Reports
+    Route::get('/admin/analytics/revenue-report', [\App\Http\Controllers\Admin\AnalyticsController::class, 'revenueReport'])->name('admin.analytics.revenue-report');
+    Route::get('/admin/analytics/booking-statistics', [\App\Http\Controllers\Admin\AnalyticsController::class, 'bookingStatistics'])->name('admin.analytics.booking-statistics');
+    Route::get('/admin/analytics/facility-utilization', [\App\Http\Controllers\Admin\AnalyticsController::class, 'facilityUtilization'])->name('admin.analytics.facility-utilization');
+    Route::get('/admin/analytics/citizen-analytics', [\App\Http\Controllers\Admin\AnalyticsController::class, 'citizenAnalytics'])->name('admin.analytics.citizen-analytics');
+    
+    // Export routes
+    Route::get('/admin/analytics/facility-utilization/export', [\App\Http\Controllers\Admin\AnalyticsController::class, 'exportFacilityUtilization'])->name('admin.analytics.facility-utilization.export');
+    Route::get('/admin/analytics/citizen-analytics/export', [\App\Http\Controllers\Admin\AnalyticsController::class, 'exportCitizenAnalytics'])->name('admin.analytics.citizen-analytics.export');
+    
+    // Legacy placeholder routes
     Route::get('/admin/reservations', function () {
         return 'Reservations page - Coming soon';
     })->name('admin.reservations.index');
@@ -1170,23 +1200,73 @@ Route::middleware(['auth', 'role:Admin'])->group(function () {
     })->name('admin.analytics');
 });
 
-Route::middleware(['auth', 'role:Reservations Staff'])->group(function () {
-    Route::get('/staff/dashboard', function () {
-        return view('staff.dashboard');
-    })->name('staff.dashboard');
+Route::middleware(['auth', 'role:Reservations Staff'])->prefix('staff')->name('staff.')->group(function () {
+    // Staff Dashboard
+    Route::get('/dashboard', [\App\Http\Controllers\Staff\BookingVerificationController::class, 'dashboard'])->name('dashboard');
     
-    // Staff Routes (placeholder - to be implemented)
-    Route::get('/staff/calendar', function () {
-        return 'Calendar page - Coming soon';
-    })->name('calendar');
+    // Booking Verification Queue
+    Route::get('/verification-queue', [\App\Http\Controllers\Staff\BookingVerificationController::class, 'verificationQueue'])->name('verification-queue');
     
-    Route::get('/staff/bookings', function () {
-        return 'Bookings page - Coming soon';
-    })->name('bookings.approval');
+    // Review Specific Booking
+    Route::get('/bookings/{id}/review', [\App\Http\Controllers\Staff\BookingVerificationController::class, 'review'])->name('bookings.review');
     
-    Route::get('/staff/verification', function () {
-        return 'Verification page - Coming soon';
-    })->name('staff.verification.index');
+    // Verify/Approve Booking
+    Route::post('/bookings/{id}/verify', [\App\Http\Controllers\Staff\BookingVerificationController::class, 'verify'])->name('bookings.verify');
+    
+    // Reject Booking
+    Route::post('/bookings/{id}/reject', [\App\Http\Controllers\Staff\BookingVerificationController::class, 'reject'])->name('bookings.reject');
+    
+    // All Bookings (History with filters)
+    Route::get('/bookings', [\App\Http\Controllers\Staff\BookingVerificationController::class, 'allBookings'])->name('bookings.index');
+    
+    // Facility Calendar - View booking schedule
+    Route::get('/calendar', [\App\Http\Controllers\Staff\CalendarController::class, 'index'])->name('calendar');
+    Route::get('/calendar/events', [\App\Http\Controllers\Staff\CalendarController::class, 'getEvents'])->name('calendar.events');
+});
+
+// Treasurer Portal Routes
+Route::middleware(['auth', 'role:Treasurer'])->prefix('treasurer')->name('treasurer.')->group(function () {
+    // Treasurer Dashboard
+    Route::get('/dashboard', [\App\Http\Controllers\Treasurer\DashboardController::class, 'index'])->name('dashboard');
+    
+    // Payment Verification Queue - Cash payments at CTO
+    Route::get('/payment-verification', [\App\Http\Controllers\Treasurer\PaymentVerificationController::class, 'index'])->name('payment-verification');
+    Route::get('/payment-slips/{id}', [\App\Http\Controllers\Treasurer\PaymentVerificationController::class, 'show'])->name('payment-slips.show');
+    Route::post('/payment-slips/{id}/verify-payment', [\App\Http\Controllers\Treasurer\PaymentVerificationController::class, 'verifyPayment'])->name('payment-slips.verify');
+    
+    // Payment History - All verified payments
+    Route::get('/payment-history', [\App\Http\Controllers\Treasurer\PaymentVerificationController::class, 'history'])->name('payment-history');
+    
+    // Official Receipts
+    Route::get('/official-receipts', [\App\Http\Controllers\Treasurer\OfficialReceiptController::class, 'index'])->name('official-receipts');
+    Route::get('/official-receipts/{id}', [\App\Http\Controllers\Treasurer\OfficialReceiptController::class, 'show'])->name('official-receipts.show');
+    Route::get('/official-receipts/{id}/print', [\App\Http\Controllers\Treasurer\OfficialReceiptController::class, 'print'])->name('official-receipts.print');
+    
+    // Reports
+    Route::get('/reports/daily-collections', [\App\Http\Controllers\Treasurer\ReportController::class, 'dailyCollections'])->name('reports.daily-collections');
+    Route::get('/reports/daily-collections/export', [\App\Http\Controllers\Treasurer\ReportController::class, 'exportDailyCollections'])->name('reports.daily-collections.export');
+    Route::get('/reports/monthly-summary', [\App\Http\Controllers\Treasurer\ReportController::class, 'monthlySummary'])->name('reports.monthly-summary');
+    Route::get('/reports/monthly-summary/export', [\App\Http\Controllers\Treasurer\ReportController::class, 'exportMonthlySummary'])->name('reports.monthly-summary.export');
+});
+
+// CBD (City Budget Department) Portal Routes
+Route::middleware(['auth', 'role:CBD Staff'])->prefix('cbd')->name('cbd.')->group(function () {
+    // CBD Dashboard
+    Route::get('/dashboard', [\App\Http\Controllers\CBD\DashboardController::class, 'index'])->name('dashboard');
+    
+    // Reports
+    Route::get('/reports/revenue', [\App\Http\Controllers\CBD\ReportController::class, 'revenue'])->name('reports.revenue');
+    Route::get('/reports/revenue/export', [\App\Http\Controllers\CBD\ReportController::class, 'exportRevenue'])->name('reports.revenue.export');
+    Route::get('/reports/facility-utilization', [\App\Http\Controllers\CBD\ReportController::class, 'facilityUtilization'])->name('reports.facility-utilization');
+    Route::get('/reports/budget-analysis', [\App\Http\Controllers\CBD\ReportController::class, 'budgetAnalysis'])->name('reports.budget-analysis');
+});
+
+// Notification routes - Accessible to ALL authenticated users (citizen, staff, treasurer, admin)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread', [\App\Http\Controllers\NotificationController::class, 'getUnread'])->name('notifications.unread');
+    Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 });
 
 // Session ping endpoint - Keep session alive on user activity
@@ -1220,7 +1300,9 @@ Route::middleware(['auth', 'role:citizen', \App\Http\Middleware\CheckSessionTime
     // Booking System
     Route::get('/citizen/booking/create/{facilityId?}', [\App\Http\Controllers\Citizen\BookingController::class, 'create'])->name('citizen.booking.create');
     Route::post('/citizen/booking/step2', [\App\Http\Controllers\Citizen\BookingController::class, 'step2'])->name('citizen.booking.step2');
+    Route::get('/citizen/booking/step2', function() { return redirect()->route('citizen.booking.create'); }); // Redirect GET to step 1
     Route::post('/citizen/booking/step3', [\App\Http\Controllers\Citizen\BookingController::class, 'step3'])->name('citizen.booking.step3');
+    Route::get('/citizen/booking/step3', function() { return redirect()->route('citizen.booking.create'); }); // Redirect GET to step 1
     Route::post('/citizen/booking/store', [\App\Http\Controllers\Citizen\BookingController::class, 'store'])->name('citizen.booking.store');
     Route::get('/citizen/booking/confirmation/{bookingId}', [\App\Http\Controllers\Citizen\BookingController::class, 'confirmation'])->name('citizen.booking.confirmation');
     Route::post('/citizen/booking/check-availability', [\App\Http\Controllers\Citizen\BookingController::class, 'checkAvailability'])->name('citizen.booking.check-availability');
@@ -1235,7 +1317,10 @@ Route::middleware(['auth', 'role:citizen', \App\Http\Middleware\CheckSessionTime
     // Payments
     Route::get('/citizen/payments', [\App\Http\Controllers\Citizen\PaymentController::class, 'index'])->name('citizen.payment-slips');
     Route::get('/citizen/payments/{id}', [\App\Http\Controllers\Citizen\PaymentController::class, 'show'])->name('citizen.payment-slips.show');
+    Route::get('/citizen/payments/{id}/cashless', [\App\Http\Controllers\Citizen\PaymentController::class, 'showCashless'])->name('citizen.payment-slips.cashless');
+    Route::post('/citizen/payments/{id}/cashless', [\App\Http\Controllers\Citizen\PaymentController::class, 'submitCashless'])->name('citizen.payment-slips.submit-cashless');
     Route::post('/citizen/payments/{id}/upload-proof', [\App\Http\Controllers\Citizen\PaymentController::class, 'uploadProof'])->name('citizen.payments.upload-proof');
+    Route::get('/citizen/payments/{id}/receipt', [\App\Http\Controllers\Citizen\PaymentController::class, 'downloadReceipt'])->name('citizen.payments.receipt');
     
     // Reviews & Feedback
     Route::get('/citizen/reviews/create/{bookingId}', [\App\Http\Controllers\Citizen\ReviewController::class, 'create'])->name('citizen.reviews.create');
@@ -1284,12 +1369,22 @@ Route::middleware(['auth', 'role:super admin'])->prefix('superadmin')->name('sup
 
 // Protected Routes - Admin
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Admin Dashboard
     Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
-});
-
-// Protected Routes - Staff
-Route::middleware(['auth', 'role:staff'])->prefix('staff')->name('staff.')->group(function () {
-    Route::get('/dashboard', [\App\Http\Controllers\Staff\DashboardController::class, 'index'])->name('dashboard');
+    
+    // Payment Verification Queue
+    Route::get('/payment-queue', [\App\Http\Controllers\Admin\PaymentVerificationController::class, 'index'])->name('payment-queue');
+    
+    // Booking Management
+    Route::get('/bookings', [\App\Http\Controllers\Admin\BookingManagementController::class, 'index'])->name('bookings.index');
+    Route::get('/bookings/{id}/review', [\App\Http\Controllers\Admin\BookingManagementController::class, 'review'])->name('bookings.review');
+    Route::post('/bookings/{id}/confirm-payment', [\App\Http\Controllers\Admin\PaymentVerificationController::class, 'confirmPayment'])->name('bookings.confirm-payment');
+    Route::post('/bookings/{id}/reject-payment', [\App\Http\Controllers\Admin\PaymentVerificationController::class, 'rejectPayment'])->name('bookings.reject-payment');
+    Route::post('/bookings/{id}/final-confirm', [\App\Http\Controllers\Admin\BookingManagementController::class, 'finalConfirm'])->name('bookings.final-confirm');
+    
+    // Admin Calendar
+    Route::get('/calendar', [\App\Http\Controllers\Admin\CalendarController::class, 'index'])->name('calendar');
+    Route::get('/calendar/events', [\App\Http\Controllers\Admin\CalendarController::class, 'getEvents'])->name('calendar.events');
 });
 
 // Default Dashboard Route (redirects based on role)

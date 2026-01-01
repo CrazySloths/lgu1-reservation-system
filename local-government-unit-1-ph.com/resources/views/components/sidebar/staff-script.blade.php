@@ -145,6 +145,42 @@ function confirmStaffLogout() {
 
 window.confirmStaffLogout = confirmStaffLogout;
 
+// Coming Soon Feature Alert
+function showComingSoon(featureName) {
+    Swal.fire({
+        title: 'Coming Soon!',
+        html: `
+            <div class="text-center">
+                <div class="mb-4">
+                    <i data-lucide="rocket" class="w-16 h-16 mx-auto text-lgu-highlight"></i>
+                </div>
+                <p class="text-body text-lgu-paragraph mb-2">
+                    <strong>${featureName}</strong> is currently under development.
+                </p>
+                <p class="text-small text-gray-600">
+                    This feature will be available in a future update.
+                </p>
+            </div>
+        `,
+        icon: null,
+        showCancelButton: false,
+        confirmButtonText: '<i data-lucide="arrow-left" class="w-4 h-4 inline mr-2"></i>Go Back',
+        confirmButtonColor: '#047857',
+        customClass: {
+            popup: 'rounded-xl',
+            confirmButton: 'px-6 py-3 rounded-lg'
+        },
+        didOpen: () => {
+            // Initialize Lucide icons in the modal
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+    });
+}
+
+window.showComingSoon = showComingSoon;
+
 // CSS for active states and transitions
 const style = document.createElement('style');
 style.textContent = `

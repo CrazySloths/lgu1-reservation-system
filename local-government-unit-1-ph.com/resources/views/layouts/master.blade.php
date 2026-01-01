@@ -21,11 +21,14 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
-    <!-- Chart.js for dashboard graphs -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- ApexCharts for dashboard graphs (per ARCHITECTURE.md) -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.0/dist/apexcharts.min.js"></script>
     
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Lucide Icons (PROJECT_DESIGN_RULES.md requirement) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     
     @stack('styles')
 </head>
@@ -35,6 +38,15 @@
     </div>
     
     @stack('scripts')
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
+    </script>
 
     <!-- 2-MINUTE SESSION TIMEOUT (CRITICAL FOR DEFENSE - PROJECT_DESIGN_RULES.md) -->
     <!-- Silent logout after 2 minutes of inactivity - no warnings, no modals -->

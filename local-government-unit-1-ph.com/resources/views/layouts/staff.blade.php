@@ -2,16 +2,16 @@
 
 @section('content')
 <!-- Staff Sidebar -->
-<div id="staff-sidebar" class="fixed left-0 top-0 h-full w-64 bg-lgu-headline shadow-2xl transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 overflow-hidden flex flex-col">
+<div id="staff-sidebar" class="fixed left-0 top-0 h-full w-72 bg-lgu-headline shadow-2xl transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 overflow-hidden flex flex-col">
     <!-- Sidebar Header -->
-    <div class="flex items-center justify-between p-4 border-b border-lgu-stroke">
-        <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-lgu-highlight">
+    <div class="flex items-center justify-between p-gr-md border-b border-lgu-stroke">
+        <div class="flex items-center gap-gr-sm">
+            <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-lgu-highlight flex-shrink-0">
                 <img src="{{ asset('assets/images/logo.png') }}" alt="LGU Logo" class="w-full h-full object-cover">
             </div>
-            <div>
-                <h2 class="text-white font-bold text-sm">Local Government Unit</h2>
-                <p class="text-gray-300 text-xs">LGU1</p>
+            <div class="min-w-0">
+                <h2 class="text-white font-bold text-small leading-tight">Local Government Unit</h2>
+                <p class="text-gray-300 text-caption leading-tight">LGU1</p>
             </div>
         </div>
         <div class="relative">
@@ -59,17 +59,17 @@
         
         <!-- Compact Profile Header (Collapsed State) -->
         <div id="profile-compact" class="transition-all duration-300">
-            <button onclick="toggleProfileExpanded()" class="w-full p-4 flex items-center justify-between hover:bg-lgu-stroke/30 transition-all duration-300 group">
-                <div class="flex items-center space-x-3">
+            <button onclick="toggleProfileExpanded()" class="w-full p-gr-md flex items-center justify-between hover:bg-lgu-stroke/30 transition-all duration-300 group">
+                <div class="flex items-center gap-gr-sm">
                     <!-- Small Avatar -->
-                    <div class="w-10 h-10 bg-lgu-highlight rounded-full flex items-center justify-center shadow-md border-2 border-lgu-button transition-transform duration-300 group-hover:scale-110">
+                    <div class="w-10 h-10 bg-lgu-highlight rounded-full flex items-center justify-center shadow-md border-2 border-lgu-button transition-transform duration-300 group-hover:scale-110 flex-shrink-0">
                         <span class="text-lgu-button-text font-bold text-base">{{ $staffInitials }}</span>
                     </div>
                     
                     <!-- Name and Email Label -->
-                    <div class="text-left">
-                        <h3 class="text-white font-semibold text-sm leading-tight">{{ $staff->name }}</h3>
-                        <p class="text-gray-400 text-xs">{{ $staff->email }}</p>
+                    <div class="text-left min-w-0">
+                        <h3 class="text-white font-semibold text-small leading-tight truncate">{{ $staff->name }}</h3>
+                        <p class="text-gray-400 text-caption leading-tight truncate">{{ $staff->email }}</p>
                     </div>
                 </div>
                 
@@ -82,24 +82,24 @@
         
         <!-- Expandable Full Profile Details (Maximized State) -->
         <div id="profile-expanded-details" class="hidden transition-all duration-500 ease-in-out">
-            <button onclick="toggleProfileExpanded()" class="w-full px-6 pb-6 pt-4 text-center hover:bg-lgu-stroke/20 transition-all duration-300 rounded-lg">
+            <button onclick="toggleProfileExpanded()" class="w-full px-gr-lg pb-gr-lg pt-gr-md text-center hover:bg-lgu-stroke/20 transition-all duration-300 rounded-lg">
                 <!-- Large Centered Staff Avatar -->
-                <div class="w-24 h-24 bg-lgu-highlight rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg border-4 border-lgu-button">
+                <div class="w-24 h-24 bg-lgu-highlight rounded-full flex items-center justify-center mx-auto mb-gr-md shadow-lg border-4 border-lgu-button">
                     <span class="text-lgu-button-text font-bold text-3xl">{{ $staffInitials }}</span>
                 </div>
                 
                 <!-- Full Profile Information -->
-                <div class="space-y-2 mb-4">
-                    <h3 class="text-white font-bold text-lg leading-tight">{{ $staff->name }}</h3>
-                    <p class="text-gray-300 text-sm break-all">{{ $staff->email }}</p>
+                <div class="space-y-gr-xs mb-gr-md">
+                    <h3 class="text-white font-bold text-body leading-tight">{{ $staff->name }}</h3>
+                    <p class="text-gray-300 text-small break-all">{{ $staff->email }}</p>
                     
                     <!-- Staff Role Badge -->
-                    <div class="flex items-center justify-center mt-3">
-                        <div class="flex items-center px-4 py-2 rounded-full bg-blue-900/40">
+                    <div class="flex items-center justify-center mt-gr-xs">
+                        <div class="flex items-center px-gr-sm py-gr-xs rounded-full bg-blue-900/40">
                             <svg class="w-4 h-4 text-blue-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                             </svg>
-                            <span class="text-blue-400 text-xs font-semibold">Staff Member</span>
+                            <span class="text-blue-400 text-caption font-semibold">Staff Member</span>
                         </div>
                     </div>
                 </div>
@@ -108,14 +108,8 @@
     </div>
 
     <!-- Navigation Menu -->
-    <nav class="flex-1 overflow-y-auto overflow-x-hidden py-4">
-        <!-- Main -->
-        <div class="px-4 mb-6">
-            <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Main</h4>
-            <ul class="space-y-1">
-                @include('components.sidebar.staff-menu')
-            </ul>
-        </div>
+    <nav class="flex-1 overflow-y-auto overflow-x-hidden py-gr-md">
+        @include('components.sidebar.staff-menu')
     </nav>
 </div>
 
@@ -132,22 +126,37 @@
 <!-- Main Content (the rest of the page) -->
 <div class="lg:ml-72">
     <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
-        <div class="px-6 py-4">
-            <h1 class="text-2xl font-bold text-gray-900">@yield('page-title', 'Staff Dashboard')</h1>
-            <p class="text-sm text-gray-600">@yield('page-subtitle', 'Manage bookings and verifications')</p>
+        <div class="flex items-center justify-between h-16 px-6">
+            <!-- Page Title -->
+            <div class="flex-1">
+                <h1 class="text-2xl font-bold text-lgu-headline">@yield('page-title', 'Staff Dashboard')</h1>
+                <p class="text-sm text-lgu-paragraph">@yield('page-subtitle', 'Manage bookings and verifications')</p>
+            </div>
+
+            <!-- Right Side Actions -->
+            <div class="flex items-center space-x-4">
+                <!-- Real-time Clock -->
+                <div class="hidden md:flex flex-col items-end">
+                    <div id="currentTime" class="text-lg font-bold text-gray-900"></div>
+                    <div id="currentDate" class="text-xs text-gray-600"></div>
+                </div>
+
+                <!-- Notifications Bell -->
+                @include('components.notification-bell')
+            </div>
         </div>
     </header>
 
-    <main class="min-h-screen bg-gray-50">
-        <div class="container mx-auto px-6 py-8">
+    <main class="min-h-screen bg-lgu-bg">
+        <div class="container mx-auto px-gr-lg py-gr-xl">
             @yield('page-content')
         </div>
     </main>
 
-    <footer class="bg-white border-t border-gray-200 py-4 px-6">
-        <div class="flex justify-between items-center text-sm text-gray-600">
+    <footer class="bg-white border-t border-lgu-stroke py-gr-md px-gr-lg">
+        <div class="flex justify-between items-center text-small text-lgu-paragraph">
             <p>&copy; {{ date('Y') }} LGU Facility Reservation System. All rights reserved.</p>
-            <p>Staff Portal</p>
+            <p class="text-caption">Staff Portal</p>
         </div>
     </footer>
 </div>
@@ -156,9 +165,29 @@
 
 @push('scripts')
 <script>
+// Update real-time clock
+function updateClock() {
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const timeString = `${hours}:${minutes}:${seconds} ${ampm}`;
+    const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+    const dateString = now.toLocaleDateString('en-US', options);
+    const timeElement = document.getElementById('currentTime');
+    const dateElement = document.getElementById('currentDate');
+    if (timeElement) timeElement.textContent = timeString;
+    if (dateElement) dateElement.textContent = dateString;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// Session timeout management
 (function() {
-    // Session timeout from Laravel config (in minutes, convert to milliseconds)
-    const SESSION_TIMEOUT = {{ config('session.lifetime') }} * 60 * 1000; // Convert minutes to milliseconds
+    const SESSION_TIMEOUT = {{ config('session.lifetime') }} * 60 * 1000;
     let inactivityTimer;
     let lastActivityTime = Date.now();
 

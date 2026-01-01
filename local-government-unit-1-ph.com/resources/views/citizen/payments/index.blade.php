@@ -64,7 +64,7 @@
 
     <!-- Payment Slips List -->
     @if($paymentSlips->isEmpty())
-        <div class="bg-gradient-to-br from-gray-50 to-gray-100 shadow-lg rounded-xl p-16 text-center">
+        <div class="bg-gray-50 shadow-lg rounded-xl p-16 text-center">
             <div class="mx-auto w-24 h-24 bg-white shadow-lg rounded-full flex items-center justify-center mb-6">
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400">
                     <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
@@ -92,7 +92,7 @@
                         'expired' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'border' => 'border-red-300', 'label' => 'Expired'],
                         default => ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'border' => 'border-gray-300', 'label' => ucfirst($slip->status)]
                     };
-                    $dueDate = \Carbon\Carbon::parse($slip->due_date);
+                    $dueDate = \Carbon\Carbon::parse($slip->payment_deadline);
                     $isOverdue = $slip->status === 'unpaid' && $dueDate->isPast();
                     $daysUntilDue = $isOverdue ? abs($dueDate->diffInDays(now(), false)) : $dueDate->diffInDays(now(), false);
                 @endphp
@@ -105,8 +105,9 @@
                                 <div class="flex items-center gap-3 mb-2 flex-wrap">
                                     <h3 class="text-xl md:text-2xl font-bold text-gray-900">{{ $slip->facility_name }}</h3>
                                     @if($isOverdue)
-                                        <span class="px-3 py-1.5 bg-red-600 text-white text-xs font-bold rounded-full animate-pulse shadow-lg">
-                                            ⚠ OVERDUE
+                                        <span class="px-3 py-1.5 bg-red-600 text-white text-xs font-bold rounded-full shadow-lg inline-flex items-center gap-1">
+                                            <i data-lucide="alert-triangle" class="w-3 h-3"></i>
+                                            OVERDUE
                                         </span>
                                     @endif
                                 </div>
@@ -128,7 +129,7 @@
                         </div>
 
                         <!-- Payment Info Grid with Countdown -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5 p-5 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5 p-5 bg-gray-50 rounded-xl">
                             <!-- Amount Due -->
                             <div class="text-center border-r border-gray-200 last:border-r-0">
                                 <p class="text-xs text-gray-600 mb-1 font-semibold uppercase tracking-wide">Amount Due</p>
@@ -136,7 +137,7 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-lgu-button">
                                         <line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                                     </svg>
-                                    <p class="text-2xl md:text-3xl font-bold text-lgu-headline">₱{{ number_format($slip->amount, 2) }}</p>
+                                    <p class="text-2xl md:text-3xl font-bold text-lgu-headline">₱{{ number_format($slip->amount_due, 2) }}</p>
                                 </div>
                             </div>
                             
@@ -174,8 +175,8 @@
                             <div class="text-center">
                                 <p class="text-xs text-gray-600 mb-1 font-semibold uppercase tracking-wide">Payment Method</p>
                                 <p class="text-base font-bold text-gray-900">{{ $slip->payment_method ? ucfirst(str_replace('_', ' ', $slip->payment_method)) : 'Not set' }}</p>
-                                @if($slip->gateway_reference_number)
-                                    <p class="text-xs text-gray-600 mt-1 font-mono">{{ $slip->gateway_reference_number }}</p>
+                                @if($slip->transaction_reference)
+                                    <p class="text-xs text-gray-600 mt-1 font-mono">{{ $slip->transaction_reference }}</p>
                                 @endif
                             </div>
                         </div>
@@ -198,7 +199,7 @@
                                 View Booking
                             </a>
 
-                            @if($slip->status === 'paid' && $slip->or_number)
+                            @if($slip->status === 'paid' && isset($slip->or_number) && $slip->or_number)
                                 <div class="px-5 py-3 bg-green-50 border-2 border-green-200 text-green-700 font-semibold rounded-lg shadow-sm flex items-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>
@@ -229,6 +230,11 @@ function liveSearch(query) {
         const currentStatus = '{{ $status }}';
         window.location.href = `{{ route('citizen.payment-slips') }}?status=${currentStatus}&search=${encodeURIComponent(query)}`;
     }, 500);
+}
+
+// Initialize Lucide icons
+if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
 }
 </script>
 @endpush

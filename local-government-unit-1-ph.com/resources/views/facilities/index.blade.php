@@ -159,7 +159,7 @@
                                     class="w-full h-full object-cover"
                                 >
                             @else
-                                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-200">
+                                <div class="w-full h-full flex items-center justify-center bg-primary-100">
                                     <i data-lucide="building-2" class="w-16 h-16 text-primary-400"></i>
                                 </div>
                             @endif

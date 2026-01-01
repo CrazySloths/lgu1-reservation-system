@@ -2,7 +2,7 @@
 
 <?php $__env->startSection('content'); ?>
 <!-- Citizen Sidebar -->
-<div id="citizen-sidebar" class="fixed left-0 top-0 h-full w-72 bg-lgu-headline shadow-2xl transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 overflow-hidden flex flex-col">
+<div id="citizen-sidebar" class="fixed left-0 top-0 h-full w-72 bg-lgu-headline shadow-2xl transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 overflow-hidden flex flex-col no-print">
     <!-- Sidebar Header -->
     <div class="flex items-center justify-between p-gr-md border-b border-lgu-stroke">
         <div class="flex items-center gap-gr-sm">
@@ -114,10 +114,10 @@
 </div>
 
 <!-- Mobile Sidebar Overlay -->
-<div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden"></div>
+<div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden no-print"></div>
 
 <!-- Mobile Sidebar Toggle Button -->
-<button id="sidebar-toggle" class="fixed top-4 left-4 z-50 lg:hidden bg-lgu-headline text-white p-2 rounded-lg shadow-lg hover:bg-lgu-stroke transition-colors duration-200">
+<button id="sidebar-toggle" class="fixed top-4 left-4 z-50 lg:hidden bg-lgu-headline text-white p-2 rounded-lg shadow-lg hover:bg-lgu-stroke transition-colors duration-200 no-print">
     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
     </svg>
@@ -125,7 +125,7 @@
 
 <!-- Main Content (the rest of the page) -->
 <div class="lg:ml-72">
-    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40 no-print">
         <?php echo $__env->make('components.header.citizen-header', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     </header>
 
@@ -135,7 +135,7 @@
         </div>
     </main>
 
-    <footer class="bg-white border-t border-gray-200 py-gr-md px-gr-lg">
+    <footer class="bg-white border-t border-gray-200 py-gr-md px-gr-lg no-print">
         <div class="flex justify-between items-center text-small text-gray-600">
             <p>&copy; <?php echo e(date('Y')); ?> LGU Facility Reservation System. All rights reserved.</p>
             <p>Citizen Portal</p>

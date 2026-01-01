@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Citizen;
 
 use App\Http\Controllers\Controller;
 use App\Models\Facility;
+use App\Models\FacilityDb;
+use App\Models\LguCity;
 use App\Models\Location;
 use Illuminate\Http\Request;
 
@@ -21,27 +23,25 @@ class FacilityController extends Controller
             return redirect()->route('login')->with('error', 'Please login to continue.');
         }
         
-        // Get all locations for filter dropdown
-        $cities = Location::where('is_active', true)
-            ->orderBy('location_name')
+        // Get all cities for filter dropdown (from facilities_db)
+        $cities = LguCity::where('status', 'active')
+            ->orderBy('city_name')
             ->get();
         
-        // Start query for facilities (showing all including "coming soon" - not filtering by is_available)
-        $query = Facility::with('location')
-            ->where('status', 'active')
-            ->orderBy('display_order')
-            ->orderBy('facility_name');
+        // Start query for facilities from facilities_db (showing all including "coming soon")
+        $query = FacilityDb::with('lguCity')
+            ->orderBy('name');
         
-        // Filter by location
+        // Filter by city
         if ($request->has('city_id') && $request->city_id != '') {
-            $query->where('location_id', $request->city_id);
+            $query->where('lgu_city_id', $request->city_id);
         }
         
         // Search functionality
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('facility_name', 'LIKE', "%{$search}%")
+                $q->where('name', 'LIKE', "%{$search}%")
                   ->orWhere('address', 'LIKE', "%{$search}%")
                   ->orWhere('description', 'LIKE', "%{$search}%");
             });
@@ -53,10 +53,10 @@ class FacilityController extends Controller
         }
         
         // Sort
-        $sortBy = $request->get('sort', 'facility_name');
+        $sortBy = $request->get('sort', 'name');
         $sortDirection = $request->get('direction', 'asc');
         
-        if (in_array($sortBy, ['facility_name', 'capacity', 'per_person_rate', 'hourly_rate'])) {
+        if (in_array($sortBy, ['name', 'capacity', 'per_person_rate', 'hourly_rate'])) {
             $query->orderBy($sortBy, $sortDirection);
         }
         

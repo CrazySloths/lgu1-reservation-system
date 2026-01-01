@@ -95,6 +95,40 @@ FACILITIES_DB_CONNECTION=mysql
 FACILITIES_DB_DATABASE=lgu1_facilities_db
 ```
 
+## 🔗 Inter-Departmental Integration
+
+This system is designed to integrate with other LGU departments:
+
+### City Treasurer's Office (CTO) Integration
+- **Payment verification** and processing
+- **Official Receipt (OR)** generation and issuance
+- **Daily collection reports** for treasury records
+- **54 CTO services** identified for future unified portal
+
+📄 **See:** [EXTERNAL_INTEGRATIONS.md](EXTERNAL_INTEGRATIONS.md)
+
+### City Budget Department (CBD) Integration
+- **Monthly/Quarterly revenue reports** for budget planning
+- **Budget allocation tracking** and utilization monitoring
+- **Financial oversight** and expenditure approval workflows
+
+📄 **See:** [INTERNAL_PROCESSES.md](INTERNAL_PROCESSES.md)
+
+### Cross-Department Workflows
+- **Payment lifecycle:** Citizen → CTO → System → CBD
+- **Budget requests:** Admin → CBD → CTO → System
+- **Annual reconciliation** processes
+
+📄 **See:** [HYBRID_INTEGRATION_PROCESSES.md](HYBRID_INTEGRATION_PROCESSES.md)
+
+## 📚 Documentation
+
+- **[NEXT_STEPS_ROADMAP.md](NEXT_STEPS_ROADMAP.md)** - Development priorities and timeline
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture and design
+- **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)** - Database structure and relationships
+- **[PROJECT_DESIGN_RULES.md](PROJECT_DESIGN_RULES.md)** - UI/UX design standards
+- **[FEATURES_CHECKLIST.md](FEATURES_CHECKLIST.md)** - Feature implementation checklist
+
 ## 📝 License
 
 Proprietary - Local Government Unit 1

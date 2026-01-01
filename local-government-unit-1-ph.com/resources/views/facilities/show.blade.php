@@ -70,7 +70,7 @@
                             </div>
                         @endif
                     @else
-                        <div class="h-96 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+                        <div class="h-96 bg-primary-100 flex items-center justify-center">
                             <i data-lucide="building-2" class="w-32 h-32 text-primary-400"></i>
                         </div>
                     @endif
@@ -305,7 +305,7 @@
                                         class="w-full h-full object-cover"
                                     >
                                 @else
-                                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-200">
+                                    <div class="w-full h-full flex items-center justify-center bg-primary-100">
                                         <i data-lucide="building-2" class="w-12 h-12 text-primary-400"></i>
                                     </div>
                                 @endif

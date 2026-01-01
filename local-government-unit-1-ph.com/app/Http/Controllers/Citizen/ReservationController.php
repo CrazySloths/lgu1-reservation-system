@@ -24,7 +24,7 @@ class ReservationController extends Controller
         $status = $request->get('status', 'all');
         $search = $request->get('search');
 
-        // Base query
+        // Base query - My Reservations should only show ACTIVE bookings (not closed/historical ones)
         $query = DB::connection('facilities_db')
             ->table('bookings')
             ->join('facilities', 'bookings.facility_id', '=', 'facilities.facility_id')
@@ -38,6 +38,8 @@ class ReservationController extends Controller
                 'lgu_cities.city_code'
             )
             ->where('bookings.user_id', $userId)
+            // EXCLUDE completed, expired, cancelled, rejected from "My Reservations"
+            ->whereNotIn('bookings.status', ['completed', 'expired', 'cancelled', 'rejected'])
             ->orderBy('bookings.start_time', 'desc');
 
         // Filter by status
@@ -46,8 +48,6 @@ class ReservationController extends Controller
                 $query->whereIn('bookings.status', ['pending', 'staff_verified', 'payment_pending', 'confirmed']);
             } elseif ($status === 'completed') {
                 $query->where('bookings.status', 'completed');
-            } elseif ($status === 'cancelled') {
-                $query->whereIn('bookings.status', ['cancelled', 'rejected']);
             } else {
                 $query->where('bookings.status', $status);
             }
@@ -64,9 +64,12 @@ class ReservationController extends Controller
 
         $bookings = $query->paginate(10);
 
-        // Get counts for filter badges
+        // Get counts for filter badges - only count ACTIVE bookings
         $statusCounts = [
-            'all' => DB::connection('facilities_db')->table('bookings')->where('user_id', $userId)->count(),
+            'all' => DB::connection('facilities_db')->table('bookings')
+                ->where('user_id', $userId)
+                ->whereNotIn('status', ['completed', 'expired', 'cancelled', 'rejected'])
+                ->count(),
             'active' => DB::connection('facilities_db')->table('bookings')
                 ->where('user_id', $userId)
                 ->whereIn('status', ['pending', 'staff_verified', 'payment_pending', 'confirmed'])
@@ -74,10 +77,6 @@ class ReservationController extends Controller
             'completed' => DB::connection('facilities_db')->table('bookings')
                 ->where('user_id', $userId)
                 ->where('status', 'completed')
-                ->count(),
-            'cancelled' => DB::connection('facilities_db')->table('bookings')
-                ->where('user_id', $userId)
-                ->whereIn('status', ['cancelled', 'rejected'])
                 ->count(),
         ];
 
@@ -95,27 +94,24 @@ class ReservationController extends Controller
             return redirect()->route('login')->with('error', 'Please login to continue.');
         }
 
-        $booking = DB::connection('facilities_db')
-            ->table('bookings')
-            ->join('facilities', 'bookings.facility_id', '=', 'facilities.facility_id')
-            ->leftJoin('lgu_cities', 'facilities.lgu_city_id', '=', 'lgu_cities.id')
-            ->select(
-                'bookings.*',
-                'facilities.name as facility_name',
-                'facilities.description as facility_description',
-                'facilities.address as facility_address',
-                'facilities.capacity as facility_capacity',
-                'facilities.image_path as facility_image',
-                'lgu_cities.city_name',
-                'lgu_cities.city_code'
-            )
-            ->where('bookings.id', $id)
-            ->where('bookings.user_id', $userId)
+        // Use Booking model instead of raw query to access model methods
+        $booking = \App\Models\Booking::with(['facility.lguCity'])
+            ->where('id', $id)
+            ->where('user_id', $userId)
             ->first();
 
         if (!$booking) {
             return redirect()->route('citizen.reservations')->with('error', 'Booking not found.');
         }
+
+        // Add facility details as properties for backward compatibility with view
+        $booking->facility_name = $booking->facility->name ?? 'N/A';
+        $booking->facility_description = $booking->facility->description ?? '';
+        $booking->facility_address = $booking->facility->address ?? '';
+        $booking->facility_capacity = $booking->facility->capacity ?? 0;
+        $booking->facility_image = $booking->facility->image_path ?? '';
+        $booking->city_name = $booking->facility->lguCity->name ?? '';
+        $booking->city_code = $booking->facility->lguCity->code ?? '';
 
         // Get selected equipment
         $equipment = DB::connection('facilities_db')
@@ -177,6 +173,34 @@ class ReservationController extends Controller
                 'rejected_reason' => $request->cancellation_reason,
                 'updated_at' => Carbon::now(),
             ]);
+
+        // Send notification to all staff members
+        try {
+            // Get booking details with facility info
+            $bookingDetails = DB::connection('facilities_db')
+                ->table('bookings')
+                ->join('facilities', 'bookings.facility_id', '=', 'facilities.facility_id')
+                ->where('bookings.id', $id)
+                ->selectRaw('bookings.*, facilities.name as facility_name, CONCAT("BK", LPAD(bookings.id, 6, "0")) as booking_reference')
+                ->first();
+
+            if ($bookingDetails) {
+                // Get all staff members (subsystem_role_id = 3 for Reservations Staff, subsystem_id = 4 for Public Facilities)
+                $staffUsers = \App\Models\User::where('subsystem_role_id', 3)
+                                              ->where('subsystem_id', 4)
+                                              ->get();
+
+                foreach ($staffUsers as $staff) {
+                    $staff->notify(new \App\Notifications\BookingCancelled($bookingDetails, $request->cancellation_reason));
+                }
+
+                \Log::info('Cancellation notifications sent to ' . $staffUsers->count() . ' staff members', [
+                    'booking_id' => $id
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send booking cancellation notification: ' . $e->getMessage());
+        }
 
         return redirect()->route('citizen.reservations')->with('success', 'Booking cancelled successfully.');
     }
@@ -263,7 +287,7 @@ class ReservationController extends Controller
                 'lgu_cities.city_code'
             )
             ->where('bookings.user_id', $userId)
-            ->whereIn('bookings.status', ['completed', 'cancelled', 'rejected'])
+            ->whereIn('bookings.status', ['completed', 'cancelled', 'rejected', 'expired'])
             ->orderBy('bookings.start_time', 'desc');
 
         if ($search) {

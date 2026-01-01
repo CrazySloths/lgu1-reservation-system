@@ -41,6 +41,12 @@ colors: {
 - **Success/Info:** Use `lgu-secondary`
 - **Errors/Warnings:** Use `lgu-tertiary`
 
+### ❌ FORBIDDEN:
+- **NO GRADIENTS** - Use solid colors only
+- **NO bg-gradient-*** classes allowed
+- **NO linear-gradient()** in CSS
+- All backgrounds must be flat, solid colors
+
 ---
 
 ## 🔧 2. TECHNICAL STACK (NON-NEGOTIABLE)
@@ -51,9 +57,161 @@ colors: {
 | **Frontend** | Blade + Tailwind CSS | No React/Vue |
 | **Database** | **MySQL ONLY** | ❌ No SQLite, PostgreSQL, or others |
 | **Icons** | **Lucide Icons ONLY** | ❌ Absolutely no emojis/emoticons |
+| **Currency** | **Philippine Peso (₱) ONLY** | ❌ No dollar signs ($) - Use ₱ symbol |
 | **Alerts** | **SweetAlert2 ONLY** | All alerts MUST be modal |
 | **Font** | **Poppins** | All weights, all text |
 | **AI** | TensorFlow.js | Client-side only |
+
+---
+
+## 📂 2.5 SIDEBAR NAVIGATION STRUCTURE (SUBMODULE-BASED)
+
+**Last Updated:** December 21, 2025
+
+### **Design Philosophy**
+
+All portal sidebars (Admin, Staff, Citizen) MUST follow a **submodule-based organization** to:
+- Group related features logically
+- Make navigation intuitive and scalable
+- Maintain consistency across all user roles
+- Clearly separate implemented vs. upcoming features
+
+### **Unified Sidebar Structure**
+
+Each sidebar is divided into **submodule sections** with:
+1. **Section Header** - Gray uppercase label (e.g., "BOOKING MANAGEMENT")
+2. **Feature Links** - Grouped under their parent submodule
+3. **Status Badges** - "Soon" for unimplemented features
+4. **Active States** - Golden yellow highlight for current page
+5. **Notification Badges** - Yellow pill badges for counts (e.g., pending queue)
+
+### **Role-Based Submodules**
+
+#### **👑 Admin Portal Submodules:**
+```
+MAIN
+  └─ Dashboard
+
+BOOKING MANAGEMENT
+  └─ Payment Queue
+  └─ All Bookings
+  └─ Calendar View
+
+FINANCIAL
+  └─ Revenue Reports [Soon]
+  └─ Payment Analytics [Soon]
+  └─ Transactions [Soon]
+
+FACILITIES
+  └─ Manage Facilities [Soon]
+  └─ Equipment [Soon]
+  └─ Pricing [Soon]
+
+USERS
+  └─ Staff Accounts [Soon]
+  └─ Citizens [Soon]
+
+COMMUNICATIONS
+  └─ Email Settings [Soon]
+  └─ SMS Settings [Soon]
+
+REPORTS
+  └─ Usage Statistics [Soon]
+  └─ Audit Trail [Soon]
+
+SYSTEM
+  └─ Settings [Soon]
+  └─ Backup [Soon]
+```
+
+#### **👤 Staff Portal Submodules:**
+```
+MAIN
+  └─ Dashboard
+
+BOOKING VERIFICATION
+  └─ Verification Queue
+  └─ All Bookings
+  └─ Calendar View
+
+FACILITIES
+  └─ View Facilities [Soon]
+  └─ Equipment List [Soon]
+  └─ Pricing Info [Soon]
+
+REPORTS
+  └─ My Statistics [Soon]
+  └─ Activity Log [Soon]
+
+COMMUNICATIONS
+  └─ Send Notification [Soon]
+  └─ Templates [Soon]
+```
+
+#### **🏠 Citizen Portal Submodules:**
+```
+MAIN
+  └─ Dashboard
+
+BOOKINGS
+  └─ Book Facility
+  └─ My Reservations
+  └─ Booking History [Soon]
+
+FACILITIES
+  └─ Browse All [Soon]
+  └─ Favorites [Soon]
+  └─ Availability [Soon]
+
+PAYMENTS
+  └─ Payment Methods [Soon]
+  └─ Transaction History [Soon]
+
+SUPPORT
+  └─ Help Center [Soon]
+  └─ Contact Us [Soon]
+```
+
+### **"Coming Soon" Features**
+
+For unimplemented features:
+1. Add `opacity-60` to the link
+2. Add "Soon" badge with `bg-gray-500`
+3. Call `showComingSoon('Feature Name')` on click
+4. Show SweetAlert2 modal with:
+   - Rocket icon (Lucide)
+   - Feature name
+   - "This feature will be available in a future update" message
+   - "Go Back" button
+
+**Example Implementation:**
+```blade
+<li>
+    <a href="#" onclick="showComingSoon('Revenue Reports'); return false;" 
+       class="sidebar-link opacity-60">
+        <i data-lucide="trending-up" class="w-5 h-5"></i>
+        <span>Revenue Reports</span>
+        <span class="ml-auto text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full">Soon</span>
+    </a>
+</li>
+```
+
+### **Visual Guidelines**
+
+- **Section Headers:** `text-gray-400 text-caption font-semibold uppercase tracking-wider`
+- **Spacing:** Use Golden Ratio spacing (`mb-gr-lg`, `space-y-gr-xs`, etc.)
+- **Icons:** Lucide icons, 20px (w-5 h-5)
+- **Active State:** Yellow background (`bg-lgu-highlight/10`) with dark teal text
+- **Hover State:** Lighter background with smooth transition
+- **Badges:** Rounded full, small text, appropriate color (yellow for counts, gray for "Soon")
+
+### **Benefits**
+
+✅ **Scalable** - Easy to add new features within existing submodules  
+✅ **Intuitive** - Users know where to find related features  
+✅ **Consistent** - All three portals follow the same pattern  
+✅ **Professional** - Clear visual hierarchy and organization  
+✅ **Future-Ready** - "Coming Soon" features set expectations  
 
 ---
 
@@ -450,7 +608,226 @@ label, .form-label {
 
 ---
 
-## 🎯 5. UI/UX DESIGN PRINCIPLES
+## 🔄 5. CODE QUALITY & ARCHITECTURE PRINCIPLES
+
+### A. Avoid Redundancy (Single Source of Truth)
+
+**CRITICAL FOR CAPSTONE:** Excessive redundancy is strictly forbidden in academic projects and professional development.
+
+**What is Code Redundancy?**
+- Duplicate logic in multiple places
+- Copy-pasted code blocks
+- Multiple functions doing the same thing
+- Repeated database queries
+- Identical validation rules scattered across files
+
+---
+
+### **Why Avoid Redundancy?**
+
+✅ **Maintainability:** Change logic once, not in 10 places  
+✅ **Consistency:** One source = no conflicting behaviors  
+✅ **Debugging:** Fix bugs in one place  
+✅ **Performance:** Query database once, reuse result  
+✅ **Defense Success:** Panel looks for clean, professional code  
+
+---
+
+### **DRY Principle: Don't Repeat Yourself**
+
+❌ **BAD: Redundant Code**
+```php
+// Conflict check in Controller A
+$conflicts = Booking::where('facility_id', $facilityId)
+    ->where('event_date', $date)
+    ->whereIn('status', ['approved', 'paid'])
+    ->where(function($q) use ($start, $end) {
+        $q->where('start_time', '<', $end)
+          ->where('end_time', '>', $start);
+    })->get();
+
+// SAME logic repeated in Controller B
+$conflicts = Booking::where('facility_id', $facilityId)
+    ->where('event_date', $date)
+    ->whereIn('status', ['approved', 'paid'])
+    ->where(function($q) use ($start, $end) {
+        $q->where('start_time', '<', $end)
+          ->where('end_time', '>', $start);
+    })->get();
+
+// SAME logic repeated in Service C
+// ... repeated again!
+```
+
+✅ **GOOD: Single Source of Truth**
+```php
+// In Booking model (ONE place)
+public function checkScheduleConflicts(): array
+{
+    $conflicts = self::where('facility_id', $this->facility_id)
+        ->where('event_date', $this->event_date)
+        ->whereIn('status', ['approved', 'paid'])
+        ->where(function($query) {
+            $query->where('start_time', '<', $this->end_time)
+                  ->where('end_time', '>', $this->start_time);
+        })->get();
+
+    return [
+        'hasConflict' => $conflicts->isNotEmpty(),
+        'conflicts' => $conflicts
+    ];
+}
+
+// Now use EVERYWHERE (Controller A, B, C, etc.)
+$conflictCheck = $booking->checkScheduleConflicts();
+```
+
+---
+
+### **Common Redundancy Patterns to Avoid**
+
+#### **1. Database Queries**
+
+❌ **DON'T:** Query the same data multiple times
+```php
+// Bad: 3 separate queries
+$user = User::find($id);
+$userName = User::find($id)->name;
+$userEmail = User::find($id)->email;
+```
+
+✅ **DO:** Query once, reuse
+```php
+// Good: 1 query
+$user = User::find($id);
+$userName = $user->name;
+$userEmail = $user->email;
+```
+
+---
+
+#### **2. Validation Rules**
+
+❌ **DON'T:** Duplicate validation across controllers
+```php
+// Controller A
+$request->validate([
+    'email' => 'required|email|max:255',
+    'phone' => 'required|regex:/^[0-9]{10}$/',
+]);
+
+// Controller B - SAME rules copied
+$request->validate([
+    'email' => 'required|email|max:255',
+    'phone' => 'required|regex:/^[0-9]{10}$/',
+]);
+```
+
+✅ **DO:** Use Form Requests
+```php
+// app/Http/Requests/UserRequest.php (ONE place)
+class UserRequest extends FormRequest
+{
+    public function rules()
+    {
+        return [
+            'email' => 'required|email|max:255',
+            'phone' => 'required|regex:/^[0-9]{10}$/',
+        ];
+    }
+}
+
+// Use everywhere
+public function store(UserRequest $request) { ... }
+```
+
+---
+
+#### **3. Blade Components**
+
+❌ **DON'T:** Copy-paste HTML
+```blade
+<!-- Page A -->
+<div class="bg-white rounded-xl shadow-sm p-6">
+    <h3 class="text-xl font-bold mb-4">Title</h3>
+    <p>Content</p>
+</div>
+
+<!-- Page B - SAME card copied -->
+<div class="bg-white rounded-xl shadow-sm p-6">
+    <h3 class="text-xl font-bold mb-4">Title</h3>
+    <p>Content</p>
+</div>
+```
+
+✅ **DO:** Create reusable components
+```blade
+<!-- resources/views/components/card.blade.php -->
+<div class="bg-white rounded-xl shadow-sm p-6">
+    <h3 class="text-xl font-bold mb-4">{{ $title }}</h3>
+    <p>{{ $slot }}</p>
+</div>
+
+<!-- Use everywhere -->
+<x-card title="Title">Content</x-card>
+```
+
+---
+
+#### **4. JavaScript Functions**
+
+❌ **DON'T:** Duplicate functions
+```javascript
+// Page 1
+function formatCurrency(amount) {
+    return '₱' + amount.toFixed(2);
+}
+
+// Page 2 - SAME function copied
+function formatCurrency(amount) {
+    return '₱' + amount.toFixed(2);
+}
+```
+
+✅ **DO:** Create utility file
+```javascript
+// resources/js/utils.js (ONE place)
+export function formatCurrency(amount) {
+    return '₱' + amount.toFixed(2);
+}
+
+// Import everywhere
+import { formatCurrency } from './utils.js';
+```
+
+---
+
+### **How to Identify Redundancy**
+
+Ask yourself:
+1. **Am I copying code from another file?** → Create shared function
+2. **Does this logic exist elsewhere?** → Use the existing one
+3. **Will I need this in multiple places?** → Make it reusable
+4. **Am I querying the same data twice?** → Query once, store in variable
+5. **Are these validation rules similar?** → Extract to Form Request
+
+---
+
+### **Refactoring Checklist**
+
+Before committing code, check:
+
+- [ ] No copy-pasted code blocks
+- [ ] No duplicate database queries
+- [ ] Validation rules in Form Requests, not controllers
+- [ ] Common UI patterns extracted to components
+- [ ] Utility functions in shared files
+- [ ] Business logic in Models, not Controllers
+- [ ] Single source of truth for each feature
+
+---
+
+## 🎯 6. UI/UX DESIGN PRINCIPLES
 
 ### A. Error Handling (Form Validation)
 
@@ -547,7 +924,7 @@ Every card should follow this structure:
 
 ---
 
-## 🛠️ 6. MANDATORY FEATURES (ALL SYSTEMS)
+## 🛠️ 7. MANDATORY FEATURES (ALL SYSTEMS)
 
 Every system page MUST implement these features where applicable:
 
@@ -753,7 +1130,7 @@ fontFamily: {
 
 ---
 
-## 🚦 7. PRE-COMMIT CHECKLIST
+## 🚦 8. PRE-COMMIT CHECKLIST
 
 Before you commit ANY code, verify:
 
@@ -775,7 +1152,7 @@ Before you commit ANY code, verify:
 
 ---
 
-## 🎯 8. FINAL DEFENSE REQUIREMENTS
+## 🎯 9. FINAL DEFENSE REQUIREMENTS
 
 The panel MUST see these working:
 
@@ -798,7 +1175,7 @@ The panel MUST see these working:
 
 ---
 
-## 📚 9. COMPONENT LIBRARY
+## 📚 10. COMPONENT LIBRARY
 
 ### Button Styles
 
@@ -916,15 +1293,16 @@ The panel MUST see these working:
 
 ❌ **DON'T:**
 1. Use emojis in the UI (use Lucide icons)
-2. Use `confirm()` or `alert()` (use SweetAlert2)
-3. Hard delete records (use soft deletes)
-4. Forget session timeout (critical for defense)
-5. Skip responsive testing
-6. Use random colors (stick to theme)
-7. Forget audit logging
-8. Skip form validation
-9. Ignore error states
-10. Use inconsistent spacing
+2. Use dollar signs ($) for currency (use Philippine Peso ₱ ONLY)
+3. Use `confirm()` or `alert()` (use SweetAlert2)
+4. Hard delete records (use soft deletes)
+5. Forget session timeout (critical for defense)
+6. Skip responsive testing
+7. Use random colors (stick to theme)
+8. Forget audit logging
+9. Skip form validation
+10. Ignore error states
+11. Use inconsistent spacing
 
 ✅ **DO:**
 1. Follow the design system religiously

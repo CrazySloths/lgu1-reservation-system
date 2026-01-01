@@ -17,25 +17,24 @@ class PaymentSlip extends Model
     protected $fillable = [
         'slip_number',
         'booking_id',
-        'user_id',
-        'generated_by',
-        'amount',
+        'amount_due',
+        'payment_deadline',
         'status',
-        'due_date',
-        'paid_at',
         'payment_method',
-        'cashier_notes',
-        'paid_by_cashier'
+        'paid_at',
+        'verified_by',
+        'transaction_reference',
+        'notes'
     ];
 
     protected $casts = [
-        'amount' => 'decimal:2',
-        'due_date' => 'datetime',
+        'amount_due' => 'decimal:2',
+        'payment_deadline' => 'datetime',
         'paid_at' => 'datetime',
     ];
 
     /**
-     * Generate a unique slip number
+     * Generate a unique slip number (Format: PS-2025-001234)
      */
     public static function generateSlipNumber()
     {
@@ -45,10 +44,10 @@ class PaymentSlip extends Model
                        ->first();
         
         if ($lastSlip) {
-            $lastNumber = intval(substr($lastSlip->slip_number, -4));
-            $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+            $lastNumber = intval(substr($lastSlip->slip_number, -6));
+            $newNumber = str_pad($lastNumber + 1, 6, '0', STR_PAD_LEFT);
         } else {
-            $newNumber = '0001';
+            $newNumber = '000001';
         }
         
         return "PS-{$year}-{$newNumber}";
@@ -62,19 +61,12 @@ class PaymentSlip extends Model
         return $this->belongsTo(Booking::class);
     }
 
-    public function user()
+    /**
+     * Treasurer who verified the payment (from auth_db)
+     */
+    public function verifiedBy()
     {
-        return $this->belongsTo(User::class);
-    }
-
-    public function generatedBy()
-    {
-        return $this->belongsTo(User::class, 'generated_by');
-    }
-
-    public function paidByCashier()
-    {
-        return $this->belongsTo(User::class, 'paid_by_cashier');
+        return $this->belongsTo(\App\Models\User::class, 'verified_by');
     }
 
     /**
@@ -82,19 +74,41 @@ class PaymentSlip extends Model
      */
     public function getIsExpiredAttribute()
     {
-        return $this->status === 'unpaid' && $this->due_date->isPast();
+        return $this->status === 'unpaid' && $this->payment_deadline->isPast();
     }
 
     /**
-     * Get days until due
+     * Get hours until deadline
      */
-    public function getDaysUntilDueAttribute()
+    public function getHoursUntilDeadlineAttribute()
     {
         if ($this->status === 'paid') {
             return 0;
         }
         
-        return max(0, Carbon::now()->diffInDays($this->due_date, false));
+        return max(0, Carbon::now()->diffInHours($this->payment_deadline, false));
+    }
+
+    /**
+     * Mark payment slip as paid
+     */
+    public function markAsPaid($paymentMethod, $verifiedBy, $transactionReference = null)
+    {
+        $this->update([
+            'status' => 'paid',
+            'payment_method' => $paymentMethod,
+            'paid_at' => now(),
+            'verified_by' => $verifiedBy,
+            'transaction_reference' => $transactionReference,
+        ]);
+    }
+
+    /**
+     * Mark payment slip as expired
+     */
+    public function markAsExpired()
+    {
+        $this->update(['status' => 'expired']);
     }
 }
 

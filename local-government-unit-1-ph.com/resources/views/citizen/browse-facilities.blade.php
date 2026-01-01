@@ -166,7 +166,7 @@
                 <div class="facility-card bg-white shadow-sm rounded-xl overflow-hidden hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 opacity-0 animate-fade-in" style="animation-delay: {{ $loop->index * 0.1 }}s">
                     <!-- Facility Image -->
                     <div class="relative h-48 bg-gray-200">
-                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-200">
+                        <div class="w-full h-full flex items-center justify-center bg-primary-100">
                             <svg class="w-16 h-16 text-primary-400" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm6 6H7v2h6v-2z" clip-rule="evenodd"/>
                             </svg>
@@ -184,14 +184,14 @@
                     <!-- Facility Info -->
                     <div class="p-gr-md">
                         <div class="mb-gr-sm">
-                            <h3 class="text-h3 text-gray-900 mb-1">{{ $facility->facility_name }}</h3>
-                            @if($facility->location)
+                            <h3 class="text-h3 text-gray-900 mb-1">{{ $facility->name }}</h3>
+                            @if($facility->lguCity)
                                 <p class="text-small text-gray-600 flex items-center gap-1">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
                                         <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>
                                         <circle cx="12" cy="10" r="3"/>
                                     </svg>
-                                    {{ $facility->location->location_name }}
+                                    {{ $facility->lguCity->city_name }}
                                 </p>
                             @endif
                         </div>
@@ -208,7 +208,7 @@
                                     </svg>
                                     Capacity
                                 </span>
-                                <span class="font-semibold text-gray-900">{{ number_format($facility->capacity) }} people</span>
+                                <span class="font-semibold text-gray-900">{{ number_format($facility->min_capacity ?? 1) }}-{{ number_format($facility->capacity) }} people</span>
                             </div>
 
                         </div>
@@ -233,12 +233,12 @@
                             @endif
                             
                             <div class="grid grid-cols-2 gap-gr-sm">
-                                <a href="{{ route('citizen.facility-details', $facility->id) }}" 
+                                <a href="{{ route('citizen.facility-details', $facility->facility_id) }}" 
                                    class="px-gr-sm py-gr-sm border-2 border-lgu-stroke text-lgu-headline font-semibold rounded-lg hover:bg-lgu-bg transition-colors text-center text-sm">
                                     Details
                                 </a>
                                 @if($facility->is_available)
-                                    <a href="{{ route('citizen.booking.create', $facility->id) }}" 
+                                    <a href="{{ route('citizen.booking.create', $facility->facility_id) }}" 
                                        class="px-gr-sm py-gr-sm bg-lgu-button text-lgu-button-text font-semibold rounded-lg hover:opacity-90 transition-all shadow-sm text-center text-sm">
                                         Book Now
                                     </a>
