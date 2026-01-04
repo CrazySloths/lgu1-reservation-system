@@ -229,7 +229,69 @@ class ReportController extends Controller
      */
     public function budgetAnalysis(Request $request)
     {
-        return view('cbd.reports.budget-analysis');
+        $fiscalYear = $request->input('fiscal_year', now()->year);
+        
+        // Get all budget allocations for the fiscal year
+        $budgetAllocations = DB::connection('facilities_db')
+            ->table('budget_allocations')
+            ->where('fiscal_year', $fiscalYear)
+            ->get();
+        
+        // Calculate totals
+        $totalAllocated = $budgetAllocations->sum('allocated_amount');
+        $totalSpent = $budgetAllocations->sum('spent_amount');
+        $totalRemaining = $budgetAllocations->sum('remaining_amount');
+        $utilizationPercentage = $totalAllocated > 0 ? ($totalSpent / $totalAllocated) * 100 : 0;
+        
+        // Get revenue for the fiscal year
+        $fiscalYearStart = Carbon::createFromDate($fiscalYear, 1, 1)->startOfYear();
+        $fiscalYearEnd = Carbon::createFromDate($fiscalYear, 12, 31)->endOfYear();
+        
+        $totalRevenue = DB::connection('facilities_db')
+            ->table('payment_slips')
+            ->whereBetween('paid_at', [$fiscalYearStart, $fiscalYearEnd])
+            ->where('status', 'paid')
+            ->sum('amount_due');
+        
+        // Get recent expenditures
+        $recentExpenditures = DB::connection('facilities_db')
+            ->table('budget_expenditures')
+            ->join('budget_allocations', 'budget_expenditures.budget_allocation_id', '=', 'budget_allocations.id')
+            ->select(
+                'budget_expenditures.*',
+                'budget_allocations.category',
+                'budget_allocations.category_name'
+            )
+            ->where('budget_allocations.fiscal_year', $fiscalYear)
+            ->orderByDesc('budget_expenditures.expenditure_date')
+            ->limit(10)
+            ->get();
+        
+        // Fiscal year options (current year and 5 years back)
+        $fiscalYears = range(now()->year, now()->year - 5);
+        
+        // Category labels
+        $categoryLabels = [
+            'maintenance' => 'Facility Maintenance',
+            'equipment' => 'Equipment Purchase',
+            'operations' => 'Operational Costs',
+            'staff' => 'Staff Salaries',
+            'utilities' => 'Utility Bills',
+            'other' => 'Other Expenses'
+        ];
+        
+        return view('cbd.reports.budget-analysis', compact(
+            'budgetAllocations',
+            'totalAllocated',
+            'totalSpent',
+            'totalRemaining',
+            'utilizationPercentage',
+            'totalRevenue',
+            'recentExpenditures',
+            'fiscalYears',
+            'fiscalYear',
+            'categoryLabels'
+        ));
     }
 }
 

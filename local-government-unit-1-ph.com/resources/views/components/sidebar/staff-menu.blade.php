@@ -19,6 +19,25 @@
             <a href="{{ route('staff.verification-queue') }}" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('staff.verification-queue') ? 'active' : '' }}">
                 <i data-lucide="clock" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
                 <span>Verification Queue</span>
+                @php
+                    // Get conflict count for staff notification
+                    $conflictCount = \Illuminate\Support\Facades\DB::connection('facilities_db')
+                        ->table('bookings as a')
+                        ->join('bookings as b', function ($join) {
+                            $join->on('a.facility_id', '=', 'b.facility_id')
+                                ->on('a.event_date', '=', 'b.event_date')
+                                ->whereRaw('a.id < b.id')
+                                ->whereRaw('(a.start_time < b.end_time AND a.end_time > b.start_time)');
+                        })
+                        ->whereIn('a.status', ['pending', 'staff_verified'])
+                        ->whereIn('b.status', ['pending', 'staff_verified'])
+                        ->where('a.event_date', '>=', now()->toDateString())
+                        ->distinct('a.id')
+                        ->count();
+                @endphp
+                @if($conflictCount > 0)
+                    <span class="ml-auto text-xs bg-lgu-tertiary text-white px-2 py-0.5 rounded-full font-semibold">{{ $conflictCount }}</span>
+                @endif
             </a>
         </li>
         <li>
@@ -41,24 +60,21 @@
     <h4 class="text-gray-400 text-caption font-semibold uppercase tracking-wider mb-gr-xs">Facilities</h4>
     <ul class="space-y-gr-xs">
         <li>
-            <a href="#" onclick="showComingSoon('View Facilities'); return false;" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 opacity-60">
+            <a href="{{ route('staff.facilities.index') }}" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('staff.facilities.*') ? 'active' : '' }}">
                 <i data-lucide="building-2" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
                 <span>View Facilities</span>
-                <span class="ml-auto text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full">Soon</span>
             </a>
         </li>
         <li>
-            <a href="#" onclick="showComingSoon('Equipment List'); return false;" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 opacity-60">
+            <a href="{{ route('staff.equipment.index') }}" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('staff.equipment.*') ? 'active' : '' }}">
                 <i data-lucide="package" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
                 <span>Equipment List</span>
-                <span class="ml-auto text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full">Soon</span>
             </a>
         </li>
         <li>
-            <a href="#" onclick="showComingSoon('Pricing Information'); return false;" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 opacity-60">
+            <a href="{{ route('staff.pricing.index') }}" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('staff.pricing.*') ? 'active' : '' }}">
                 <i data-lucide="tag" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
                 <span>Pricing Info</span>
-                <span class="ml-auto text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full">Soon</span>
             </a>
         </li>
     </ul>
@@ -69,17 +85,15 @@
     <h4 class="text-gray-400 text-caption font-semibold uppercase tracking-wider mb-gr-xs">Reports</h4>
     <ul class="space-y-gr-xs">
         <li>
-            <a href="#" onclick="showComingSoon('Verification Reports'); return false;" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 opacity-60">
+            <a href="{{ route('staff.statistics.index') }}" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('staff.statistics.*') ? 'active' : '' }}">
                 <i data-lucide="file-bar-chart" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
                 <span>My Statistics</span>
-                <span class="ml-auto text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full">Soon</span>
             </a>
         </li>
         <li>
-            <a href="#" onclick="showComingSoon('Activity Log'); return false;" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 opacity-60">
+            <a href="{{ route('staff.activity-log.index') }}" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('staff.activity-log.*') ? 'active' : '' }}">
                 <i data-lucide="file-text" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
                 <span>Activity Log</span>
-                <span class="ml-auto text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full">Soon</span>
             </a>
         </li>
     </ul>

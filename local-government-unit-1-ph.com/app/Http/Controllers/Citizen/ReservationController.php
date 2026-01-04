@@ -127,7 +127,15 @@ class ReservationController extends Controller
             ->where('booking_id', $id)
             ->first();
 
-        return view('citizen.reservations.show', compact('booking', 'equipment', 'paymentSlip'));
+        // Check if booking has passed and if review exists
+        $eventHasPassed = Carbon::parse($booking->end_time)->isPast();
+        $existingReview = DB::connection('facilities_db')
+            ->table('facility_reviews')
+            ->where('booking_id', $id)
+            ->first();
+        $canReview = $eventHasPassed && !$existingReview && in_array($booking->status, ['confirmed', 'completed']);
+
+        return view('citizen.reservations.show', compact('booking', 'equipment', 'paymentSlip', 'canReview', 'existingReview'));
     }
 
     /**

@@ -47,6 +47,12 @@
             </a>
         </li>
         <li>
+            <a href="{{ route('citizen.reviews.index') }}" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('citizen.reviews.*') ? 'active' : '' }}">
+                <i data-lucide="star" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
+                <span>My Reviews</span>
+            </a>
+        </li>
+        <li>
             <a href="#" onclick="showComingSoon('Browse All Facilities'); return false;" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 opacity-60">
                 <i data-lucide="building-2" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
                 <span>Browse All</span>
@@ -74,17 +80,15 @@
             </a>
         </li>
         <li>
-            <a href="#" onclick="showComingSoon('Payment Methods'); return false;" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 opacity-60">
+            <a href="{{ route('citizen.payment-methods.index') }}" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('citizen.payment-methods.*') ? 'active' : '' }}">
                 <i data-lucide="credit-card" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
                 <span>Payment Methods</span>
-                <span class="ml-auto text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full">Soon</span>
             </a>
         </li>
         <li>
-            <a href="#" onclick="showComingSoon('Transaction History'); return false;" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 opacity-60">
-                <i data-lucide="coins" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
+            <a href="{{ route('citizen.transactions.index') }}" class="sidebar-link flex items-center px-gr-sm py-gr-xs text-small font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('citizen.transactions.*') ? 'active' : '' }}">
+                <i data-lucide="receipt" class="w-5 h-5 mr-gr-xs flex-shrink-0"></i>
                 <span>Transaction History</span>
-                <span class="ml-auto text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full">Soon</span>
             </a>
         </li>
     </ul>
