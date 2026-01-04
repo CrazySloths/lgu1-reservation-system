@@ -177,3 +177,21 @@ textarea {
 .space-y-gr-md > * + * { margin-top: 21px; }
 .space-y-gr-lg > * + * { margin-top: 34px; }
 .space-y-gr-xl > * + * { margin-top: 55px; }
+
+/* Button Styles (Following PROJECT_DESIGN_RULES.md) */
+.btn-primary {
+    @apply px-6 py-3 bg-lgu-button text-lgu-button-text font-semibold rounded-lg hover:opacity-90 transition inline-flex items-center;
+}
+
+.btn-secondary {
+    @apply px-6 py-3 border-2 border-lgu-stroke text-lgu-headline font-semibold rounded-lg hover:bg-lgu-bg transition inline-flex items-center;
+}
+
+.btn-danger {
+    @apply px-6 py-3 bg-lgu-tertiary text-white font-semibold rounded-lg hover:opacity-90 transition inline-flex items-center;
+}
+
+/* Input Field Styles */
+.input-field {
+    @apply w-full px-4 py-3 border-2 border-lgu-stroke rounded-lg focus:border-lgu-highlight focus:outline-none text-lgu-paragraph;
+}

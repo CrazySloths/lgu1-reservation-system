@@ -11,6 +11,51 @@ use Illuminate\Support\Facades\Validator;
 class ReviewController extends Controller
 {
     /**
+     * Display list of all user's reviews.
+     */
+    public function index(Request $request)
+    {
+        $userId = session('user_id');
+        
+        if (!$userId) {
+            return redirect()->route('login')->with('error', 'Please login to continue.');
+        }
+
+        $facilityFilter = $request->input('facility_id');
+
+        $query = DB::connection('facilities_db')
+            ->table('facility_reviews')
+            ->join('facilities', 'facility_reviews.facility_id', '=', 'facilities.facility_id')
+            ->join('bookings', 'facility_reviews.booking_id', '=', 'bookings.id')
+            ->select(
+                'facility_reviews.*',
+                'facilities.name as facility_name',
+                'facilities.image_path as facility_image',
+                'bookings.event_date',
+                'bookings.start_time',
+                'bookings.end_time'
+            )
+            ->where('facility_reviews.user_id', $userId)
+            ->where('facility_reviews.is_visible', true);
+
+        if ($facilityFilter) {
+            $query->where('facility_reviews.facility_id', $facilityFilter);
+        }
+
+        $reviews = $query->orderBy('facility_reviews.created_at', 'desc')
+            ->paginate(10);
+
+        // Get facilities for filter
+        $facilities = DB::connection('facilities_db')
+            ->table('facilities')
+            ->whereNull('deleted_at')
+            ->orderBy('name')
+            ->get();
+
+        return view('citizen.reviews.index', compact('reviews', 'facilities', 'facilityFilter'));
+    }
+
+    /**
      * Show form to submit a review for a completed booking.
      */
     public function create($bookingId)
@@ -21,7 +66,7 @@ class ReviewController extends Controller
             return redirect()->route('login')->with('error', 'Please login to continue.');
         }
 
-        // Check if booking exists and is completed
+        // Check if booking exists and event has passed
         $booking = DB::connection('facilities_db')
             ->table('bookings')
             ->join('facilities', 'bookings.facility_id', '=', 'facilities.facility_id')
@@ -33,11 +78,17 @@ class ReviewController extends Controller
             )
             ->where('bookings.id', $bookingId)
             ->where('bookings.user_id', $userId)
-            ->where('bookings.status', 'completed')
+            ->whereIn('bookings.status', ['confirmed', 'completed'])
             ->first();
 
         if (!$booking) {
             return redirect()->route('citizen.reservations')->with('error', 'Booking not found or not eligible for review.');
+        }
+
+        // Check if event has passed
+        if (Carbon::parse($booking->end_time)->isFuture()) {
+            return redirect()->route('citizen.reservations.show', $bookingId)
+                ->with('error', 'You can only leave a review after your event has ended.');
         }
 
         // Check if review already exists
@@ -75,16 +126,21 @@ class ReviewController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        // Verify the booking belongs to the user and is completed
+        // Verify the booking belongs to the user and event has passed
         $booking = DB::connection('facilities_db')
             ->table('bookings')
             ->where('id', $request->booking_id)
             ->where('user_id', $userId)
-            ->where('status', 'completed')
+            ->whereIn('status', ['confirmed', 'completed'])
             ->first();
 
         if (!$booking) {
             return redirect()->route('citizen.reservations')->with('error', 'Invalid booking for review.');
+        }
+
+        // Verify event has passed
+        if (Carbon::parse($booking->end_time)->isFuture()) {
+            return redirect()->back()->with('error', 'You can only leave a review after your event has ended.');
         }
 
         // Check if review already exists

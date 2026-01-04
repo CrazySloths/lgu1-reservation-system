@@ -35,7 +35,7 @@
                 <h3 class="text-2xl font-bold text-lgu-headline">₱{{ number_format($ytdRevenue, 2) }}</h3>
             </div>
             <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <i data-lucide="dollar-sign" class="w-6 h-6 text-green-600"></i>
+                <span class="text-2xl font-bold text-green-600">₱</span>
             </div>
         </div>
         <p class="text-sm text-gray-500">{{ date('Y') }} Revenue</p>
@@ -154,9 +154,8 @@
 @push('scripts')
 <script src="https://unpkg.com/apexcharts@3.45.1/dist/apexcharts.min.js"></script>
 <script>
-// Ensure ApexCharts loads before initializing charts
+// Initialize charts once DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Wait for ApexCharts to be fully loaded
     setTimeout(function() {
         // Check if ApexCharts is available
         if (typeof ApexCharts === 'undefined') {
@@ -172,84 +171,128 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Chart containers not found');
             return;
         }
-    
-    // Monthly Revenue Trend Chart
-    const monthlyData = @json($monthlyTrend);
-    
-    if (monthlyData && monthlyData.length > 0) {
-        try {
-            const monthlyOptions = {
-        series: [{
-            name: 'Revenue',
-            data: monthlyData.map(item => parseFloat(item.revenue) || 0)
-        }],
-        chart: {
-            height: 250,
-            type: 'area',
-            toolbar: { show: false }
-        },
-        colors: ['#0f3d3e'],
-        dataLabels: { enabled: false },
-        stroke: { curve: 'smooth', width: 2 },
-        xaxis: {
-            categories: monthlyData.map(item => item.month)
-        },
-        yaxis: {
-            labels: {
-                formatter: function (val) {
-                    return '₱' + val.toLocaleString();
-                }
-            }
-        },
-        fill: {
-            type: 'gradient',
-            gradient: {
-                shadeIntensity: 1,
-                opacityFrom: 0.7,
-                opacityTo: 0.3,
+        
+        // Clear any existing charts ONLY if they exist
+        if (window.monthlyChart && typeof window.monthlyChart.destroy === 'function') {
+            window.monthlyChart.destroy();
+        }
+        if (window.paymentMethodChart && typeof window.paymentMethodChart.destroy === 'function') {
+            window.paymentMethodChart.destroy();
+        }
+        
+        // Clear containers
+        monthlyContainer.innerHTML = '';
+        paymentContainer.innerHTML = '';
+        
+        // Monthly Revenue Trend Chart
+        const monthlyData = @json($monthlyTrend);
+        
+        if (monthlyData && monthlyData.length > 0) {
+            try {
+                const monthlyOptions = {
+                    series: [{
+                        name: 'Revenue',
+                        data: monthlyData.map(item => parseFloat(item.revenue) || 0)
+                    }],
+                    chart: {
+                        height: 256,
+                        type: 'area',
+                        toolbar: { show: false }
+                    },
+                    colors: ['#0f3d3e'],
+                    dataLabels: { enabled: false },
+                    stroke: { curve: 'smooth', width: 2 },
+                    xaxis: {
+                        categories: monthlyData.map(item => item.month)
+                    },
+                    yaxis: {
+                        labels: {
+                            formatter: function (val) {
+                                return '₱' + val.toLocaleString();
+                            }
+                        }
+                    },
+                    fill: {
+                        type: 'gradient',
+                        gradient: {
+                            shadeIntensity: 1,
+                            opacityFrom: 0.7,
+                            opacityTo: 0.3,
+                        }
+                    },
+                    tooltip: {
+                        y: {
+                            formatter: function(val) {
+                                return '₱' + val.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                            }
+                        }
+                    }
+                };
+                
+                window.monthlyChart = new ApexCharts(monthlyContainer, monthlyOptions);
+                window.monthlyChart.render();
+            } catch (error) {
+                console.error('Error rendering monthly chart:', error);
             }
         }
-    };
-    
-            const monthlyChart = new ApexCharts(monthlyContainer, monthlyOptions);
-            monthlyChart.render();
-        } catch (error) {
-            console.error('Error rendering monthly chart:', error);
-        }
-    }
 
-    // Payment Method Chart
-    const paymentMethodData = @json($revenueByPaymentMethod);
-    
-    if (paymentMethodData && paymentMethodData.length > 0) {
-        try {
-            const paymentMethodOptions = {
-                series: paymentMethodData.map(item => parseFloat(item.total_amount) || 0),
-                chart: {
-                    type: 'donut',
-                    height: 250
-                },
-                labels: paymentMethodData.map(item => {
-                    const method = item.payment_method || '';
-                    return method.charAt(0).toUpperCase() + method.slice(1).replace('_', ' ');
-                }),
-                colors: ['#0f3d3e', '#14b8a6', '#faae2b', '#ffa8ba'],
-                legend: {
-                    position: 'bottom'
-                }
-            };
-            const paymentMethodChart = new ApexCharts(paymentContainer, paymentMethodOptions);
-            paymentMethodChart.render();
-        } catch (error) {
-            console.error('Error rendering payment method chart:', error);
+        // Payment Method Chart
+        const paymentMethodData = @json($revenueByPaymentMethod);
+        
+        if (paymentMethodData && paymentMethodData.length > 0) {
+            try {
+                const paymentMethodOptions = {
+                    series: paymentMethodData.map(item => parseFloat(item.total_amount) || 0),
+                    chart: {
+                        type: 'donut',
+                        height: 256
+                    },
+                    labels: paymentMethodData.map(item => {
+                        const method = item.payment_method || '';
+                        return method.charAt(0).toUpperCase() + method.slice(1).replace('_', ' ');
+                    }),
+                    colors: ['#0f3d3e', '#14b8a6', '#faae2b', '#ffa8ba'],
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        y: {
+                            formatter: function(val) {
+                                return '₱' + val.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                            }
+                        }
+                    },
+                    plotOptions: {
+                        pie: {
+                            donut: {
+                                labels: {
+                                    show: true,
+                                    total: {
+                                        show: true,
+                                        label: 'Total',
+                                        formatter: function(w) {
+                                            const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                            return '₱' + total.toLocaleString();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
+                
+                window.paymentMethodChart = new ApexCharts(paymentContainer, paymentMethodOptions);
+                window.paymentMethodChart.render();
+            } catch (error) {
+                console.error('Error rendering payment method chart:', error);
+            }
         }
-    }
 
         // Initialize Lucide icons
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
-    }, 100); // Wait 100ms for ApexCharts to load
+    }, 100);
 });
 </script>
 @endpush

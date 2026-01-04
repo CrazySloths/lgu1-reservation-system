@@ -1171,11 +1171,85 @@ Route::middleware(['auth', 'role:Admin'])->group(function () {
     Route::get('/admin/calendar', [\App\Http\Controllers\Admin\CalendarController::class, 'index'])->name('admin.calendar');
     Route::get('/admin/calendar/events', [\App\Http\Controllers\Admin\CalendarController::class, 'getEvents'])->name('admin.calendar.events');
     
+    // Schedule Conflicts & Maintenance
+    Route::get('/admin/schedule-conflicts', [\App\Http\Controllers\Admin\ScheduleConflictController::class, 'index'])->name('admin.schedule-conflicts.index');
+    Route::get('/admin/schedule-conflicts/{id}', [\App\Http\Controllers\Admin\ScheduleConflictController::class, 'show'])->name('admin.schedule-conflicts.show');
+    Route::post('/admin/schedule-conflicts/{id}/resolve', [\App\Http\Controllers\Admin\ScheduleConflictController::class, 'resolve'])->name('admin.schedule-conflicts.resolve');
+    
+    Route::get('/admin/maintenance', [\App\Http\Controllers\Admin\MaintenanceScheduleController::class, 'index'])->name('admin.maintenance.index');
+    Route::get('/admin/maintenance/create', [\App\Http\Controllers\Admin\MaintenanceScheduleController::class, 'create'])->name('admin.maintenance.create');
+    Route::post('/admin/maintenance', [\App\Http\Controllers\Admin\MaintenanceScheduleController::class, 'store'])->name('admin.maintenance.store');
+    Route::delete('/admin/maintenance/{id}', [\App\Http\Controllers\Admin\MaintenanceScheduleController::class, 'destroy'])->name('admin.maintenance.destroy');
+    
     // Analytics & Reports
+    Route::get('/admin/analytics', [\App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('admin.analytics.index');
     Route::get('/admin/analytics/revenue-report', [\App\Http\Controllers\Admin\AnalyticsController::class, 'revenueReport'])->name('admin.analytics.revenue-report');
     Route::get('/admin/analytics/booking-statistics', [\App\Http\Controllers\Admin\AnalyticsController::class, 'bookingStatistics'])->name('admin.analytics.booking-statistics');
     Route::get('/admin/analytics/facility-utilization', [\App\Http\Controllers\Admin\AnalyticsController::class, 'facilityUtilization'])->name('admin.analytics.facility-utilization');
     Route::get('/admin/analytics/citizen-analytics', [\App\Http\Controllers\Admin\AnalyticsController::class, 'citizenAnalytics'])->name('admin.analytics.citizen-analytics');
+    Route::get('/admin/analytics/operational-metrics', [\App\Http\Controllers\Admin\AnalyticsController::class, 'operationalMetrics'])->name('admin.analytics.operational-metrics');
+    
+    // Phase 5: Payment Analytics & Transactions
+    Route::get('/admin/analytics/payments', [\App\Http\Controllers\Admin\PaymentAnalyticsController::class, 'index'])->name('admin.analytics.payments');
+    Route::get('/admin/transactions', [\App\Http\Controllers\Admin\TransactionController::class, 'index'])->name('admin.transactions.index');
+    Route::get('/admin/transactions/{id}', [\App\Http\Controllers\Admin\TransactionController::class, 'show'])->name('admin.transactions.show');
+    Route::get('/admin/transactions-export/csv', [\App\Http\Controllers\Admin\TransactionController::class, 'exportCsv'])->name('admin.transactions.export.csv');
+    
+    // Export Routes
+    Route::get('/admin/analytics/export/booking-statistics/excel', [\App\Http\Controllers\Admin\AnalyticsController::class, 'exportBookingStatisticsExcel'])->name('admin.analytics.export-booking-statistics-excel');
+    Route::get('/admin/analytics/export/booking-statistics/pdf', [\App\Http\Controllers\Admin\AnalyticsController::class, 'exportBookingStatisticsPDF'])->name('admin.analytics.export-booking-statistics-pdf');
+    Route::get('/admin/analytics/export/facility-utilization/excel', [\App\Http\Controllers\Admin\AnalyticsController::class, 'exportFacilityUtilizationExcel'])->name('admin.analytics.export-facility-utilization-excel');
+    Route::get('/admin/analytics/export/citizen-analytics/excel', [\App\Http\Controllers\Admin\AnalyticsController::class, 'exportCitizenAnalyticsExcel'])->name('admin.analytics.export-citizen-analytics-excel');
+
+    // Budget Management
+    Route::get('/admin/budget', [\App\Http\Controllers\Admin\BudgetAllocationController::class, 'index'])->name('admin.budget.index');
+    Route::post('/admin/budget', [\App\Http\Controllers\Admin\BudgetAllocationController::class, 'store'])->name('admin.budget.store');
+    Route::put('/admin/budget/{id}', [\App\Http\Controllers\Admin\BudgetAllocationController::class, 'update'])->name('admin.budget.update');
+    Route::delete('/admin/budget/{id}', [\App\Http\Controllers\Admin\BudgetAllocationController::class, 'destroy'])->name('admin.budget.destroy');
+    Route::post('/admin/budget/expenditure', [\App\Http\Controllers\Admin\BudgetAllocationController::class, 'storeExpenditure'])->name('admin.budget.expenditure.store');
+    
+    // Facility Management
+    Route::get('/admin/facilities', [\App\Http\Controllers\Admin\FacilityController::class, 'index'])->name('admin.facilities.index');
+    Route::get('/admin/facilities/create', [\App\Http\Controllers\Admin\FacilityController::class, 'create'])->name('admin.facilities.create');
+    Route::post('/admin/facilities', [\App\Http\Controllers\Admin\FacilityController::class, 'store'])->name('admin.facilities.store');
+    Route::get('/admin/facilities/{id}/edit', [\App\Http\Controllers\Admin\FacilityController::class, 'edit'])->name('admin.facilities.edit');
+    Route::put('/admin/facilities/{id}', [\App\Http\Controllers\Admin\FacilityController::class, 'update'])->name('admin.facilities.update');
+    Route::delete('/admin/facilities/{id}', [\App\Http\Controllers\Admin\FacilityController::class, 'destroy'])->name('admin.facilities.destroy');
+    Route::post('/admin/facilities/{id}/restore', [\App\Http\Controllers\Admin\FacilityController::class, 'restore'])->name('admin.facilities.restore');
+    
+    // Equipment Management
+    Route::get('/admin/equipment', [\App\Http\Controllers\Admin\EquipmentController::class, 'index'])->name('admin.equipment.index');
+    Route::get('/admin/equipment/create', [\App\Http\Controllers\Admin\EquipmentController::class, 'create'])->name('admin.equipment.create');
+    Route::post('/admin/equipment', [\App\Http\Controllers\Admin\EquipmentController::class, 'store'])->name('admin.equipment.store');
+    Route::get('/admin/equipment/{id}/edit', [\App\Http\Controllers\Admin\EquipmentController::class, 'edit'])->name('admin.equipment.edit');
+    Route::put('/admin/equipment/{id}', [\App\Http\Controllers\Admin\EquipmentController::class, 'update'])->name('admin.equipment.update');
+    Route::delete('/admin/equipment/{id}', [\App\Http\Controllers\Admin\EquipmentController::class, 'destroy'])->name('admin.equipment.destroy');
+    Route::post('/admin/equipment/{id}/restore', [\App\Http\Controllers\Admin\EquipmentController::class, 'restore'])->name('admin.equipment.restore');
+    Route::post('/admin/equipment/{id}/toggle', [\App\Http\Controllers\Admin\EquipmentController::class, 'toggleAvailability'])->name('admin.equipment.toggle');
+    
+    // Pricing Management
+    Route::get('/admin/pricing', [\App\Http\Controllers\Admin\PricingController::class, 'index'])->name('admin.pricing.index');
+    Route::put('/admin/pricing/{id}', [\App\Http\Controllers\Admin\PricingController::class, 'update'])->name('admin.pricing.update');
+    Route::post('/admin/pricing/bulk-update', [\App\Http\Controllers\Admin\PricingController::class, 'bulkUpdate'])->name('admin.pricing.bulk-update');
+    
+    // Reviews Moderation
+    Route::get('/admin/reviews', [\App\Http\Controllers\Admin\ReviewController::class, 'index'])->name('admin.reviews.index');
+    Route::get('/admin/reviews/{id}', [\App\Http\Controllers\Admin\ReviewController::class, 'show'])->name('admin.reviews.show');
+    
+    // User Management
+    // Staff Management
+    Route::get('/admin/staff', [\App\Http\Controllers\Admin\StaffController::class, 'index'])->name('admin.staff.index');
+    Route::get('/admin/staff/create', [\App\Http\Controllers\Admin\StaffController::class, 'create'])->name('admin.staff.create');
+    Route::post('/admin/staff', [\App\Http\Controllers\Admin\StaffController::class, 'store'])->name('admin.staff.store');
+    Route::get('/admin/staff/{id}/edit', [\App\Http\Controllers\Admin\StaffController::class, 'edit'])->name('admin.staff.edit');
+    Route::put('/admin/staff/{id}', [\App\Http\Controllers\Admin\StaffController::class, 'update'])->name('admin.staff.update');
+    Route::put('/admin/staff/{id}/toggle-status', [\App\Http\Controllers\Admin\StaffController::class, 'toggleStatus'])->name('admin.staff.toggle-status');
+    
+    // Citizens Management
+    Route::get('/admin/citizens', [\App\Http\Controllers\Admin\CitizenController::class, 'index'])->name('admin.citizens.index');
+    Route::get('/admin/citizens/{id}', [\App\Http\Controllers\Admin\CitizenController::class, 'show'])->name('admin.citizens.show');
+    Route::put('/admin/citizens/{id}/toggle-status', [\App\Http\Controllers\Admin\CitizenController::class, 'toggleStatus'])->name('admin.citizens.toggle-status');
+    Route::get('/admin/citizens/{id}/bookings', [\App\Http\Controllers\Admin\CitizenController::class, 'bookings'])->name('admin.citizens.bookings');
     
     // Export routes
     Route::get('/admin/analytics/facility-utilization/export', [\App\Http\Controllers\Admin\AnalyticsController::class, 'exportFacilityUtilization'])->name('admin.analytics.facility-utilization.export');
@@ -1193,11 +1267,6 @@ Route::middleware(['auth', 'role:Admin'])->group(function () {
     Route::get('/admin/payment-slips', function () {
         return 'Payment slips page - Coming soon';
     })->name('admin.payment-slips.index');
-    
-    // Analytics & Insights (AI Feature - replaces old forecast)
-    Route::get('/admin/analytics', function () {
-        return view('admin.analytics');
-    })->name('admin.analytics');
 });
 
 Route::middleware(['auth', 'role:Reservations Staff'])->prefix('staff')->name('staff.')->group(function () {
@@ -1222,6 +1291,22 @@ Route::middleware(['auth', 'role:Reservations Staff'])->prefix('staff')->name('s
     // Facility Calendar - View booking schedule
     Route::get('/calendar', [\App\Http\Controllers\Staff\CalendarController::class, 'index'])->name('calendar');
     Route::get('/calendar/events', [\App\Http\Controllers\Staff\CalendarController::class, 'getEvents'])->name('calendar.events');
+    
+    // Facilities (Read-only)
+    Route::get('/facilities', [\App\Http\Controllers\Staff\FacilityController::class, 'index'])->name('facilities.index');
+    Route::get('/facilities/{id}', [\App\Http\Controllers\Staff\FacilityController::class, 'show'])->name('facilities.show');
+    
+    // Equipment (Read-only)
+    Route::get('/equipment', [\App\Http\Controllers\Staff\EquipmentController::class, 'index'])->name('equipment.index');
+    
+    // Pricing (Read-only)
+    Route::get('/pricing', [\App\Http\Controllers\Staff\PricingController::class, 'index'])->name('pricing.index');
+    
+    // My Statistics Dashboard
+    Route::get('/statistics', [\App\Http\Controllers\Staff\StatisticsController::class, 'index'])->name('statistics.index');
+    
+    // Activity Log
+    Route::get('/activity-log', [\App\Http\Controllers\Staff\ActivityLogController::class, 'index'])->name('activity-log.index');
 });
 
 // Treasurer Portal Routes
@@ -1323,12 +1408,26 @@ Route::middleware(['auth', 'role:citizen', \App\Http\Middleware\CheckSessionTime
     Route::get('/citizen/payments/{id}/receipt', [\App\Http\Controllers\Citizen\PaymentController::class, 'downloadReceipt'])->name('citizen.payments.receipt');
     
     // Reviews & Feedback
+    Route::get('/citizen/reviews', [\App\Http\Controllers\Citizen\ReviewController::class, 'index'])->name('citizen.reviews.index');
     Route::get('/citizen/reviews/create/{bookingId}', [\App\Http\Controllers\Citizen\ReviewController::class, 'create'])->name('citizen.reviews.create');
     Route::post('/citizen/reviews', [\App\Http\Controllers\Citizen\ReviewController::class, 'store'])->name('citizen.reviews.store');
     Route::get('/citizen/reviews/{id}/edit', [\App\Http\Controllers\Citizen\ReviewController::class, 'edit'])->name('citizen.reviews.edit');
     Route::put('/citizen/reviews/{id}', [\App\Http\Controllers\Citizen\ReviewController::class, 'update'])->name('citizen.reviews.update');
     Route::delete('/citizen/reviews/{id}', [\App\Http\Controllers\Citizen\ReviewController::class, 'destroy'])->name('citizen.reviews.destroy');
     Route::get('/citizen/facilities/{facilityId}/reviews', [\App\Http\Controllers\Citizen\ReviewController::class, 'facilityReviews'])->name('citizen.facilities.reviews');
+    
+    // Payment Methods Management
+    Route::get('/citizen/payment-methods', [\App\Http\Controllers\Citizen\PaymentMethodController::class, 'index'])->name('citizen.payment-methods.index');
+    Route::get('/citizen/payment-methods/create', [\App\Http\Controllers\Citizen\PaymentMethodController::class, 'create'])->name('citizen.payment-methods.create');
+    Route::post('/citizen/payment-methods', [\App\Http\Controllers\Citizen\PaymentMethodController::class, 'store'])->name('citizen.payment-methods.store');
+    Route::get('/citizen/payment-methods/{id}/edit', [\App\Http\Controllers\Citizen\PaymentMethodController::class, 'edit'])->name('citizen.payment-methods.edit');
+    Route::put('/citizen/payment-methods/{id}', [\App\Http\Controllers\Citizen\PaymentMethodController::class, 'update'])->name('citizen.payment-methods.update');
+    Route::delete('/citizen/payment-methods/{id}', [\App\Http\Controllers\Citizen\PaymentMethodController::class, 'destroy'])->name('citizen.payment-methods.destroy');
+    Route::post('/citizen/payment-methods/{id}/set-default', [\App\Http\Controllers\Citizen\PaymentMethodController::class, 'setDefault'])->name('citizen.payment-methods.set-default');
+
+    // Transaction History
+    Route::get('/citizen/transactions', [\App\Http\Controllers\Citizen\TransactionController::class, 'index'])->name('citizen.transactions.index');
+    Route::get('/citizen/transactions/{id}', [\App\Http\Controllers\Citizen\TransactionController::class, 'show'])->name('citizen.transactions.show');
     
     // Bulletin Board
     Route::get('/citizen/bulletin', [\App\Http\Controllers\Citizen\BulletinController::class, 'index'])->name('citizen.bulletin');

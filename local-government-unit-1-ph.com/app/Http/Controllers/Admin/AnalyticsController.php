@@ -10,6 +10,52 @@ use Carbon\Carbon;
 class AnalyticsController extends Controller
 {
     /**
+     * Display analytics hub index page
+     */
+    public function index()
+    {
+        // Total Revenue (Year to Date)
+        $totalRevenue = DB::connection('facilities_db')
+            ->table('payment_slips')
+            ->where('status', 'paid')
+            ->whereYear('paid_at', now()->year)
+            ->sum('amount_due');
+
+        // Total Bookings (All time)
+        $totalBookings = DB::connection('facilities_db')
+            ->table('bookings')
+            ->count();
+
+        // Active Citizens (users with at least 1 booking)
+        $activeCitizens = DB::connection('facilities_db')
+            ->table('bookings')
+            ->distinct('user_id')
+            ->count('user_id');
+
+        // Facility Utilization Rate (last 30 days)
+        $totalFacilities = DB::connection('facilities_db')
+            ->table('facilities')
+            ->where('is_available', 1)
+            ->count();
+
+        $bookedFacilities = DB::connection('facilities_db')
+            ->table('bookings')
+            ->distinct('facility_id')
+            ->where('created_at', '>=', now()->subDays(30))
+            ->whereIn('status', ['approved', 'completed', 'paid'])
+            ->count('facility_id');
+
+        $facilityUtilization = $totalFacilities > 0 ? ($bookedFacilities / $totalFacilities) * 100 : 0;
+
+        return view('admin.analytics.index', compact(
+            'totalRevenue',
+            'totalBookings',
+            'activeCitizens',
+            'facilityUtilization'
+        ));
+    }
+
+    /**
      * Display booking statistics dashboard
      */
     public function bookingStatistics(Request $request)
@@ -473,6 +519,229 @@ class AnalyticsController extends Controller
         };
         
         return response()->stream($callback, 200, $headers);
+    }
+    
+    /**
+     * Display operational metrics dashboard
+     */
+    public function operationalMetrics(Request $request)
+    {
+        // Date range filter (default to last 3 months)
+        $startDate = $request->input('start_date', now()->subMonths(3)->toDateString());
+        $endDate = $request->input('end_date', now()->toDateString());
+        
+        // Average processing times
+        $avgStaffVerificationTime = DB::connection('facilities_db')
+            ->table('bookings')
+            ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, created_at, staff_verified_at)) as avg_hours')
+            ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
+            ->whereNotNull('staff_verified_at')
+            ->value('avg_hours');
+        
+        $avgPaymentTime = DB::connection('facilities_db')
+            ->table('bookings')
+            ->join('payment_slips', 'bookings.id', '=', 'payment_slips.booking_id')
+            ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, bookings.staff_verified_at, payment_slips.paid_at)) as avg_hours')
+            ->whereBetween(DB::raw('DATE(bookings.created_at)'), [$startDate, $endDate])
+            ->whereNotNull('payment_slips.paid_at')
+            ->value('avg_hours');
+        
+        $avgTotalProcessingTime = DB::connection('facilities_db')
+            ->table('bookings')
+            ->join('payment_slips', 'bookings.id', '=', 'payment_slips.booking_id')
+            ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, bookings.created_at, payment_slips.paid_at)) as avg_hours')
+            ->whereBetween(DB::raw('DATE(bookings.created_at)'), [$startDate, $endDate])
+            ->whereNotNull('payment_slips.paid_at')
+            ->value('avg_hours');
+        
+        // Staff performance metrics
+        $staffPerformance = DB::connection('facilities_db')
+            ->table('bookings')
+            ->selectRaw('
+                staff_verified_by,
+                COUNT(*) as total_verified,
+                SUM(CASE WHEN status IN ("paid", "confirmed", "completed") THEN 1 ELSE 0 END) as approved_count,
+                SUM(CASE WHEN status = "rejected" THEN 1 ELSE 0 END) as rejected_count,
+                AVG(TIMESTAMPDIFF(HOUR, created_at, staff_verified_at)) as avg_verification_hours
+            ')
+            ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
+            ->whereNotNull('staff_verified_by')
+            ->groupBy('staff_verified_by')
+            ->orderByDesc('total_verified')
+            ->get();
+        
+        // Get staff names
+        $staffIds = $staffPerformance->pluck('staff_verified_by')->filter()->unique()->toArray();
+        $staffNames = DB::connection('auth_db')
+            ->table('users')
+            ->whereIn('id', $staffIds)
+            ->get()
+            ->keyBy('id');
+        
+        // Rejection reasons breakdown
+        $rejectionReasons = DB::connection('facilities_db')
+            ->table('bookings')
+            ->selectRaw('
+                rejected_reason,
+                COUNT(*) as count
+            ')
+            ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
+            ->where('status', 'rejected')
+            ->whereNotNull('rejected_reason')
+            ->groupBy('rejected_reason')
+            ->orderByDesc('count')
+            ->get();
+        
+        // Expiration and cancellation rates
+        $totalBookings = DB::connection('facilities_db')
+            ->table('bookings')
+            ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
+            ->count();
+        
+        $expiredBookings = DB::connection('facilities_db')
+            ->table('bookings')
+            ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
+            ->where('status', 'expired')
+            ->count();
+        
+        $cancelledBookings = DB::connection('facilities_db')
+            ->table('bookings')
+            ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
+            ->where('status', 'cancelled')
+            ->count();
+        
+        $completedBookings = DB::connection('facilities_db')
+            ->table('bookings')
+            ->whereBetween(DB::raw('DATE(created_at)'), [$startDate, $endDate])
+            ->where('status', 'completed')
+            ->count();
+        
+        // Calculate rates
+        $expirationRate = $totalBookings > 0 ? ($expiredBookings / $totalBookings) * 100 : 0;
+        $cancellationRate = $totalBookings > 0 ? ($cancelledBookings / $totalBookings) * 100 : 0;
+        $completionRate = $totalBookings > 0 ? ($completedBookings / $totalBookings) * 100 : 0;
+        
+        // Workflow bottleneck identification
+        $bottlenecks = [];
+        
+        if ($avgStaffVerificationTime > 48) {
+            $bottlenecks[] = [
+                'stage' => 'Staff Verification',
+                'avg_hours' => round($avgStaffVerificationTime, 1),
+                'severity' => 'high',
+                'recommendation' => 'Consider hiring additional staff or streamlining verification process'
+            ];
+        }
+        
+        if ($avgPaymentTime > 24) {
+            $bottlenecks[] = [
+                'stage' => 'Payment Processing',
+                'avg_hours' => round($avgPaymentTime, 1),
+                'severity' => 'medium',
+                'recommendation' => 'Improve payment reminder system or simplify payment methods'
+            ];
+        }
+        
+        return view('admin.analytics.operational-metrics', compact(
+            'startDate',
+            'endDate',
+            'avgStaffVerificationTime',
+            'avgPaymentTime',
+            'avgTotalProcessingTime',
+            'staffPerformance',
+            'staffNames',
+            'rejectionReasons',
+            'totalBookings',
+            'expiredBookings',
+            'cancelledBookings',
+            'completedBookings',
+            'expirationRate',
+            'cancellationRate',
+            'completionRate',
+            'bottlenecks'
+        ));
+    }
+
+    /**
+     * Export Booking Statistics as Excel
+     */
+    public function exportBookingStatisticsExcel(Request $request)
+    {
+        $startDate = $request->input('start_date', now()->subMonths(3)->toDateString());
+        $endDate = $request->input('end_date', now()->toDateString());
+        
+        $filename = "booking_statistics_{$startDate}_to_{$endDate}.xlsx";
+        
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\BookingStatisticsExport($startDate, $endDate),
+            $filename
+        );
+    }
+
+    /**
+     * Export Booking Statistics as PDF
+     */
+    public function exportBookingStatisticsPDF(Request $request)
+    {
+        $startDate = $request->input('start_date', now()->subMonths(3)->toDateString());
+        $endDate = $request->input('end_date', now()->toDateString());
+        
+        $bookings = DB::connection('facilities_db')
+            ->table('bookings')
+            ->leftJoin('facilities', 'bookings.facility_id', '=', 'facilities.facility_id')
+            ->selectRaw('
+                bookings.id,
+                bookings.user_id,
+                facilities.name as facility_name,
+                bookings.status,
+                bookings.start_time,
+                bookings.end_time,
+                bookings.total_amount,
+                bookings.created_at
+            ')
+            ->whereBetween(DB::raw('DATE(bookings.created_at)'), [$startDate, $endDate])
+            ->orderBy('bookings.created_at', 'desc')
+            ->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.analytics.exports.booking-statistics-pdf', [
+            'bookings' => $bookings,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+        ]);
+
+        return $pdf->download("booking_statistics_{$startDate}_to_{$endDate}.pdf");
+    }
+
+    /**
+     * Export Facility Utilization as Excel
+     */
+    public function exportFacilityUtilizationExcel(Request $request)
+    {
+        $startDate = $request->input('start_date', now()->subMonths(3)->toDateString());
+        $endDate = $request->input('end_date', now()->toDateString());
+        
+        $filename = "facility_utilization_{$startDate}_to_{$endDate}.xlsx";
+        
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\FacilityUtilizationExport($startDate, $endDate),
+            $filename
+        );
+    }
+
+    /**
+     * Export Citizen Analytics as Excel
+     */
+    public function exportCitizenAnalyticsExcel(Request $request)
+    {
+        $startDate = $request->input('start_date', now()->subMonths(3)->toDateString());
+        $endDate = $request->input('end_date', now()->toDateString());
+        
+        $filename = "citizen_analytics_{$startDate}_to_{$endDate}.xlsx";
+        
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\CitizenAnalyticsExport($startDate, $endDate),
+            $filename
+        );
     }
 }
 

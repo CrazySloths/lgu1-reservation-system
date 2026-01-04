@@ -34,10 +34,25 @@
                     <i data-lucide="printer" class="w-4 h-4 inline mr-1"></i>
                     Print
                 </button>
-                <a href="{{ route('admin.analytics.facility-utilization.export', ['start_date' => $startDate, 'end_date' => $endDate]) }}" class="px-6 py-2 bg-lgu-headline text-white rounded-lg hover:bg-opacity-90 transition-all font-semibold">
-                    <i data-lucide="download" class="w-4 h-4 inline mr-1"></i>
-                    Export CSV
-                </a>
+                
+                <!-- Export Dropdown -->
+                <div class="relative inline-block" x-data="{ open: false }">
+                    <button @click="open = !open" class="px-6 py-2 bg-lgu-secondary text-white rounded-lg hover:opacity-90 transition-all font-semibold flex items-center">
+                        <i data-lucide="download" class="w-4 h-4 mr-1"></i>
+                        Export
+                        <i data-lucide="chevron-down" class="w-4 h-4 ml-1"></i>
+                    </button>
+                    <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+                        <a href="{{ route('admin.analytics.export-facility-utilization-excel', ['start_date' => $startDate, 'end_date' => $endDate]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-lgu-bg">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4 inline mr-2"></i>
+                            Export as Excel
+                        </a>
+                        <a href="{{ route('admin.analytics.facility-utilization.export', ['start_date' => $startDate, 'end_date' => $endDate]) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-lgu-bg">
+                            <i data-lucide="file-text" class="w-4 h-4 inline mr-2"></i>
+                            Export as CSV
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

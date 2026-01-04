@@ -113,6 +113,42 @@
         </div>
     </div>
 
+    <!-- Event Completed - Leave Review Alert -->
+    @if($canReview)
+        <div class="bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-lgu-highlight p-5 rounded-lg shadow-md">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <i data-lucide="message-circle" class="w-7 h-7 text-lgu-highlight"></i>
+                </div>
+                <div class="ml-4 flex-1">
+                    <h3 class="text-lg font-bold text-lgu-headline">We'd Love Your Feedback!</h3>
+                    <p class="text-sm text-gray-700 mt-1 mb-3">
+                        Your event has ended. Please take a moment to share your experience and help us improve our services.
+                    </p>
+                    <a href="{{ route('citizen.reviews.create', $booking->id) }}" 
+                       class="inline-flex items-center gap-2 px-5 py-2.5 bg-lgu-highlight text-lgu-button-text font-bold rounded-lg hover:bg-lgu-hover transition shadow-md">
+                        <i data-lucide="star" class="w-5 h-5"></i>
+                        Leave a Review Now
+                    </a>
+                </div>
+            </div>
+        </div>
+    @elseif($existingReview)
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-5 rounded-lg shadow-sm">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <i data-lucide="check-circle" class="w-6 h-6 text-blue-500"></i>
+                </div>
+                <div class="ml-4 flex-1">
+                    <h3 class="text-base font-bold text-blue-800">Thank You for Your Review!</h3>
+                    <p class="text-sm text-blue-700 mt-1">
+                        You've already submitted feedback for this booking. You can view or edit your review anytime.
+                    </p>
+                </div>
+            </div>
+        </div>
+    @endif
+
     @if($booking->status === 'staff_verified')
         <!-- Payment Deadline Countdown -->
         @php
@@ -536,6 +572,21 @@
                         <a href="{{ route('citizen.payment-slips') }}" 
                            class="block w-full px-4 py-3 bg-lgu-button text-lgu-button-text text-center font-semibold rounded-lg hover:bg-lgu-highlight transition">
                             View Payment Slip
+                        </a>
+                    @endif
+
+                    <!-- Leave Review Button (shows when event has passed and no review exists) -->
+                    @if($canReview)
+                        <a href="{{ route('citizen.reviews.create', $booking->id) }}" 
+                           class="block w-full px-4 py-3 bg-lgu-highlight text-lgu-button-text text-center font-bold rounded-lg hover:bg-lgu-hover transition shadow-md flex items-center justify-center gap-2">
+                            <i data-lucide="star" class="w-5 h-5"></i>
+                            Leave a Review
+                        </a>
+                    @elseif($existingReview)
+                        <a href="{{ route('citizen.reviews.edit', $existingReview->id) }}" 
+                           class="block w-full px-4 py-3 bg-blue-50 text-blue-700 text-center font-semibold rounded-lg hover:bg-blue-100 transition flex items-center justify-center gap-2 border-2 border-blue-200">
+                            <i data-lucide="check-circle" class="w-5 h-5"></i>
+                            Review Submitted
                         </a>
                     @endif
 
